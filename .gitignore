@@ -1,0 +1,46 @@
+# Data and artifacts (reproducible from scripts; too large / binary)
+# Anchored to repo root so they don't accidentally match nested dirs like
+# scripts/data/, which holds source code (loader, preprocessing pipeline, etc.).
+/data/
+/logs/
+/models/
+/outputs/
+
+# Vendored dependencies
+.local_packages/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+.ipynb_checkpoints/
+.pytest_cache/
+
+# Virtualenvs
+venv/
+env/
+.venv/
+.env
+
+# Experiment trackers
+mlruns/
+wandb/
+
+# Editor / OS / tool markers
+.vscode/
+.idea/
+.DS_Store
+*.swp
+.codex
+
+# Personal notes / working drafts (kept local, not published)
+TUTORIAL.md
+LESSONS_LEARNED.md
+RETRIEVAL_RANKER_GUIDE.md
+STORY.md
+
+# Large per-user retrieval predictions (regenerable via train_two_tower.py)
+results/**/*.parquet

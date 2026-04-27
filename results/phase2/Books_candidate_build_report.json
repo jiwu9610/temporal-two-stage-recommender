@@ -1,0 +1,27 @@
+{
+  "category": "Books",
+  "built_utc": "2026-04-27T07:43:02.353785+00:00",
+  "elapsed_seconds": 282.76,
+  "top_k": 100,
+  "two_tower_variant": "metadata_and_ids",
+  "rule_weights": {
+    "w_store": 0.5,
+    "w_cat": 0.5,
+    "w_pop": 1.0
+  },
+  "candidate_pool_size": 23285,
+  "n_eval_users": 32830,
+  "n_rows_total": 14517204,
+  "n_rows_val": 7258602,
+  "n_rows_test": 7258602,
+  "positive_rate_val": 0.0010664588029485568,
+  "positive_rate_test": 0.0008376268598278291,
+  "per_user_candidates_mean": 221.0966189460859,
+  "per_user_candidates_median": 220.0,
+  "source_overlap": {
+    "n_only_pop": 1275327,
+    "n_only_rule": 1334186,
+    "n_only_tt": 2501211,
+    "n_all_three": 442520
+  }
+}

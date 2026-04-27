@@ -1,0 +1,36 @@
+# Core ML / Deep Learning
+torch>=2.0
+torchvision
+numpy
+scipy
+pandas
+scikit-learn
+
+# Recommendation system libraries
+surprise
+implicit
+lightfm
+recbole
+
+# Data handling & feature engineering
+polars
+pyarrow
+
+# Experiment tracking & evaluation
+mlflow
+tensorboard
+
+# Visualization
+matplotlib
+seaborn
+plotly
+
+# Notebooks
+jupyter
+ipywidgets
+
+# Utilities
+tqdm
+pyyaml
+hydra-core
+omegaconf

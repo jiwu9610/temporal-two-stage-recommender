@@ -1,0 +1,61 @@
+{
+  "category": "All_Beauty",
+  "n_items_in_train_catalog": 744,
+  "n_train_positive_users": 852,
+  "main_category": {
+    "n_unique": 2,
+    "max_share": 0.9690860215053764,
+    "entropy_bits": 0.19895490802746107,
+    "top_20": {
+      "All Beauty": 721,
+      "Premium Beauty": 23
+    },
+    "tail_n_categories": 0,
+    "tail_n_items": 0
+  },
+  "store": {
+    "n_unique": 586,
+    "max_share": 0.038978494623655914,
+    "entropy_bits": 8.938550332253321,
+    "top_20": {
+      "Unknown": 29,
+      "EASYDEW": 8,
+      "Marine Forest": 7,
+      "L'ANGE HAIR": 7,
+      "Mountain Falls": 6,
+      "Higher Education": 5,
+      "Everyday Beauty": 4,
+      "Spanature": 4,
+      "KISSIO": 3,
+      "Laloirelle": 3,
+      "+WIS+": 3,
+      "AIFAIFA": 3,
+      "QTMY": 3,
+      "SIKEMAY": 3,
+      "YanJie": 3,
+      "Biutee": 3,
+      "PRETTY FRANK": 3,
+      "Vitamasques": 3,
+      "OGANA CELL": 2,
+      "Amtidy": 2
+    },
+    "tail_n_categories": 566,
+    "tail_n_items": 640
+  },
+  "user_train_to_val_overlap": {
+    "main_category": {
+      "n_val_positive_pairs": 815,
+      "per_pair_match_rate": 0.9484662576687116,
+      "per_user_match_rate_mean": 0.9484662576687116,
+      "per_user_match_rate_median": 1.0,
+      "n_users_with_val_positive": 815
+    },
+    "store": {
+      "n_val_positive_pairs": 815,
+      "per_pair_match_rate": 0.04294478527607362,
+      "per_user_match_rate_mean": 0.04294478527607362,
+      "per_user_match_rate_median": 0.0,
+      "n_users_with_val_positive": 815
+    }
+  }
+}

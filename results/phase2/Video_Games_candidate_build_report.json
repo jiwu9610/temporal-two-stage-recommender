@@ -1,0 +1,27 @@
+{
+  "category": "Video_Games",
+  "built_utc": "2026-04-27T07:41:16.009387+00:00",
+  "elapsed_seconds": 509.39,
+  "top_k": 100,
+  "two_tower_variant": "metadata_and_ids",
+  "rule_weights": {
+    "w_store": 0.5,
+    "w_cat": 0.5,
+    "w_pop": 1.0
+  },
+  "candidate_pool_size": 17169,
+  "n_eval_users": 77923,
+  "n_rows_total": 37898994,
+  "n_rows_val": 18949497,
+  "n_rows_test": 18949497,
+  "positive_rate_val": 0.0010521123594995688,
+  "positive_rate_test": 0.0008546928712672426,
+  "per_user_candidates_mean": 243.18233384238286,
+  "per_user_candidates_median": 248.0,
+  "source_overlap": {
+    "n_only_pop": 4769632,
+    "n_only_rule": 4910290,
+    "n_only_tt": 5520058,
+    "n_all_three": 677886
+  }
+}

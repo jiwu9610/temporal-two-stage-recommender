@@ -1,0 +1,107 @@
+# Phase 0 data-layer preprocessing config.
+#
+# Two named profiles. Pick at the CLI:
+#   python -m scripts.data.preprocessing_pipeline --category Video_Games --profile default
+#   python -m scripts.data.preprocessing_pipeline --category Video_Games --profile strict
+#
+# Decisions (spec-aligned, see memory/project_phase0_decisions.md):
+#   - label = (rating >= positive_threshold); observed-only. Soft negatives are sampled at
+#     train time downstream, never stored in the data layer.
+#   - canonical item id = parent_asin throughout (raw asin -> parent_asin map saved to disk).
+#   - filtering = iterative bipartite k-core. Item then user, repeat until no rows removed.
+#     Both thresholds configurable per-profile.
+#   - split = per-user chronological leave-last-two on the FILTERED universe.
+#     Requires every retained user to have >= 3 interactions (enforced by min_user>=3).
+#   - all user-feature aggregates and item review-stats aggregates are computed from
+#     the train split only (no val/test leakage). Catalog metadata can use full meta.
+#   - feature schemas are identical across all 4 categories (missing source columns
+#     filled with 0 / "Unknown" / missing_flag=1 so column set is invariant).
+
+categories:
+  - All_Beauty
+  - Video_Games
+  - Books
+  - Electronics
+
+label:
+  # Project spec: positive iff observed rating >= 3. Hard negative iff observed rating < 3.
+  positive_threshold: 3.0
+
+profiles:
+  default:
+    # Minimum viable profile. min_user=3 is the hard floor for leave-last-two
+    # (each user needs >=1 train + 1 val + 1 test). min_item=5 is a moderate
+    # quality filter that doesn't decimate sparse categories like All_Beauty.
+    filter:
+      min_user_interactions: 3
+      min_item_interactions: 5
+      iterative: true
+      max_iterations: 50      # safety cap; convergence is usually <10 rounds
+      filter_order: [item, user]   # apply item threshold first each round, then user
+
+  strict:
+    # Higher-quality profile. Use when ranker / two-tower training needs richer
+    # per-user history. Will significantly shrink All_Beauty.
+    filter:
+      min_user_interactions: 5
+      min_item_interactions: 5
+      iterative: true
+      max_iterations: 50
+      filter_order: [item, user]
+
+split:
+  # Per-user chronological leave-last-two. Applied AFTER iterative filtering.
+  # For each user with N interactions in the filtered universe (N>=3 by construction):
+  #   train = first N-2 (chronological), val = N-1, test = N
+  strategy: per_user_leave_last_two
+
+# Where outputs land. Each category writes to data/processed/{category}/.
+output:
+  base_dir: data/processed
+  # Files written by the orchestrator:
+  #   canonical_item_map.parquet        original_asin -> parent_asin
+  #   interactions_clean.parquet        post cleanup + canonicalization (pre-filter)
+  #   interactions_filtered.parquet     post iterative k-core (the universe split is on)
+  #   train.parquet, val.parquet, test.parquet
+  #   user_features.parquet             explicit user_id col + train-only aggregates
+  #   item_features.parquet             explicit parent_asin col + metadata + train-only review aggregates
+  #   item_text_embeddings.npz          aligned to canonical parent_asin (verified/rebuilt)
+  #   filtering_report.json             per-iteration n_users / n_items / n_interactions
+  #   split_manifest.json               per-split counts, label dist, ts ranges, train-catalog coverage
+  #   text_alignment_report.json        BERT key alignment status
+  #   pipeline_run.json                 profile used, timestamps, config snapshot
+
+# Schema conventions (enforced by feature_store.py and tests/test_data_invariants.py):
+#
+# user_features.parquet columns:
+#   user_id                                       (explicit, also set as index)
+#   n_reviews_train, avg_rating_train, std_rating_train,
+#   n_unique_items_train, active_days_train,
+#   n_verified_train, verified_rate_train,
+#   avg_helpful_vote_train, total_helpful_votes_train
+#   -- all train-derived aggregates carry the _train suffix.
+#
+# item_features.parquet columns:
+#   parent_asin                                   (explicit, also set as index)
+#   main_category, store, price                   (catalog metadata; no _train suffix)
+#   average_rating, rating_number                 (catalog metadata)
+#   n_features, n_description, n_categories       (derived from list-length metadata)
+#   has_bought_together, missing_flag             (binary indicators)
+#   n_reviews_train, avg_rating_train,
+#   n_unique_reviewers_train                      (review aggregates from train only)
+#   in_filtered_universe                          (1 if item is in interactions_filtered)
+#   in_train_catalog                              (1 if item appears in train.parquet, any label)
+#   in_train_positive_catalog                     (1 if item appears in train with label==1)
+# -- the catalog-membership flags let downstream code (retrieval / ranker)
+#    explicitly choose its candidate universe without re-deriving it.
+#
+# split_manifest.json must include:
+#   per-split: n_rows, n_users, n_items, label_positive_rate, ts_min, ts_max
+#   n_val_positive_users, n_test_positive_users
+#   n_val_positive_items, n_test_positive_items
+#   val_positive_items_in_train_catalog_rate
+#   test_positive_items_in_train_catalog_rate
+# The "train catalog" is the set of distinct parent_asin values in train.parquet
+# (full train, not train-positives-only). The coverage rate is the fraction of
+# positive items in val/test that also appear in the train catalog -- crucial for
+# popularity / item-id retrieval which cannot retrieve unseen items.

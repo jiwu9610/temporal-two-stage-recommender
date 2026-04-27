@@ -1,0 +1,67 @@
+{
+  "category": "Books",
+  "n_items_in_train_catalog": 23285,
+  "n_train_positive_users": 32076,
+  "main_category": {
+    "n_unique": 8,
+    "max_share": 0.7706248657934293,
+    "entropy_bits": 0.9601597866033419,
+    "top_20": {
+      "Books": 17944,
+      "Buy a Kindle": 4159,
+      "Audible Audiobooks": 1161,
+      "Toys & Games": 8,
+      "": 7,
+      "Unknown": 3,
+      "Office Products": 2,
+      "Industrial & Scientific": 1
+    },
+    "tail_n_categories": 0,
+    "tail_n_items": 0
+  },
+  "store": {
+    "n_unique": 14550,
+    "max_share": 0.011380717199914108,
+    "entropy_bits": 13.181745689274019,
+    "top_20": {
+      "Unknown": 265,
+      "DK (Author)": 86,
+      "Dr. Seuss (Author)": 57,
+      "Stephen King (Author)": 57,
+      "Peter Pauper Press (Author)": 54,
+      "Roger Priddy (Author)": 52,
+      "Amanda M. Lee (Author)   Format: Kindle Edition": 50,
+      "America's Test Kitchen (Editor)": 48,
+      "Jade Summer (Author)": 44,
+      "John Sandford (Author)   Format: Kindle Edition": 44,
+      "Mo Willems (Author)": 43,
+      "James Patterson (Author)": 40,
+      "James Dean (Author, Illustrator),  Kimberly Dean (Author)": 38,
+      "Dean Koontz (Author)": 37,
+      "John Grisham (Author)": 37,
+      "Inc. BarCharts (Author)": 36,
+      "Michael Connelly (Author)   Format: Kindle Edition": 34,
+      "Marty Noble (Author)": 32,
+      "Michael Connelly (Author)": 31,
+      "Lee Child (Author)": 31
+    },
+    "tail_n_categories": 14530,
+    "tail_n_items": 22169
+  },
+  "user_train_to_val_overlap": {
+    "main_category": {
+      "n_val_positive_pairs": 30848,
+      "per_pair_match_rate": 0.846667531120332,
+      "per_user_match_rate_mean": 0.846667531120332,
+      "per_user_match_rate_median": 1.0,
+      "n_users_with_val_positive": 30848
+    },
+    "store": {
+      "n_val_positive_pairs": 30848,
+      "per_pair_match_rate": 0.09115663900414937,
+      "per_user_match_rate_mean": 0.09115663900414937,
+      "per_user_match_rate_median": 0.0,
+      "n_users_with_val_positive": 30848
+    }
+  }
+}

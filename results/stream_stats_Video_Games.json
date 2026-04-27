@@ -1,0 +1,32 @@
+{
+  "category": "Video_Games",
+  "total_reviews": 1000000,
+  "n_unique_items": 81952,
+  "n_unique_users": 448679,
+  "rating_hist": [
+    93823,
+    48940,
+    77460,
+    139600,
+    640177
+  ],
+  "helpful_votes_hist": {
+    "0": 746812,
+    "1-5": 213168,
+    "6-20": 30875,
+    "21-100": 7920,
+    "100+": 1225
+  },
+  "item_review_percentiles": {
+    "P20": 1.0,
+    "P50": 2.0,
+    "P90": 20.0,
+    "P99": 178.49000000000524
+  },
+  "user_review_percentiles": {
+    "P20": 1.0,
+    "P50": 1.0,
+    "P90": 4.0,
+    "P99": 15.0
+  }
+}

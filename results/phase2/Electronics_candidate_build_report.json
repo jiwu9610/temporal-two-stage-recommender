@@ -1,0 +1,27 @@
+{
+  "category": "Electronics",
+  "built_utc": "2026-04-27T07:45:53.357965+00:00",
+  "elapsed_seconds": 511.73,
+  "top_k": 100,
+  "two_tower_variant": "metadata_and_ids",
+  "rule_weights": {
+    "w_store": 0.5,
+    "w_cat": 0.5,
+    "w_pop": 1.0
+  },
+  "candidate_pool_size": 29374,
+  "n_eval_users": 66157,
+  "n_rows_total": 28104710,
+  "n_rows_val": 14052355,
+  "n_rows_test": 14052355,
+  "positive_rate_val": 0.0007329020651698594,
+  "positive_rate_test": 0.000587374856385282,
+  "per_user_candidates_mean": 212.40919328264582,
+  "per_user_candidates_median": 217.0,
+  "source_overlap": {
+    "n_only_pop": 2087269,
+    "n_only_rule": 4975433,
+    "n_only_tt": 2169191,
+    "n_all_three": 974283
+  }
+}

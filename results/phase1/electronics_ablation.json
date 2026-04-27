@@ -1,0 +1,91 @@
+{
+  "category": "Electronics",
+  "split": "val",
+  "candidate_pool": {
+    "type": "in_train_catalog",
+    "size": 29374
+  },
+  "n_tuning_users": 5000,
+  "k_for_tuning": 100,
+  "variants": {
+    "A_store_maincat_pop": {
+      "best_weights": {
+        "store": 0.5,
+        "main_category": 0.5,
+        "w_pop": 1.0
+      },
+      "best_val_recall@100_tuning_subset": 0.0872,
+      "full_val_metrics": {
+        "Recall@10": 0.02874628431543976,
+        "Precision@10": 0.0028746284315439765,
+        "Recall@50": 0.0632453226088477,
+        "Precision@50": 0.001264906452176954,
+        "Recall@100": 0.08517223290785102,
+        "Precision@100": 0.0008517223290785104
+      }
+    },
+    "B_maincat_pop": {
+      "best_weights": {
+        "main_category": 0.5,
+        "w_pop": 1.0
+      },
+      "best_val_recall@100_tuning_subset": 0.0924,
+      "full_val_metrics": {
+        "Recall@10": 0.03220842804686134,
+        "Precision@10": 0.0032208428046861344,
+        "Recall@50": 0.06992481203007518,
+        "Precision@50": 0.0013984962406015037,
+        "Recall@100": 0.09363525091799266,
+        "Precision@100": 0.0009363525091799266
+      }
+    },
+    "C_deepercat_pop": {
+      "best_weights": {
+        "deeper_category": 0.5,
+        "w_pop": 1.0
+      },
+      "best_val_recall@100_tuning_subset": 0.0892,
+      "full_val_metrics": {
+        "Recall@10": 0.035478230459870606,
+        "Precision@10": 0.003547823045987061,
+        "Recall@50": 0.06623535583143907,
+        "Precision@50": 0.0013247071166287811,
+        "Recall@100": 0.08959608323133415,
+        "Precision@100": 0.0008959608323133414
+      }
+    }
+  },
+  "elapsed_seconds": 2024.81,
+  "test_eval": {
+    "B_maincat_pop": {
+      "best_weights_from_val": {
+        "main_category": 0.5,
+        "w_pop": 1.0
+      },
+      "test_metrics": {
+        "Recall@10": 0.023291730268474455,
+        "Precision@10": 0.002329173026847445,
+        "Recall@50": 0.05425159378647751,
+        "Precision@50": 0.0010850318757295503,
+        "Recall@100": 0.07431085570620455,
+        "Precision@100": 0.0007431085570620454
+      }
+    },
+    "C_deepercat_pop": {
+      "best_weights_from_val": {
+        "deeper_category": 0.5,
+        "w_pop": 1.0
+      },
+      "test_metrics": {
+        "Recall@10": 0.025105504175271617,
+        "Precision@10": 0.002510550417527162,
+        "Recall@50": 0.048271527341294786,
+        "Precision@50": 0.0009654305468258957,
+        "Recall@100": 0.06994702343539552,
+        "Precision@100": 0.0006994702343539553
+      }
+    },
+    "note": "Only B and C are evaluated on test, with weights chosen on val. Variant A's test number is the rule_based result in results/phase1/Electronics.json.",
+    "elapsed_seconds": 600.1
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "category": "All_Beauty",
+  "total_reviews": 701528,
+  "n_unique_items": 112565,
+  "n_unique_users": 631986,
+  "rating_hist": [
+    102080,
+    43034,
+    56307,
+    79381,
+    420726
+  ],
+  "helpful_votes_hist": {
+    "0": 514089,
+    "1-5": 165082,
+    "6-20": 18637,
+    "21-100": 3409,
+    "100+": 311
+  },
+  "item_review_percentiles": {
+    "P20": 1.0,
+    "P50": 2.0,
+    "P90": 11.0,
+    "P99": 73.0
+  },
+  "user_review_percentiles": {
+    "P20": 1.0,
+    "P50": 1.0,
+    "P90": 1.0,
+    "P99": 3.0
+  }
+}

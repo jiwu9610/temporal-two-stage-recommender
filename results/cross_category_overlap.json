@@ -1,0 +1,23 @@
+{
+  "category_user_counts": {
+    "All_Beauty": 631986,
+    "Video_Games": 448679,
+    "Books": 165531,
+    "Electronics": 185242
+  },
+  "cross_category_distribution": {
+    "1": 1107543,
+    "2": 118373,
+    "3": 25635,
+    "4": 2561
+  },
+  "overlap_matrix": {
+    "All_Beauty|Video_Games": 29266,
+    "All_Beauty|Books": 12667,
+    "All_Beauty|Electronics": 12218,
+    "Video_Games|Books": 28190,
+    "Video_Games|Electronics": 32324,
+    "Books|Electronics": 95979
+  },
+  "n_total_unique_users": 1254112
+}

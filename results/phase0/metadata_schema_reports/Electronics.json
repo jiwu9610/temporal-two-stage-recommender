@@ -1,0 +1,245 @@
+{
+  "category": "Electronics",
+  "raw_metadata_path": "/projects/PROJECT_ALLOC/R-project/data/raw/Electronics/metadata.parquet",
+  "raw_metadata_n_rows": 1610012,
+  "raw_metadata_n_columns": 16,
+  "raw_metadata_columns": [
+    "main_category",
+    "title",
+    "average_rating",
+    "rating_number",
+    "features",
+    "description",
+    "price",
+    "images",
+    "videos",
+    "store",
+    "categories",
+    "details",
+    "parent_asin",
+    "bought_together",
+    "subtitle",
+    "author"
+  ],
+  "columns_summary": {
+    "main_category": {
+      "dtype": "object",
+      "n": 1610012,
+      "null_count": 106334,
+      "null_rate": 0.06604547046854309,
+      "kind": "scalar_object"
+    },
+    "title": {
+      "dtype": "object",
+      "n": 1610012,
+      "null_count": 0,
+      "null_rate": 0.0,
+      "kind": "scalar_object"
+    },
+    "average_rating": {
+      "dtype": "float64",
+      "n": 1610012,
+      "null_count": 0,
+      "null_rate": 0.0,
+      "kind": "scalar"
+    },
+    "rating_number": {
+      "dtype": "int64",
+      "n": 1610012,
+      "null_count": 0,
+      "null_rate": 0.0,
+      "kind": "scalar"
+    },
+    "features": {
+      "dtype": "object",
+      "n": 1610012,
+      "null_count": 0,
+      "null_rate": 0.0,
+      "kind": "list",
+      "non_list_count": 0,
+      "empty_list_count": 423041,
+      "nonempty_list_count": 1186971,
+      "nonempty_list_rate": 0.737243573339826,
+      "mean_len_when_present": 3.443012225995831,
+      "max_len": 63
+    },
+    "description": {
+      "dtype": "object",
+      "n": 1610012,
+      "null_count": 0,
+      "null_rate": 0.0,
+      "kind": "list",
+      "non_list_count": 0,
+      "empty_list_count": 682748,
+      "nonempty_list_count": 927264,
+      "nonempty_list_rate": 0.5759360799795281,
+      "mean_len_when_present": 2.982226840545288,
+      "max_len": 517
+    },
+    "price": {
+      "dtype": "object",
+      "n": 1610012,
+      "null_count": 0,
+      "null_rate": 0.0,
+      "kind": "scalar_object"
+    },
+    "images": {
+      "dtype": "object",
+      "n": 1610012,
+      "null_count": 0,
+      "null_rate": 0.0,
+      "kind": "scalar_object"
+    },
+    "videos": {
+      "dtype": "object",
+      "n": 1610012,
+      "null_count": 0,
+      "null_rate": 0.0,
+      "kind": "scalar_object"
+    },
+    "store": {
+      "dtype": "object",
+      "n": 1610012,
+      "null_count": 9520,
+      "null_rate": 0.005912999406215606,
+      "kind": "scalar_object"
+    },
+    "categories": {
+      "dtype": "object",
+      "n": 1610012,
+      "null_count": 0,
+      "null_rate": 0.0,
+      "kind": "list",
+      "non_list_count": 0,
+      "empty_list_count": 128442,
+      "nonempty_list_count": 1481570,
+      "nonempty_list_rate": 0.9202229548599637,
+      "mean_len_when_present": 4.050261116066216,
+      "max_len": 7
+    },
+    "details": {
+      "dtype": "object",
+      "n": 1610012,
+      "null_count": 0,
+      "null_rate": 0.0,
+      "kind": "scalar_object"
+    },
+    "parent_asin": {
+      "dtype": "object",
+      "n": 1610012,
+      "null_count": 0,
+      "null_rate": 0.0,
+      "kind": "scalar_object"
+    },
+    "bought_together": {
+      "dtype": "object",
+      "n": 1610012,
+      "null_count": 1610012,
+      "null_rate": 1.0,
+      "kind": "scalar_object"
+    },
+    "subtitle": {
+      "dtype": "object",
+      "n": 1610012,
+      "null_count": 1609161,
+      "null_rate": 0.9994714325110621,
+      "kind": "scalar_object"
+    },
+    "author": {
+      "dtype": "object",
+      "n": 1610012,
+      "null_count": 1609536,
+      "null_rate": 0.9997043500296893,
+      "kind": "scalar_object"
+    }
+  },
+  "canonical_view": {
+    "n_canonical_rows": 1551350,
+    "expected_n_canonical_rows": 1551350,
+    "match": true,
+    "list_columns_in_canonical_rows": {
+      "features": {
+        "dtype": "object",
+        "n": 1551350,
+        "null_count": 0,
+        "null_rate": 0.0,
+        "kind": "list",
+        "non_list_count": 0,
+        "empty_list_count": 406638,
+        "nonempty_list_count": 1144712,
+        "nonempty_list_rate": 0.737881200244948,
+        "mean_len_when_present": 3.4462429496889806,
+        "max_len": 63
+      },
+      "description": {
+        "dtype": "object",
+        "n": 1551350,
+        "null_count": 0,
+        "null_rate": 0.0,
+        "kind": "list",
+        "non_list_count": 0,
+        "empty_list_count": 656880,
+        "nonempty_list_count": 894470,
+        "nonempty_list_rate": 0.5765752409191994,
+        "mean_len_when_present": 2.9710046088890323,
+        "max_len": 517
+      },
+      "categories": {
+        "dtype": "object",
+        "n": 1551350,
+        "null_count": 0,
+        "null_rate": 0.0,
+        "kind": "list",
+        "non_list_count": 0,
+        "empty_list_count": 124729,
+        "nonempty_list_count": 1426621,
+        "nonempty_list_rate": 0.9195997034840623,
+        "mean_len_when_present": 4.055751442292197,
+        "max_len": 7
+      },
+      "bought_together": {
+        "dtype": "object",
+        "n": 1551350,
+        "null_count": 1551350,
+        "null_rate": 1.0,
+        "kind": "scalar_object"
+      }
+    }
+  },
+  "item_features_summary": {
+    "path": "/projects/PROJECT_ALLOC/R-project/data/processed/Electronics/item_features.parquet",
+    "n_rows": 1551350,
+    "feature_status": {
+      "n_features": {
+        "n_nonzero": 1144712,
+        "n_total": 1551350,
+        "nonzero_rate": 0.737881200244948,
+        "is_populated": true
+      },
+      "n_description": {
+        "n_nonzero": 894470,
+        "n_total": 1551350,
+        "nonzero_rate": 0.5765752409191994,
+        "is_populated": true
+      },
+      "n_categories": {
+        "n_nonzero": 1426621,
+        "n_total": 1551350,
+        "nonzero_rate": 0.9195997034840623,
+        "is_populated": true
+      },
+      "has_bought_together": {
+        "n_nonzero": 0,
+        "n_total": 1551350,
+        "nonzero_rate": 0.0,
+        "is_populated": false
+      },
+      "missing_flag": {
+        "n_nonzero": 1063892,
+        "n_total": 1551350,
+        "nonzero_rate": 0.6857846391852258,
+        "is_populated": true
+      }
+    }
+  }
+}

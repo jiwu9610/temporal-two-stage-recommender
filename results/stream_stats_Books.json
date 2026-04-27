@@ -1,0 +1,32 @@
+{
+  "category": "Books",
+  "total_reviews": 1000000,
+  "n_unique_items": 504564,
+  "n_unique_users": 165531,
+  "rating_hist": [
+    33956,
+    35812,
+    79114,
+    170464,
+    680654
+  ],
+  "helpful_votes_hist": {
+    "0": 649204,
+    "1-5": 285512,
+    "6-20": 50525,
+    "21-100": 13206,
+    "100+": 1552
+  },
+  "item_review_percentiles": {
+    "P20": 1.0,
+    "P50": 1.0,
+    "P90": 3.0,
+    "P99": 14.0
+  },
+  "user_review_percentiles": {
+    "P20": 1.0,
+    "P50": 2.0,
+    "P90": 11.0,
+    "P99": 59.0
+  }
+}

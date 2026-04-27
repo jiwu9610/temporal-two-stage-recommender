@@ -1,0 +1,79 @@
+{
+  "category": "Electronics",
+  "n_items_in_train_catalog": 29374,
+  "n_train_positive_users": 63055,
+  "main_category": {
+    "n_unique": 31,
+    "max_share": 0.27749029754204396,
+    "entropy_bits": 2.9847852494395304,
+    "top_20": {
+      "All Electronics": 8151,
+      "Computers": 8018,
+      "Camera & Photo": 3232,
+      "Cell Phones & Accessories": 2832,
+      "Home Audio & Theater": 2714,
+      "Amazon Devices": 834,
+      "Industrial & Scientific": 550,
+      "Tools & Home Improvement": 517,
+      "Unknown": 453,
+      "Office Products": 425,
+      "Car Electronics": 313,
+      "Amazon Home": 249,
+      "Apple Products": 181,
+      "Musical Instruments": 165,
+      "Sports & Outdoors": 162,
+      "AMAZON FASHION": 158,
+      "Automotive": 136,
+      "Health & Personal Care": 79,
+      "Toys & Games": 35,
+      "Portable Audio & Accessories": 30
+    },
+    "tail_n_categories": 11,
+    "tail_n_items": 140
+  },
+  "store": {
+    "n_unique": 6990,
+    "max_share": 0.017362293184448832,
+    "entropy_bits": 10.777007446389828,
+    "top_20": {
+      "SAMSUNG": 510,
+      "Sony": 486,
+      "Amazon": 410,
+      "Amazon Basics": 405,
+      "Logitech": 357,
+      "Amazon Renewed": 280,
+      "Apple": 272,
+      "SanDisk": 261,
+      "ASUS": 246,
+      "Canon": 235,
+      "Fintie": 210,
+      "Garmin": 209,
+      "Anker": 195,
+      "Belkin": 177,
+      "SquareTrade": 161,
+      "NETGEAR": 161,
+      "Nikon": 160,
+      "TP-Link": 158,
+      "Cable Matters": 153,
+      "Microsoft": 151
+    },
+    "tail_n_categories": 6970,
+    "tail_n_items": 24177
+  },
+  "user_train_to_val_overlap": {
+    "main_category": {
+      "n_val_positive_pairs": 57190,
+      "per_pair_match_rate": 0.4689106487148103,
+      "per_user_match_rate_mean": 0.4689106487148103,
+      "per_user_match_rate_median": 0.0,
+      "n_users_with_val_positive": 57190
+    },
+    "store": {
+      "n_val_positive_pairs": 57190,
+      "per_pair_match_rate": 0.0989858366847351,
+      "per_user_match_rate_mean": 0.0989858366847351,
+      "per_user_match_rate_median": 0.0,
+      "n_users_with_val_positive": 57190
+    }
+  }
+}

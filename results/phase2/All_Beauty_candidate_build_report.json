@@ -1,0 +1,27 @@
+{
+  "category": "All_Beauty",
+  "built_utc": "2026-04-27T07:35:31.219729+00:00",
+  "elapsed_seconds": 4.09,
+  "top_k": 100,
+  "two_tower_variant": "metadata_and_ids",
+  "rule_weights": {
+    "w_store": 0.5,
+    "w_cat": 0.5,
+    "w_pop": 0.0
+  },
+  "candidate_pool_size": 744,
+  "n_eval_users": 871,
+  "n_rows_total": 458580,
+  "n_rows_val": 229290,
+  "n_rows_test": 229290,
+  "positive_rate_val": 0.0013214706267172577,
+  "positive_rate_test": 0.0010554319856949715,
+  "per_user_candidates_mean": 263.2491389207807,
+  "per_user_candidates_median": 264.0,
+  "source_overlap": {
+    "n_only_pop": 65911,
+    "n_only_rule": 66849,
+    "n_only_tt": 65588,
+    "n_all_three": 1068
+  }
+}

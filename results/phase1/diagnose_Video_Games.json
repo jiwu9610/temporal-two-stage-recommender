@@ -1,0 +1,79 @@
+{
+  "category": "Video_Games",
+  "n_items_in_train_catalog": 17169,
+  "n_train_positive_users": 73288,
+  "main_category": {
+    "n_unique": 28,
+    "max_share": 0.6689964470848623,
+    "entropy_bits": 1.6365017007254696,
+    "top_20": {
+      "Video Games": 11486,
+      "Computers": 2545,
+      "All Electronics": 1916,
+      "Unknown": 388,
+      "Cell Phones & Accessories": 289,
+      "Toys & Games": 129,
+      "Software": 107,
+      "Industrial & Scientific": 80,
+      "Home Audio & Theater": 43,
+      "Amazon Home": 36,
+      "Tools & Home Improvement": 33,
+      "Office Products": 25,
+      "Movies & TV": 21,
+      "Sports & Outdoors": 17,
+      "Camera & Photo": 15,
+      "Books": 7,
+      "Musical Instruments": 6,
+      "Portable Audio & Accessories": 4,
+      "Buy a Kindle": 4,
+      "All Beauty": 4
+    },
+    "tail_n_categories": 8,
+    "tail_n_items": 14
+  },
+  "store": {
+    "n_unique": 2927,
+    "max_share": 0.06517560719902149,
+    "entropy_bits": 8.785228820773227,
+    "top_20": {
+      "Nintendo": 1119,
+      "Electronic Arts": 640,
+      "PlayStation": 461,
+      "Microsoft": 444,
+      "Ubisoft": 440,
+      "ACTIVISION": 415,
+      "Sony": 279,
+      "Square Enix": 268,
+      "BANDAI NAMCO Entertainment": 244,
+      "SEGA": 236,
+      "Capcom": 205,
+      "2K": 187,
+      "Razer": 185,
+      "Konami": 182,
+      "PDP": 178,
+      "THQ": 174,
+      "Xbox": 158,
+      "Amazon Renewed": 149,
+      "Atari": 145,
+      "HORI": 141
+    },
+    "tail_n_categories": 2907,
+    "tail_n_items": 10919
+  },
+  "user_train_to_val_overlap": {
+    "main_category": {
+      "n_val_positive_pairs": 68727,
+      "per_pair_match_rate": 0.6968876860622463,
+      "per_user_match_rate_mean": 0.6968876860622463,
+      "per_user_match_rate_median": 1.0,
+      "n_users_with_val_positive": 68727
+    },
+    "store": {
+      "n_val_positive_pairs": 68727,
+      "per_pair_match_rate": 0.19749152443726628,
+      "per_user_match_rate_mean": 0.19749152443726628,
+      "per_user_match_rate_median": 0.0,
+      "n_users_with_val_positive": 68727
+    }
+  }
+}
