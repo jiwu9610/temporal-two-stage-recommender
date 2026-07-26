@@ -55,6 +55,52 @@ split:
   #   train = first N-2 (chronological), val = N-1, test = N
   strategy: per_user_leave_last_two
 
+# ---------------------------------------------------------------------------
+# Mode 2: global_temporal_snapshots (scripts.data.temporal_pipeline)
+# Coexists with the leave-last-two pipeline above; writes ONLY to
+# data/processed/{category}/temporal/. See temporal_split.py for the protocol.
+# ---------------------------------------------------------------------------
+temporal_snapshots:
+  # Global calendar cutoffs shared by every user.
+  #   history(val)  = ts <  train_end     labels(val)  = [train_end, val_end)
+  #   history(test) = ts <  val_end       labels(test) = [val_end, test_end)
+  # Resolution order: explicit per-category dates below win; otherwise cutoffs
+  # come from timestamp quantiles of interactions_clean (recorded in
+  # snapshot_manifest.json). test_end defaults to max timestamp + 1ms.
+  cutoff_quantiles:
+    train_end: 0.80
+    val_end: 0.90
+  cutoffs: {}
+    # Example explicit override (ISO dates, interpreted as UTC midnight):
+    # Video_Games: {train_end: "2020-05-05", val_end: "2021-08-12"}
+
+  # History-only eligibility (replaces full-timeline k-core, which uses future
+  # events to decide who survives). Nothing is dropped -- these thresholds
+  # only define the candidate pool and the warm/cold reporting split.
+  eligibility:
+    min_item_history_interactions: 5   # candidate pool membership
+    warm_user_min_history: 3           # warm vs cold user reporting threshold
+
+  features:
+    recent_days: 30                    # window for interactions_last_30d etc.
+
+  # Three-snapshot walk-forward protocol for the temporal ranker
+  # (scripts.data.temporal_ranker_pipeline). Four global cutoffs T0<T1<T2<T3:
+  #   ranker_train     history < T0, labels [T0, T1)   -- ranker fitting
+  #   model_selection  history < T1, labels [T1, T2)   -- early stop / arch / hp
+  #   test             history < T2, labels [T2, T3)   -- final eval ONLY
+  # t1/t2/t3 deliberately equal the 2-snapshot train_end/val_end/test_end
+  # defaults so the final-test snapshot stays comparable with the
+  # phase1_temporal baseline. Explicit per-category dates win over quantiles.
+  three_snapshot:
+    cutoff_quantiles:
+      t0: 0.70
+      t1: 0.80
+      t2: 0.90
+    cutoffs: {}
+      # Example:
+      # Video_Games: {t0: "2020-01-01", t1: "2021-01-13", t2: "2022-01-31"}
+
 # Where outputs land. Each category writes to data/processed/{category}/.
 output:
   base_dir: data/processed

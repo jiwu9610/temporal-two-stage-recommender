@@ -1,0 +1,223 @@
+{
+  "category": "Books",
+  "protocol": "three_snapshot_walk_forward",
+  "started_utc": "2026-07-26T16:52:23.875629+00:00",
+  "elapsed_seconds": 310.37,
+  "device": "cuda",
+  "provenance": {
+    "training_data": "candidates_ranker_train.parquet (labels T0->T1)",
+    "selection_data": "candidates_model_selection.parquet (labels T1->T2)",
+    "refit_data": "ranker_train + model_selection candidates",
+    "refit_fixed_epochs": 4,
+    "no_early_stopping_on_refit": true,
+    "test_labels_used_for_fitting_or_tuning": false
+  },
+  "selection": {
+    "grid": [
+      {
+        "arch": "mlp",
+        "lr": 0.001,
+        "best_selection_recall@100": 0.04745866503368034,
+        "best_epoch": 4,
+        "n_epochs_run": 7
+      },
+      {
+        "arch": "mlp",
+        "lr": 0.0003,
+        "best_selection_recall@100": 0.04718031509213383,
+        "best_epoch": 8,
+        "n_epochs_run": 11
+      },
+      {
+        "arch": "deep_cross",
+        "lr": 0.001,
+        "best_selection_recall@100": 0.04692980014474197,
+        "best_epoch": 4,
+        "n_epochs_run": 7
+      },
+      {
+        "arch": "deep_cross",
+        "lr": 0.0003,
+        "best_selection_recall@100": 0.047263820074597784,
+        "best_epoch": 7,
+        "n_epochs_run": 10
+      }
+    ],
+    "chosen": {
+      "arch": "mlp",
+      "lr": 0.001,
+      "best_selection_recall@100": 0.04745866503368034,
+      "best_epoch": 4,
+      "n_epochs_run": 7
+    },
+    "metric": "model_selection Recall@100"
+  },
+  "refit": {
+    "n_rows": 10282628,
+    "pos_weight": 2969.1409589832465,
+    "log": [
+      {
+        "epoch": 1,
+        "train_loss": 0.996200127605773
+      },
+      {
+        "epoch": 2,
+        "train_loss": 0.8971607483952821
+      },
+      {
+        "epoch": 3,
+        "train_loss": 0.8734662333306844
+      },
+      {
+        "epoch": 4,
+        "train_loss": 0.8603423534899722
+      }
+    ]
+  },
+  "final_test": {
+    "n_groundtruth_users": 35258,
+    "overall": {
+      "Recall@10": 0.024334902717113846,
+      "Precision@10": 0.002433490271711385,
+      "Recall@50": 0.03377956775767202,
+      "Precision@50": 0.0006755913551534404,
+      "Recall@100": 0.037948834307107604,
+      "Precision@100": 0.00037948834307107603
+    },
+    "candidate_ceiling_retrieved_coverage": 0.039962561688127514,
+    "conditional_given_retrieved": {
+      "n_users_retrieved": 1409,
+      "Recall@10": 0.6089425124201562,
+      "Precision@10": 0.06089425124201561,
+      "Recall@50": 0.8452803406671399,
+      "Precision@50": 0.016905606813342796,
+      "Recall@100": 0.9496096522356281,
+      "Precision@100": 0.009496096522356279
+    },
+    "history_cohorts": {
+      "0": {
+        "n_users": 11234,
+        "Recall@10": 0.05073882855616877,
+        "Precision@10": 0.005073882855616878,
+        "Recall@50": 0.06097560975609756,
+        "Precision@50": 0.0012195121951219512,
+        "Recall@100": 0.06418016734911874,
+        "Precision@100": 0.0006418016734911875
+      },
+      "1": {
+        "n_users": 4981,
+        "Recall@10": 0.019674764103593655,
+        "Precision@10": 0.0019674764103593655,
+        "Recall@50": 0.02810680586227665,
+        "Precision@50": 0.000562136117245533,
+        "Recall@100": 0.03252358964063441,
+        "Precision@100": 0.0003252358964063441
+      },
+      "2": {
+        "n_users": 3220,
+        "Recall@10": 0.016149068322981366,
+        "Precision@10": 0.001614906832298137,
+        "Recall@50": 0.02670807453416149,
+        "Precision@50": 0.0005341614906832298,
+        "Recall@100": 0.031987577639751553,
+        "Precision@100": 0.0003198757763975155
+      },
+      "3+": {
+        "n_users": 15823,
+        "Recall@10": 0.008721481387853126,
+        "Precision@10": 0.0008721481387853126,
+        "Recall@50": 0.017695759337673006,
+        "Precision@50": 0.00035391518675346014,
+        "Recall@100": 0.02224609745307464,
+        "Precision@100": 0.0002224609745307464
+      }
+    },
+    "target_item_cohorts": {
+      "warm_target_item": {
+        "n_users": 14694,
+        "Recall@10": 0.05839118007349939,
+        "Recall@50": 0.08105349122090649,
+        "Recall@100": 0.09105757452021233
+      },
+      "cold_target_item": {
+        "n_users": 20564,
+        "Recall@10": 0.0,
+        "Recall@50": 0.0,
+        "Recall@100": 0.0
+      }
+    }
+  },
+  "retrieval_only_on_test_candidates": {
+    "two_tower": {
+      "Recall@10": 0.012933235010494072,
+      "Precision@10": 0.0012933235010494073,
+      "Recall@50": 0.026490441885529525,
+      "Precision@50": 0.0005298088377105905,
+      "Recall@100": 0.03485733734187986,
+      "Precision@100": 0.0003485733734187986
+    },
+    "popularity": {
+      "Recall@10": 0.02158375404163594,
+      "Precision@10": 0.0021583754041635942,
+      "Recall@50": 0.029099778773611664,
+      "Precision@50": 0.0005819955754722333,
+      "Recall@100": 0.0336661183277554,
+      "Precision@100": 0.00033666118327755403
+    },
+    "rule_based": {
+      "Recall@10": 0.020193998525157412,
+      "Precision@10": 0.002019399852515741,
+      "Recall@50": 0.028560893981507744,
+      "Precision@50": 0.0005712178796301549,
+      "Recall@100": 0.03508423620171309,
+      "Precision@100": 0.0003508423620171308
+    }
+  },
+  "config": {
+    "max_epochs": 20,
+    "batch_size": 8192,
+    "weight_decay": 1e-05,
+    "early_stopping_patience": 3,
+    "seed": 42,
+    "smoke": false,
+    "dense_features": [
+      "popularity_score",
+      "rule_score",
+      "two_tower_score",
+      "popularity_rank",
+      "rule_rank",
+      "two_tower_rank",
+      "best_rank",
+      "num_sources",
+      "source_popularity",
+      "source_rule",
+      "source_two_tower",
+      "user_n_reviews_hist",
+      "user_avg_rating_hist",
+      "user_std_rating_hist",
+      "user_n_unique_items_hist",
+      "user_active_days_hist",
+      "user_verified_rate_hist",
+      "days_since_last_interaction",
+      "interactions_last_30d",
+      "positives_last_30d",
+      "n_history_events",
+      "user_has_history",
+      "item_n_reviews_hist",
+      "item_n_positives_hist",
+      "item_avg_rating_hist",
+      "item_n_unique_reviewers_hist",
+      "n_features",
+      "n_description",
+      "n_categories",
+      "user_store_affinity",
+      "user_category_affinity",
+      "same_top_store",
+      "same_top_category"
+    ],
+    "categorical_features": [
+      "main_category",
+      "store"
+    ]
+  }
+}

@@ -1,0 +1,169 @@
+{
+  "category": "All_Beauty",
+  "built_utc": "2026-07-26T15:49:40.851103+00:00",
+  "elapsed_seconds": 475.39,
+  "snapshots": {
+    "ranker_train": {
+      "snapshot": "ranker_train",
+      "n_positive_eval_users": 50413,
+      "candidate_catalog_size": 18962,
+      "coverage": {
+        "historical_catalog": 0.655446015908595,
+        "eligible_pool": 0.4485152639200206,
+        "retrieved_union": 0.04411560510185865
+      },
+      "cold_users": 46913,
+      "cold_items_not_in_history": 17370,
+      "history_cohorts": {
+        "0": 46913,
+        "1": 2469,
+        "2": 506,
+        "3+": 525
+      },
+      "sources": {
+        "popularity": {
+          "Recall@10": 0.013369567373494932,
+          "Precision@10": 0.0013369567373494931,
+          "Recall@50": 0.03419752841528971,
+          "Precision@50": 0.0006839505683057941,
+          "Recall@100": 0.04233035129827624,
+          "Precision@100": 0.00042330351298276237
+        },
+        "rule": {
+          "Recall@10": 0.013548092753853172,
+          "Precision@10": 0.0013548092753853172,
+          "Recall@50": 0.03453474302263305,
+          "Precision@50": 0.000690694860452661,
+          "Recall@100": 0.04264772975224644,
+          "Precision@100": 0.00042647729752246443
+        },
+        "two_tower": {
+          "Recall@10": 0.00047606768095530917,
+          "Precision@10": 4.7606768095530916e-05,
+          "Recall@50": 0.0014480391962390653,
+          "Precision@50": 2.8960783924781308e-05,
+          "Recall@100": 0.002181976871045167,
+          "Precision@100": 2.181976871045167e-05
+        }
+      },
+      "rule_weights": {
+        "w_store": 0.5,
+        "w_cat": 0.5,
+        "w_pop": 0.5
+      },
+      "rule_tuning": null,
+      "n_rows": 5338829,
+      "n_positive_rows": 2224,
+      "top_k": 100,
+      "elapsed_seconds": 147.11
+    },
+    "model_selection": {
+      "snapshot": "model_selection",
+      "n_positive_eval_users": 47062,
+      "candidate_catalog_size": 21859,
+      "coverage": {
+        "historical_catalog": 0.6638901874123496,
+        "eligible_pool": 0.46304874420976583,
+        "retrieved_union": 0.04757553865114105
+      },
+      "cold_users": 43165,
+      "cold_items_not_in_history": 15818,
+      "history_cohorts": {
+        "0": 43165,
+        "1": 2746,
+        "2": 533,
+        "3+": 618
+      },
+      "sources": {
+        "popularity": {
+          "Recall@10": 0.013067867918915474,
+          "Precision@10": 0.0013067867918915472,
+          "Recall@50": 0.03503888487527092,
+          "Precision@50": 0.0007007776975054184,
+          "Recall@100": 0.04587565339339594,
+          "Precision@100": 0.00045875653393395943
+        },
+        "rule": {
+          "Recall@10": 0.013641579193404444,
+          "Precision@10": 0.0013641579193404444,
+          "Recall@50": 0.035676341846925336,
+          "Precision@50": 0.0007135268369385067,
+          "Recall@100": 0.0465768560622158,
+          "Precision@100": 0.000465768560622158
+        },
+        "two_tower": {
+          "Recall@10": 0.0005099655773235307,
+          "Precision@10": 5.099655773235306e-05,
+          "Recall@50": 0.001338659640474268,
+          "Precision@50": 2.677319280948536e-05,
+          "Recall@100": 0.001827376652075985,
+          "Precision@100": 1.827376652075985e-05
+        }
+      },
+      "rule_weights": {
+        "w_store": 0.5,
+        "w_cat": 0.5,
+        "w_pop": 0.5
+      },
+      "rule_tuning": null,
+      "n_rows": 5031314,
+      "n_positive_rows": 2239,
+      "top_k": 100,
+      "elapsed_seconds": 157.11
+    },
+    "test": {
+      "snapshot": "test",
+      "n_positive_eval_users": 48891,
+      "candidate_catalog_size": 24618,
+      "coverage": {
+        "historical_catalog": 0.6637008856435744,
+        "eligible_pool": 0.4896606737436338,
+        "retrieved_union": 0.06682211449960115
+      },
+      "cold_users": 45309,
+      "cold_items_not_in_history": 16442,
+      "history_cohorts": {
+        "0": 45309,
+        "1": 2610,
+        "2": 451,
+        "3+": 521
+      },
+      "sources": {
+        "popularity": {
+          "Recall@10": 0.016281115133664682,
+          "Precision@10": 0.0016281115133664683,
+          "Recall@50": 0.04755476468061606,
+          "Precision@50": 0.0009510952936123213,
+          "Recall@100": 0.0652880898324845,
+          "Precision@100": 0.0006528808983248451
+        },
+        "rule": {
+          "Recall@10": 0.01656746640485979,
+          "Precision@10": 0.001656746640485979,
+          "Recall@50": 0.047882023276267616,
+          "Precision@50": 0.0009576404655253523,
+          "Recall@100": 0.06534945081916917,
+          "Precision@100": 0.0006534945081916918
+        },
+        "two_tower": {
+          "Recall@10": 0.0005113415557055491,
+          "Precision@10": 5.113415557055491e-05,
+          "Recall@50": 0.001759014951627089,
+          "Precision@50": 3.5180299032541776e-05,
+          "Recall@100": 0.0025158004540713013,
+          "Precision@100": 2.5158004540713016e-05
+        }
+      },
+      "rule_weights": {
+        "w_store": 0.5,
+        "w_cat": 0.5,
+        "w_pop": 0.5
+      },
+      "rule_tuning": null,
+      "n_rows": 5216051,
+      "n_positive_rows": 3267,
+      "top_k": 100,
+      "elapsed_seconds": 170.58
+    }
+  }
+}

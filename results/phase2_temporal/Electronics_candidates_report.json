@@ -1,0 +1,177 @@
+{
+  "category": "Electronics",
+  "built_utc": "2026-07-26T16:50:06.891320+00:00",
+  "elapsed_seconds": 1713.72,
+  "snapshots": {
+    "ranker_train": {
+      "snapshot": "ranker_train",
+      "n_positive_eval_users": 43833,
+      "candidate_catalog_size": 25797,
+      "coverage": {
+        "historical_catalog": 0.6454954030068669,
+        "eligible_pool": 0.44290831108981815,
+        "retrieved_union": 0.095293500330801
+      },
+      "cold_users": 12536,
+      "cold_items_not_in_history": 15539,
+      "history_cohorts": {
+        "0": 12536,
+        "1": 6768,
+        "2": 4559,
+        "3+": 19970
+      },
+      "sources": {
+        "popularity": {
+          "Recall@10": 0.01961992106403851,
+          "Precision@10": 0.001961992106403851,
+          "Recall@50": 0.04257066593662309,
+          "Precision@50": 0.0008514133187324618,
+          "Recall@100": 0.07941505258595122,
+          "Precision@100": 0.0007941505258595123
+        },
+        "rule": {
+          "Recall@10": 0.01517121803207629,
+          "Precision@10": 0.001517121803207629,
+          "Recall@50": 0.03360481828759154,
+          "Precision@50": 0.0006720963657518308,
+          "Recall@100": 0.05913352953254397,
+          "Precision@100": 0.0005913352953254397
+        },
+        "two_tower": {
+          "Recall@10": 0.010289051627769032,
+          "Precision@10": 0.0010289051627769032,
+          "Recall@50": 0.03353637670248443,
+          "Precision@50": 0.0006707275340496886,
+          "Recall@100": 0.04567335112814546,
+          "Precision@100": 0.0004567335112814546
+        }
+      },
+      "rule_weights": {
+        "w_store": 0.5,
+        "w_cat": 0.5,
+        "w_pop": 1.0
+      },
+      "rule_tuning": {
+        "best_weights": {
+          "w_store": 0.5,
+          "w_cat": 0.5,
+          "w_pop": 1.0
+        },
+        "best_recall": 0.0608,
+        "n_tuning_users": 5000
+      },
+      "n_rows": 7827015,
+      "n_positive_rows": 4177,
+      "top_k": 100,
+      "elapsed_seconds": 933.93
+    },
+    "model_selection": {
+      "snapshot": "model_selection",
+      "n_positive_eval_users": 42406,
+      "candidate_catalog_size": 29304,
+      "coverage": {
+        "historical_catalog": 0.6614865820874405,
+        "eligible_pool": 0.4574588501627128,
+        "retrieved_union": 0.09034098948262038
+      },
+      "cold_users": 10392,
+      "cold_items_not_in_history": 14355,
+      "history_cohorts": {
+        "0": 10392,
+        "1": 6109,
+        "2": 4550,
+        "3+": 21355
+      },
+      "sources": {
+        "popularity": {
+          "Recall@10": 0.011484223930575861,
+          "Precision@10": 0.0011484223930575861,
+          "Recall@50": 0.05713814082912795,
+          "Precision@50": 0.001142762816582559,
+          "Recall@100": 0.07432910437202282,
+          "Precision@100": 0.0007432910437202283
+        },
+        "rule": {
+          "Recall@10": 0.010635287459321794,
+          "Precision@10": 0.0010635287459321793,
+          "Recall@50": 0.041574305522803376,
+          "Precision@50": 0.0008314861104560676,
+          "Recall@100": 0.05461491298401169,
+          "Precision@100": 0.000546149129840117
+        },
+        "two_tower": {
+          "Recall@10": 0.014007451775692119,
+          "Precision@10": 0.0014007451775692118,
+          "Recall@50": 0.02909965570909777,
+          "Precision@50": 0.0005819931141819554,
+          "Recall@100": 0.04218742630759798,
+          "Precision@100": 0.0004218742630759798
+        }
+      },
+      "rule_weights": {
+        "w_store": 0.5,
+        "w_cat": 0.5,
+        "w_pop": 1.0
+      },
+      "rule_tuning": null,
+      "n_rows": 7857379,
+      "n_positive_rows": 3831,
+      "top_k": 100,
+      "elapsed_seconds": 380.86
+    },
+    "test": {
+      "snapshot": "test",
+      "n_positive_eval_users": 37721,
+      "candidate_catalog_size": 32690,
+      "coverage": {
+        "historical_catalog": 0.6477293815116248,
+        "eligible_pool": 0.4373691047427163,
+        "retrieved_union": 0.06471196415789614
+      },
+      "cold_users": 7354,
+      "cold_items_not_in_history": 13288,
+      "history_cohorts": {
+        "0": 7354,
+        "1": 5208,
+        "2": 3815,
+        "3+": 21344
+      },
+      "sources": {
+        "popularity": {
+          "Recall@10": 0.006627607963733729,
+          "Precision@10": 0.0006627607963733729,
+          "Recall@50": 0.03912939741788394,
+          "Precision@50": 0.0007825879483576788,
+          "Recall@100": 0.04994565361469738,
+          "Precision@100": 0.0004994565361469738
+        },
+        "rule": {
+          "Recall@10": 0.006256461917764641,
+          "Precision@10": 0.0006256461917764641,
+          "Recall@50": 0.02780944301582673,
+          "Precision@50": 0.0005561888603165346,
+          "Recall@100": 0.03653137509610031,
+          "Precision@100": 0.00036531375096100316
+        },
+        "two_tower": {
+          "Recall@10": 0.004427242119774131,
+          "Precision@10": 0.00044272421197741313,
+          "Recall@50": 0.021340897643222608,
+          "Precision@50": 0.0004268179528644522,
+          "Recall@100": 0.031945070385196575,
+          "Precision@100": 0.00031945070385196574
+        }
+      },
+      "rule_weights": {
+        "w_store": 0.5,
+        "w_cat": 0.5,
+        "w_pop": 1.0
+      },
+      "rule_tuning": null,
+      "n_rows": 7229431,
+      "n_positive_rows": 2441,
+      "top_k": 100,
+      "elapsed_seconds": 397.79
+    }
+  }
+}
