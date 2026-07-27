@@ -143,10 +143,28 @@ def build_snapshot_candidates(
     chunk_users: int = 8000,
     processed_dir: Path = PROCESSED_DIR,
     require_two_tower: bool = True,
+    min_item_history: Optional[int] = None,
+    extra_sources: Optional[List[dict]] = None,
+    tt_k: Optional[int] = None,
+    out_dir: Optional[Path] = None,
 ) -> Dict:
-    """Build candidates_{snapshot}.parquet + per-source metrics for ONE snapshot."""
+    """Build candidates_{snapshot}.parquet + per-source metrics for ONE snapshot.
+
+    Phase 3A extensions (all default-off; defaults reproduce the frozen
+    baseline byte-for-byte):
+      min_item_history  override the eligibility threshold (None = the
+                        item_features in_eligible_pool flag, i.e. threshold 5)
+      extra_sources     additional point-in-time sources, each
+                        {"name": ..., "type": "windowed_pop"|"decayed_pop"|
+                         "covis", ...params}; contributes candidates plus
+                        source_{name}/{name}_rank/{name}_score columns
+      tt_k              read two_tower_predictions_{snap}_k{tt_k}.parquet
+                        (generated via infer_snapshot_checkpoint if missing)
+      out_dir           variant output directory (base artifacts untouched)
+    """
     t0 = time.time()
     tdir = Path(processed_dir) / category / "temporal_ranker"
+    extra_sources = extra_sources or []
     history = pd.read_parquet(tdir / f"history_{snapshot}.parquet")
     gt_df = pd.read_parquet(tdir / f"groundtruth_{snapshot}.parquet")
     user_features = pd.read_parquet(tdir / f"user_features_{snapshot}.parquet")
@@ -160,10 +178,19 @@ def build_snapshot_candidates(
             df[c] = df[c].astype(str)
 
     # ---- candidate pool: eligible items, ALPHABETICAL (future-free ties) -----
-    pool_df = (
-        item_features[item_features["in_eligible_pool"] == 1]
-        .sort_values("parent_asin", kind="mergesort").reset_index(drop=True)
-    )
+    if min_item_history is None:
+        pool_df = (
+            item_features[item_features["in_eligible_pool"] == 1]
+            .sort_values("parent_asin", kind="mergesort").reset_index(drop=True)
+        )
+    else:
+        hist_counts_for_pool = history["parent_asin"].value_counts()
+        elig = set(hist_counts_for_pool[
+            hist_counts_for_pool >= min_item_history].index.astype(str))
+        pool_df = (
+            item_features[item_features["parent_asin"].isin(elig)]
+            .sort_values("parent_asin", kind="mergesort").reset_index(drop=True)
+        )
     pool = set(pool_df["parent_asin"])
     candidate_items = pool_df["parent_asin"].to_numpy()
     item_store_arr = _clean_cat(pool_df["store"]).to_numpy()
@@ -244,7 +271,19 @@ def build_snapshot_candidates(
         print(f"[cand-{snapshot}] frozen rule weights {weights}", flush=True)
 
     # ---- two-tower predictions -------------------------------------------------
-    tt_path = tdir / f"two_tower_predictions_{snapshot}.parquet"
+    if tt_k:
+        tt_path = tdir / f"two_tower_predictions_{snapshot}_k{tt_k}.parquet"
+        if not tt_path.exists():
+            from scripts.retrieval.temporal_two_tower import (
+                infer_snapshot_checkpoint,
+            )
+            print(f"[cand-{snapshot}] generating two-tower predictions at "
+                  f"K={tt_k} from the frozen checkpoint...", flush=True)
+            infer_snapshot_checkpoint(category, snapshot, k=tt_k,
+                                      processed_dir=processed_dir,
+                                      out_path=tt_path)
+    else:
+        tt_path = tdir / f"two_tower_predictions_{snapshot}.parquet"
     if tt_path.exists():
         tt_df = pd.read_parquet(tt_path)
         tt_df["user_id"] = tt_df["user_id"].astype(str)
@@ -280,10 +319,51 @@ def build_snapshot_candidates(
     n_hist_map = dict(zip(gt_df["user_id"], gt_df["n_history_events"].astype(int)))
     eval_users = sorted(gt_map)
 
+    # ---- extra point-in-time sources (Phase 3A) --------------------------------
+    as_of_ms = int(manifest["snapshots"][snapshot]["history_end_ms"])
+    extra_prepared = []          # (name, kind, payload)
+    if extra_sources:
+        from scripts.retrieval.temporal_sources import (
+            build_covisitation,
+            decayed_popularity,
+            recommend_covisitation,
+            windowed_popularity,
+        )
+        for src in extra_sources:
+            name, kind = src["name"], src["type"]
+            if kind == "windowed_pop":
+                series = windowed_popularity(history, as_of_ms,
+                                             int(src["window_days"]))
+                extra_prepared.append((name, kind, series))
+            elif kind == "decayed_pop":
+                series = decayed_popularity(history, as_of_ms,
+                                            float(src["half_life_days"]))
+                extra_prepared.append((name, kind, series))
+            elif kind == "covis":
+                neighbors = build_covisitation(
+                    history, as_of_ms,
+                    min_support=int(src.get("min_support", 2)),
+                    normalization=src.get("normalization", "cosine"),
+                    max_basket_items=int(src.get("max_basket_items", 30)),
+                )
+                extra_prepared.append((name, kind, {
+                    "neighbors": neighbors,
+                    "max_seeds": int(src.get("max_seeds", 5)),
+                    "seed_decay": float(src.get("seed_decay", 0.7)),
+                    "max_neighbors_per_seed":
+                        int(src.get("max_neighbors_per_seed", 50)),
+                }))
+            else:
+                raise ValueError(f"unknown extra source type {kind!r}")
+    extra_names = [name for name, _, _ in extra_prepared]
+
     # ---- per-source metric accumulators ----------------------------------------
-    src_hits = {s: {k: 0 for k in KS} for s in ("popularity", "rule", "two_tower")}
+    all_source_names = ["popularity", "rule", "two_tower", *extra_names]
+    src_hits = {s: {k: 0 for k in KS} for s in all_source_names}
     retrieved_cov_n = 0
-    out_path = tdir / f"candidates_{snapshot}.parquet"
+    dest_dir = Path(out_dir) if out_dir is not None else tdir
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    out_path = dest_dir / f"candidates_{snapshot}.parquet"
     writer: Optional[pq.ParquetWriter] = None
     n_rows_total = 0
     n_pos_rows = 0
@@ -335,18 +415,42 @@ def build_snapshot_candidates(
         merged = pop_long.merge(rule_long, on=["user_id", "parent_asin"], how="outer")
         merged = merged.merge(tt_long, on=["user_id", "parent_asin"], how="outer")
 
-        for s in ("popularity", "rule", "two_tower"):
+        # ---- Phase 3A extra sources for this chunk ---------------------------
+        extra_chunk_topk: Dict[str, Dict[str, List[str]]] = {}
+        for name, kind, payload in extra_prepared:
+            if kind in ("windowed_pop", "decayed_pop"):
+                topk_e = recommend_popularity(payload, pool, chunk, seen,
+                                              k=top_k)
+                score_map = payload.to_dict()
+                scores_e = {u: [float(score_map.get(it, 0.0)) for it in items]
+                            for u, items in topk_e.items()}
+            else:   # covis
+                topk_e, scores_e = recommend_covisitation(
+                    history, chunk, payload["neighbors"], seen,
+                    max_seeds=payload["max_seeds"],
+                    seed_decay=payload["seed_decay"],
+                    max_neighbors_per_seed=payload["max_neighbors_per_seed"],
+                    k=top_k, return_scores=True,
+                )
+            extra_chunk_topk[name] = topk_e
+            e_long = _topk_to_long(topk_e, scores_e, name)
+            merged = merged.merge(e_long, on=["user_id", "parent_asin"],
+                                  how="outer")
+
+        for s in all_source_names:
             merged[f"source_{s}"] = merged[f"{s}_rank"].notna().astype(np.int8)
             merged[f"{s}_rank"] = merged[f"{s}_rank"].fillna(0).astype(np.int32)
-        merged["num_sources"] = (
-            merged["source_popularity"] + merged["source_rule"]
-            + merged["source_two_tower"]
+        merged["num_sources"] = sum(
+            merged[f"source_{s}"] for s in all_source_names
         ).astype(np.int8)
-        rank_arr = merged[["popularity_rank", "rule_rank", "two_tower_rank"]].to_numpy()
+        rank_cols = [f"{s}_rank" for s in all_source_names]
+        rank_arr = merged[rank_cols].to_numpy()
         rank_masked = np.where(rank_arr > 0, rank_arr, np.iinfo(np.int32).max)
         best = rank_masked.min(axis=1)
         best[best == np.iinfo(np.int32).max] = 0
         merged["best_rank"] = best.astype(np.int32)
+        for name in extra_names:
+            merged[f"{name}_score"] = merged[f"{name}_score"].fillna(0.0).astype(np.float32)
 
         # Score fills (missing-source rows).
         merged["popularity_score"] = merged["popularity_score"].fillna(
@@ -407,7 +511,11 @@ def build_snapshot_candidates(
 
         merged = merged.sort_values(["user_id", "parent_asin"],
                                     kind="mergesort").reset_index(drop=True)
-        merged = merged[FINAL_COLUMNS]
+        chunk_columns = FINAL_COLUMNS + [
+            col for name in extra_names
+            for col in (f"source_{name}", f"{name}_rank", f"{name}_score")
+        ]
+        merged = merged[chunk_columns]
 
         # ---- metric accumulation (per user, single positive) -----------------
         by_user_items: Dict[str, Set[str]] = {
@@ -423,6 +531,10 @@ def build_snapshot_candidates(
                         if u in tt_by_user else [])
             for k in KS:
                 src_hits["two_tower"][k] += int(target in tt_items[:k])
+            for name in extra_names:
+                items = extra_chunk_topk[name].get(u, [])
+                for k in KS:
+                    src_hits[name][k] += int(target in items[:k])
             cand_set = by_user_items.get(u, set())
             if target in cand_set:
                 retrieved_cov_n += 1
@@ -479,7 +591,13 @@ def build_snapshot_candidates(
         "cold_items_not_in_history": int(sum(
             gt_map[u] not in hist_item_set for u in eval_users)),
         "history_cohorts": cohort_counts,
-        "sources": {s: _src_metrics(s) for s in ("popularity", "rule", "two_tower")},
+        "sources": {s: _src_metrics(s) for s in all_source_names},
+        "retrieval_config": {
+            "top_k": top_k,
+            "min_item_history": min_item_history,
+            "tt_k": tt_k,
+            "extra_sources": extra_sources,
+        },
         "rule_weights": {"w_store": weights[0], "w_cat": weights[1],
                          "w_pop": weights[2]},
         "rule_tuning": tuning_payload,
@@ -496,24 +614,48 @@ def build_snapshot_candidates(
 def build_all(category: str, top_k: int = 100, seed: int = 42,
               processed_dir: Path = PROCESSED_DIR,
               results_dir: Path = RESULTS_DIR,
-              require_two_tower: bool = True) -> Dict:
-    """ranker_train first (tunes + freezes rule weights), then the rest."""
+              require_two_tower: bool = True,
+              retrieval_config: Optional[dict] = None,
+              variant: Optional[str] = None,
+              snapshots: Sequence[str] = SNAPSHOT_NAMES) -> Dict:
+    """ranker_train first (tunes + freezes rule weights), then the rest.
+
+    `retrieval_config` (Phase 3A): {top_k, min_item_history, tt_k,
+    extra_sources}. `variant` writes candidates to
+    temporal_ranker/variants/{variant}/ so baseline artifacts stay untouched.
+    `snapshots` restricts which snapshots are built (Stage B builds only
+    ranker_train + model_selection; the locked test snapshot is built only
+    after freezing)."""
     t0 = time.time()
+    rc = retrieval_config or {}
+    out_dir = None
+    if variant:
+        out_dir = (Path(processed_dir) / category / "temporal_ranker"
+                   / "variants" / variant)
     reports = {}
-    for snap in SNAPSHOT_NAMES:
+    for snap in snapshots:
         reports[snap] = build_snapshot_candidates(
-            category, snap, top_k=top_k, seed=seed,
+            category, snap,
+            top_k=int(rc.get("top_k", top_k)),
+            seed=seed,
             processed_dir=processed_dir, require_two_tower=require_two_tower,
+            min_item_history=rc.get("min_item_history"),
+            extra_sources=rc.get("extra_sources"),
+            tt_k=rc.get("tt_k"),
+            out_dir=out_dir,
         )
     payload = {
         "category": category,
+        "variant": variant,
+        "retrieval_config": rc or None,
         "built_utc": datetime.now(tz=timezone.utc).isoformat(),
         "elapsed_seconds": round(time.time() - t0, 2),
         "snapshots": reports,
     }
     results_dir = Path(results_dir)
     results_dir.mkdir(parents=True, exist_ok=True)
-    with open(results_dir / f"{category}_candidates_report.json", "w") as f:
+    suffix = f"_{variant}" if variant else ""
+    with open(results_dir / f"{category}_candidates_report{suffix}.json", "w") as f:
         json.dump(payload, f, indent=2, default=str)
     return payload
 
@@ -524,13 +666,25 @@ def _parse_args(argv=None):
     p.add_argument("--snapshot", default="all", choices=["all", *SNAPSHOT_NAMES])
     p.add_argument("--top-k", type=int, default=100)
     p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--variant", default=None,
+                   help="Variant name; candidates go to temporal_ranker/"
+                        "variants/{variant}/ (baseline untouched).")
+    p.add_argument("--config-json", default=None,
+                   help="Path to a retrieval-config JSON: {top_k, "
+                        "min_item_history, tt_k, extra_sources}.")
+    p.add_argument("--snapshots", default=None,
+                   help="Comma-separated subset, e.g. "
+                        "'ranker_train,model_selection' for Stage B.")
     return p.parse_args(argv)
 
 
 def main(argv=None):
     args = _parse_args(argv)
+    rc = json.loads(Path(args.config_json).read_text()) if args.config_json else None
+    snaps = tuple(args.snapshots.split(",")) if args.snapshots else SNAPSHOT_NAMES
     if args.snapshot == "all":
-        build_all(args.category, top_k=args.top_k, seed=args.seed)
+        build_all(args.category, top_k=args.top_k, seed=args.seed,
+                  retrieval_config=rc, variant=args.variant, snapshots=snaps)
     else:
         build_snapshot_candidates(args.category, args.snapshot,
                                   top_k=args.top_k, seed=args.seed)

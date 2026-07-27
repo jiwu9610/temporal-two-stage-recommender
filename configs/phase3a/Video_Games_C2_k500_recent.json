@@ -1,0 +1,12 @@
+{
+  "top_k": 500,
+  "tt_k": 500,
+  "min_item_history": null,
+  "extra_sources": [
+    {
+      "name": "recent_pop",
+      "type": "decayed_pop",
+      "half_life_days": 7
+    }
+  ]
+}

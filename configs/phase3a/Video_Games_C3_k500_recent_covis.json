@@ -1,0 +1,21 @@
+{
+  "top_k": 500,
+  "tt_k": 500,
+  "min_item_history": null,
+  "extra_sources": [
+    {
+      "name": "recent_pop",
+      "type": "decayed_pop",
+      "half_life_days": 7
+    },
+    {
+      "name": "covis",
+      "type": "covis",
+      "min_support": 2,
+      "normalization": "cosine",
+      "max_seeds": 5,
+      "seed_decay": 0.7,
+      "max_neighbors_per_seed": 50
+    }
+  ]
+}

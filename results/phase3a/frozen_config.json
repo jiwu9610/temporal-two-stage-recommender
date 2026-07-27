@@ -1,0 +1,43 @@
+{
+  "phase": "3A",
+  "frozen_utc": "2026-07-26T22:21:21.227462+00:00",
+  "decision_basis": "model_selection snapshot only (Stage A retrieval metrics + Stage B ranker confirmation); groundtruth_test untouched until this freeze",
+  "variant": "C2_k500_recent",
+  "config": {
+    "candidate_top_k_per_source": 500,
+    "eligibility_min_item_history": 5,
+    "sources": [
+      "popularity",
+      "rule",
+      "two_tower",
+      "recent_pop"
+    ],
+    "recent_pop_per_category": {
+      "All_Beauty": {
+        "type": "windowed_pop",
+        "window_days": 30
+      },
+      "Video_Games": {
+        "type": "decayed_pop",
+        "half_life_days": 7
+      },
+      "Books": {
+        "type": "decayed_pop",
+        "half_life_days": 90
+      },
+      "Electronics": {
+        "type": "decayed_pop",
+        "half_life_days": 30
+      }
+    },
+    "covisitation": "excluded (tied with C2 within noise; revisit in i2i/content task)",
+    "two_tower": "frozen checkpoints unchanged (inference-only re-emit at K=500)",
+    "rule_weights": "frozen T0-tuned weights unchanged",
+    "ranker": "existing selection grid + refit protocol unchanged"
+  },
+  "stage_b_mean_selection_recall_at_100": {
+    "C1": 0.0892,
+    "C2": 0.1046,
+    "C3": 0.1049
+  }
+}

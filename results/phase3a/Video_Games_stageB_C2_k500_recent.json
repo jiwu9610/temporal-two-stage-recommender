@@ -1,0 +1,158 @@
+{
+  "category": "Video_Games",
+  "variant": "C2_k500_recent",
+  "stage": "B (model-selection confirmation; test snapshot untouched)",
+  "started_utc": "2026-07-26T20:28:22.806559+00:00",
+  "elapsed_seconds": 1993.38,
+  "features": [
+    "popularity_score",
+    "rule_score",
+    "two_tower_score",
+    "popularity_rank",
+    "rule_rank",
+    "two_tower_rank",
+    "best_rank",
+    "num_sources",
+    "source_popularity",
+    "source_rule",
+    "source_two_tower",
+    "user_n_reviews_hist",
+    "user_avg_rating_hist",
+    "user_std_rating_hist",
+    "user_n_unique_items_hist",
+    "user_active_days_hist",
+    "user_verified_rate_hist",
+    "days_since_last_interaction",
+    "interactions_last_30d",
+    "positives_last_30d",
+    "n_history_events",
+    "user_has_history",
+    "item_n_reviews_hist",
+    "item_n_positives_hist",
+    "item_avg_rating_hist",
+    "item_n_unique_reviewers_hist",
+    "n_features",
+    "n_description",
+    "n_categories",
+    "user_store_affinity",
+    "user_category_affinity",
+    "same_top_store",
+    "same_top_category",
+    "recent_pop_rank",
+    "recent_pop_score",
+    "source_recent_pop"
+  ],
+  "selection": {
+    "grid": [
+      {
+        "arch": "mlp",
+        "lr": 0.001,
+        "best_selection_recall@100": 0.15799680779858238,
+        "best_epoch": 3,
+        "n_epochs_run": 6
+      },
+      {
+        "arch": "mlp",
+        "lr": 0.0003,
+        "best_selection_recall@100": 0.1600734549573515,
+        "best_epoch": 3,
+        "n_epochs_run": 6
+      },
+      {
+        "arch": "deep_cross",
+        "lr": 0.001,
+        "best_selection_recall@100": 0.15785950881287864,
+        "best_epoch": 5,
+        "n_epochs_run": 8
+      },
+      {
+        "arch": "deep_cross",
+        "lr": 0.0003,
+        "best_selection_recall@100": 0.1590608749377864,
+        "best_epoch": 3,
+        "n_epochs_run": 6
+      }
+    ],
+    "chosen": {
+      "arch": "mlp",
+      "lr": 0.0003,
+      "best_selection_recall@100": 0.1600734549573515,
+      "best_epoch": 3,
+      "n_epochs_run": 6
+    },
+    "metric": "model_selection Recall@100"
+  },
+  "model_selection_eval": {
+    "n_groundtruth_users": 58267,
+    "overall": {
+      "Recall@10": 0.04493109307154993,
+      "Precision@10": 0.004493109307154994,
+      "Recall@50": 0.11066298247721695,
+      "Precision@50": 0.0022132596495443384,
+      "Recall@100": 0.1600734549573515,
+      "Precision@100": 0.0016007345495735153
+    },
+    "candidate_ceiling_retrieved_coverage": 0.3480529287589888,
+    "conditional_given_retrieved": {
+      "n_users_retrieved": 20280,
+      "Recall@10": 0.12909270216962523,
+      "Precision@10": 0.012909270216962528,
+      "Recall@50": 0.31794871794871793,
+      "Precision@50": 0.00635897435897436,
+      "Recall@100": 0.4599112426035503,
+      "Precision@100": 0.004599112426035502
+    },
+    "history_cohorts": {
+      "0": {
+        "n_users": 37748,
+        "Recall@10": 0.05282399067500265,
+        "Precision@10": 0.005282399067500266,
+        "Recall@50": 0.12082759351488821,
+        "Precision@50": 0.0024165518702977643,
+        "Recall@100": 0.17092296280597646,
+        "Precision@100": 0.001709229628059765
+      },
+      "1": {
+        "n_users": 8330,
+        "Recall@10": 0.03481392557022809,
+        "Precision@10": 0.0034813925570228096,
+        "Recall@50": 0.09591836734693877,
+        "Precision@50": 0.0019183673469387755,
+        "Recall@100": 0.14741896758703482,
+        "Precision@100": 0.0014741896758703483
+      },
+      "2": {
+        "n_users": 3920,
+        "Recall@10": 0.027806122448979592,
+        "Precision@10": 0.0027806122448979587,
+        "Recall@50": 0.08877551020408163,
+        "Precision@50": 0.0017755102040816328,
+        "Recall@100": 0.13520408163265307,
+        "Precision@100": 0.0013520408163265308
+      },
+      "3+": {
+        "n_users": 8269,
+        "Recall@10": 0.027210061676139798,
+        "Precision@10": 0.0027210061676139798,
+        "Recall@50": 0.08949086951263756,
+        "Precision@50": 0.001789817390252751,
+        "Recall@100": 0.13508283952110292,
+        "Precision@100": 0.0013508283952110291
+      }
+    },
+    "target_item_cohorts": {
+      "warm_target_item": {
+        "n_users": 44524,
+        "Recall@10": 0.05879974845027401,
+        "Recall@50": 0.1448207708202318,
+        "Recall@100": 0.20948252627796246
+      },
+      "cold_target_item": {
+        "n_users": 13743,
+        "Recall@10": 0.0,
+        "Recall@50": 0.0,
+        "Recall@100": 0.0
+      }
+    }
+  }
+}

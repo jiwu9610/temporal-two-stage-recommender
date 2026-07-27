@@ -1,0 +1,94 @@
+{
+  "category": "All_Beauty",
+  "variant": "C2_k500_recent",
+  "retrieval_config": {
+    "top_k": 500,
+    "tt_k": 500,
+    "min_item_history": null,
+    "extra_sources": [
+      {
+        "name": "recent_pop",
+        "type": "windowed_pop",
+        "window_days": 30
+      }
+    ]
+  },
+  "built_utc": "2026-07-26T23:46:46.225918+00:00",
+  "elapsed_seconds": 471.05,
+  "snapshots": {
+    "test": {
+      "snapshot": "test",
+      "n_positive_eval_users": 48891,
+      "candidate_catalog_size": 24618,
+      "coverage": {
+        "historical_catalog": 0.6637008856435744,
+        "eligible_pool": 0.4896606737436338,
+        "retrieved_union": 0.24452353193839357
+      },
+      "cold_users": 45309,
+      "cold_items_not_in_history": 16442,
+      "history_cohorts": {
+        "0": 45309,
+        "1": 2610,
+        "2": 451,
+        "3+": 521
+      },
+      "sources": {
+        "popularity": {
+          "Recall@10": 0.016281115133664682,
+          "Precision@10": 0.0016281115133664683,
+          "Recall@50": 0.04755476468061606,
+          "Precision@50": 0.0009510952936123213,
+          "Recall@100": 0.0652880898324845,
+          "Precision@100": 0.0006528808983248451
+        },
+        "rule": {
+          "Recall@10": 0.01656746640485979,
+          "Precision@10": 0.001656746640485979,
+          "Recall@50": 0.04927287230778671,
+          "Precision@50": 0.0009854574461557342,
+          "Recall@100": 0.06571761673927717,
+          "Precision@100": 0.0006571761673927717
+        },
+        "two_tower": {
+          "Recall@10": 0.0005113415557055491,
+          "Precision@10": 5.113415557055491e-05,
+          "Recall@50": 0.001759014951627089,
+          "Precision@50": 3.5180299032541776e-05,
+          "Recall@100": 0.0025158004540713013,
+          "Precision@100": 2.5158004540713016e-05
+        },
+        "recent_pop": {
+          "Recall@10": 0.021967233233110388,
+          "Precision@10": 0.002196723323311039,
+          "Recall@50": 0.08113967805935653,
+          "Precision@50": 0.0016227935611871306,
+          "Recall@100": 0.10940663925875928,
+          "Precision@100": 0.0010940663925875927
+        }
+      },
+      "retrieval_config": {
+        "top_k": 500,
+        "min_item_history": null,
+        "tt_k": 500,
+        "extra_sources": [
+          {
+            "name": "recent_pop",
+            "type": "windowed_pop",
+            "window_days": 30
+          }
+        ]
+      },
+      "rule_weights": {
+        "w_store": 0.5,
+        "w_cat": 0.5,
+        "w_pop": 0.5
+      },
+      "rule_tuning": null,
+      "n_rows": 44430110,
+      "n_positive_rows": 11955,
+      "top_k": 500,
+      "elapsed_seconds": 470.77
+    }
+  }
+}

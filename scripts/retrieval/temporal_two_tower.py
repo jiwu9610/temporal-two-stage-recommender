@@ -521,6 +521,104 @@ def train_snapshot_checkpoint(
     return meta
 
 
+@torch.no_grad()
+def infer_snapshot_checkpoint(
+    category: str,
+    snapshot: str,
+    k: int = DEFAULT_K_RETRIEVE,
+    processed_dir: Path = PROCESSED_DIR,
+    raw_dir: Path = RAW_DIR,
+    out_path: Optional[Path] = None,
+) -> pd.DataFrame:
+    """Inference-only: load the frozen checkpoint for `snapshot` and re-emit
+    per-user top-K predictions at an arbitrary K. NO training, NO selection --
+    safe for the Phase 3A candidate-K sweep (larger K from the same frozen
+    model is a pure widening of the returned list).
+
+    Rebuilds the FeatureSpec deterministically from the snapshot artifacts
+    (same inputs as training), restores weights, and scores label users with
+    >= 1 history event exactly like train_snapshot_checkpoint's final pass.
+    """
+    tdir = Path(processed_dir) / category / "temporal_ranker"
+    meta = json.loads((tdir / f"two_tower_{snapshot}_meta.json").read_text())
+    cfg = TwoTowerConfig(**meta["config"]["two_tower"])
+
+    history = pd.read_parquet(tdir / f"history_{snapshot}.parquet")
+    labels = pd.read_parquet(tdir / f"groundtruth_{snapshot}.parquet")
+    user_features = pd.read_parquet(tdir / f"user_features_{snapshot}.parquet")
+    item_features = pd.read_parquet(tdir / f"item_features_{snapshot}.parquet")
+    raw_meta_path = Path(raw_dir) / category / "metadata.parquet"
+    raw_meta = None
+    if raw_meta_path.exists():
+        try:
+            raw_meta = pd.read_parquet(raw_meta_path,
+                                       columns=["parent_asin", "categories"])
+        except Exception:
+            raw_meta = None
+
+    spec = build_temporal_feature_spec(
+        history, user_features, item_features, raw_meta, cfg.use_deeper_cat_emb,
+    )
+    user_tower = UserTower(spec.n_users, spec.n_user_dense, cfg)
+    item_tower = ItemTower(
+        n_items=spec.n_items, n_stores=spec.n_stores,
+        n_main_cats=spec.n_main_cats, n_deeper_cats=spec.n_deeper_cats,
+        n_dense=spec.n_item_dense, cfg=cfg, has_deeper_cat=spec.has_deeper_cat,
+    )
+    model = TwoTower(user_tower, item_tower)
+    state = torch.load(tdir / f"two_tower_{snapshot}.pt", map_location="cpu",
+                       weights_only=True)
+    model.load_state_dict(state)
+    model.eval()
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model = model.to(device)
+    spec_t = _move_spec_to_tensors(spec, device)
+
+    labels["user_id"] = labels["user_id"].astype(str)
+    hist_events = dict(zip(labels["user_id"],
+                           labels["n_history_events"].astype(int)))
+    eval_users = sorted(u for u in labels["user_id"]
+                        if hist_events.get(u, 0) >= 1)
+    if not eval_users:
+        pred_df = pd.DataFrame(columns=["user_id", "parent_asin", "score", "rank"])
+    else:
+        eval_user_idx_np = np.array(
+            [spec.user_id_to_idx.get(u, 0) for u in eval_users], dtype=np.int64,
+        )
+        candidate_pa = np.array(
+            [pa for pa, i in sorted(spec.item_id_to_idx.items(),
+                                    key=lambda kv: kv[1]) if pa != "<PAD>"],
+            dtype=object,
+        )
+        item_vecs = encode_all_items(model, spec, spec_t, device=device)
+        user_vecs = encode_users_subset(
+            model, torch.from_numpy(eval_user_idx_np), spec_t, device=device,
+        )
+        topk_items, topk_scores = topk_per_user_chunked(
+            user_vecs, item_vecs, candidate_pa, eval_users, eval_user_idx_np,
+            spec.user_seen_per_user_idx, k=k, return_scores=True,
+        )
+        rows = []
+        for uid in eval_users:
+            rank = 0
+            for pa, sc in zip(topk_items[uid], topk_scores[uid]):
+                if not np.isfinite(sc):
+                    continue
+                rank += 1
+                rows.append((uid, pa, float(sc), rank))
+        pred_df = pd.DataFrame(rows, columns=["user_id", "parent_asin",
+                                              "score", "rank"])
+    if out_path is not None:
+        # Atomic write: concurrent variant jobs share this cache file, and a
+        # reader must never see a half-written parquet (observed as a 4-byte
+        # file in parallel Stage B runs).
+        import os
+        tmp = Path(str(out_path) + f".tmp.{os.getpid()}")
+        pred_df.to_parquet(tmp, index=False)
+        os.replace(tmp, out_path)
+    return pred_df
+
+
 def run_all_snapshots(
     category: str,
     cfg: TwoTowerConfig,

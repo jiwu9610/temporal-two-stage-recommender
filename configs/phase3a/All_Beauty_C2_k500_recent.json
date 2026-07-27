@@ -1,0 +1,12 @@
+{
+  "top_k": 500,
+  "tt_k": 500,
+  "min_item_history": null,
+  "extra_sources": [
+    {
+      "name": "recent_pop",
+      "type": "windowed_pop",
+      "window_days": 30
+    }
+  ]
+}

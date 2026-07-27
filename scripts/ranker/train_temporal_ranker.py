@@ -86,13 +86,39 @@ TEMPORAL_LOG1P = {
 TEMPORAL_CATEGORICALS = ("main_category", "store")
 
 
-def build_temporal_feature_spec(train_df: pd.DataFrame) -> RankerFeatureSpec:
+def resolve_feature_list(df: pd.DataFrame):
+    """Dense feature list for a candidates table: the frozen base tuple plus
+    any Phase 3A extra-source columns (source_*/\*_rank/\*_score triplets),
+    sorted for a stable order. Extra ranks/scores get log1p (non-negative,
+    long-tailed)."""
+    base = [f for f in TEMPORAL_DENSE_FEATURES if f in df.columns]
+    known = set(TEMPORAL_DENSE_FEATURES) | {
+        "snapshot", "user_id", "parent_asin", "label",
+        *TEMPORAL_CATEGORICALS,
+    }
+    extras = sorted(
+        c for c in df.columns
+        if c not in known and (
+            c.startswith("source_") or c.endswith("_rank")
+            or c.endswith("_score"))
+    )
+    features = tuple(base + extras)
+    log1p = set(TEMPORAL_LOG1P) | {
+        c for c in extras if c.endswith("_rank") or c.endswith("_score")
+    }
+    return features, log1p
+
+
+def build_temporal_feature_spec(train_df: pd.DataFrame,
+                                features=None, log1p=None) -> RankerFeatureSpec:
     """Norm stats + categorical vocabs from the given TRAINING rows only."""
-    dense = np.zeros((len(train_df), len(TEMPORAL_DENSE_FEATURES)), dtype=np.float64)
-    for j, col in enumerate(TEMPORAL_DENSE_FEATURES):
+    if features is None:
+        features, log1p = TEMPORAL_DENSE_FEATURES, TEMPORAL_LOG1P
+    dense = np.zeros((len(train_df), len(features)), dtype=np.float64)
+    for j, col in enumerate(features):
         x = pd.to_numeric(train_df[col], errors="coerce").fillna(0.0).to_numpy(np.float64)
         x = np.where(np.isfinite(x), x, 0.0)
-        if col in TEMPORAL_LOG1P:
+        if col in log1p:
             x = np.log1p(np.maximum(x, 0.0))
         dense[:, j] = x
     mean = dense.mean(axis=0)
@@ -100,17 +126,20 @@ def build_temporal_feature_spec(train_df: pd.DataFrame) -> RankerFeatureSpec:
     std = np.where(std > 1e-9, std, 1.0)
     cat_vocabs = {c: _build_cat_vocab(train_df[c]) for c in TEMPORAL_CATEGORICALS}
     return RankerFeatureSpec(
-        n_dense=len(TEMPORAL_DENSE_FEATURES),
+        n_dense=len(features),
         dense_mean=mean, dense_std=std, cat_vocabs=cat_vocabs,
     )
 
 
-def build_temporal_tensors(df: pd.DataFrame, spec: RankerFeatureSpec) -> Dict[str, torch.Tensor]:
-    dense = np.zeros((len(df), len(TEMPORAL_DENSE_FEATURES)), dtype=np.float32)
-    for j, col in enumerate(TEMPORAL_DENSE_FEATURES):
+def build_temporal_tensors(df: pd.DataFrame, spec: RankerFeatureSpec,
+                           features=None, log1p=None) -> Dict[str, torch.Tensor]:
+    if features is None:
+        features, log1p = TEMPORAL_DENSE_FEATURES, TEMPORAL_LOG1P
+    dense = np.zeros((len(df), len(features)), dtype=np.float32)
+    for j, col in enumerate(features):
         x = pd.to_numeric(df[col], errors="coerce").fillna(0.0).to_numpy(np.float64)
         x = np.where(np.isfinite(x), x, 0.0)
-        if col in TEMPORAL_LOG1P:
+        if col in log1p:
             x = np.log1p(np.maximum(x, 0.0))
         dense[:, j] = ((x - spec.dense_mean[j]) / spec.dense_std[j]).astype(np.float32)
     out = {
@@ -276,11 +305,22 @@ def run(
     max_users_per_snapshot: int = 0,
     processed_dir: Path = PROCESSED_DIR,
     results_dir: Path = RESULTS_DIR,
+    variant: Optional[str] = None,
+    stage_b_only: bool = False,
 ) -> Dict:
+    """Full run: selection -> refit -> single locked test eval.
+
+    Phase 3A additions: `variant` reads candidates from
+    temporal_ranker/variants/{variant}/ (ground truth still comes from the
+    base dir -- it is split-defined, not config-defined). `stage_b_only`
+    stops after model selection and reports selection-snapshot metrics ONLY;
+    the test snapshot is neither read nor required to exist.
+    """
     t0 = time.time()
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
     tdir = Path(processed_dir) / category / "temporal_ranker"
+    cdir = (tdir / "variants" / variant) if variant else tdir
 
     # Memory-bounded runs (login-node smoke): deterministic per-snapshot user
     # subsample, applied AT READ TIME via a parquet filter -- loading the full
@@ -290,8 +330,10 @@ def run(
     cands = {}
     kept_users: Dict[str, set] = {}
     rng = np.random.default_rng(seed)
-    for snap in ("ranker_train", "model_selection", "test"):
-        path = tdir / f"candidates_{snap}.parquet"
+    snaps_needed = (("ranker_train", "model_selection") if stage_b_only
+                    else ("ranker_train", "model_selection", "test"))
+    for snap in snaps_needed:
+        path = cdir / f"candidates_{snap}.parquet"
         if max_users_per_snapshot:
             users = np.array(sorted(pd.read_parquet(
                 path, columns=["user_id"])["user_id"].astype(str).unique()))
@@ -308,15 +350,19 @@ def run(
         df["parent_asin"] = df["parent_asin"].astype(str)
         cands[snap] = df.reset_index(drop=True)
     gt_sel = pd.read_parquet(tdir / "groundtruth_model_selection.parquet")
-    gt_test = pd.read_parquet(tdir / "groundtruth_test.parquet")
+    gt_test = (None if stage_b_only
+               else pd.read_parquet(tdir / "groundtruth_test.parquet"))
     if "model_selection" in kept_users:
         gt_sel = gt_sel[gt_sel["user_id"].astype(str).isin(
             kept_users["model_selection"])]
-    if "test" in kept_users:
+    if gt_test is not None and "test" in kept_users:
         gt_test = gt_test[gt_test["user_id"].astype(str).isin(kept_users["test"])]
     if max_users_per_snapshot:
         print(f"[ranker] capped users/snapshot to {max_users_per_snapshot:,} "
               f"(smoke scale cap, filtered at read)", flush=True)
+
+    # Dense feature list: frozen base + any Phase 3A extra-source columns.
+    features, log1p = resolve_feature_list(cands["ranker_train"])
 
     # Selection grid. Architecture + learning rate; epoch count comes from
     # early stopping against model_selection. Smoke restricts to one config.
@@ -328,9 +374,11 @@ def run(
         max_epochs = min(max_epochs, 3)
 
     # Feature spec for SELECTION runs: ranker_train rows only.
-    spec_sel = build_temporal_feature_spec(cands["ranker_train"])
-    train_inputs = build_temporal_tensors(cands["ranker_train"], spec_sel)
-    sel_inputs = build_temporal_tensors(cands["model_selection"], spec_sel)
+    spec_sel = build_temporal_feature_spec(cands["ranker_train"], features, log1p)
+    train_inputs = build_temporal_tensors(cands["ranker_train"], spec_sel,
+                                          features, log1p)
+    sel_inputs = build_temporal_tensors(cands["model_selection"], spec_sel,
+                                        features, log1p)
     sel_gt = {u: {pa} for u, pa in zip(gt_sel["user_id"].astype(str),
                                        gt_sel["parent_asin"].astype(str))}
     sel_pool = set(cands["model_selection"]["parent_asin"])
@@ -343,6 +391,7 @@ def run(
 
     selection_runs = []
     best = None  # (recall, -idx) maximize; tie -> earlier grid entry
+    best_model_state = None
     for gi, (arch, lr) in enumerate(grid):
         print(f"[ranker] selection run {gi+1}/{len(grid)}: arch={arch} lr={lr}",
               flush=True)
@@ -380,12 +429,47 @@ def run(
         key = (summary["best_ranker_val_recall@100"], -gi)
         if best is None or key > best[0]:
             best = (key, run_rec)
+            if stage_b_only:
+                # train_pointwise_bce reloaded the run's best epoch already.
+                best_model_state = {k: v.detach().cpu().clone()
+                                    for k, v in model.state_dict().items()}
         del model
 
     chosen = best[1]
     print(f"[ranker] SELECTED arch={chosen['arch']} lr={chosen['lr']} "
           f"epochs={chosen['best_epoch']} "
           f"(selection R@100={chosen['best_selection_recall@100']:.4f})", flush=True)
+
+    if stage_b_only:
+        # ---- Stage B report: selection-snapshot metrics ONLY ------------------
+        model = _make_model(chosen["arch"], spec_sel).to(device)
+        model.load_state_dict(best_model_state)
+        sel_df = cands["model_selection"]
+        sel_eval = _eval_test(model, sel_df,
+                              build_temporal_tensors(sel_df, spec_sel,
+                                                     features, log1p),
+                              gt_sel, device)
+        report = {
+            "category": category,
+            "variant": variant,
+            "stage": "B (model-selection confirmation; test snapshot untouched)",
+            "started_utc": datetime.now(tz=timezone.utc).isoformat(),
+            "elapsed_seconds": round(time.time() - t0, 2),
+            "features": list(features),
+            "selection": {"grid": selection_runs, "chosen": chosen,
+                          "metric": "model_selection Recall@100"},
+            "model_selection_eval": sel_eval,
+        }
+        stage_b_dir = REPO_ROOT / "results" / "phase3a"
+        stage_b_dir.mkdir(parents=True, exist_ok=True)
+        out = stage_b_dir / f"{category}_stageB_{variant or 'base'}.json"
+        with open(out, "w") as f:
+            json.dump(report, f, indent=2, default=str)
+        print(f"[ranker] Stage B wrote {out} | selection R@100="
+              f"{sel_eval['overall']['Recall@100']:.4f} "
+              f"ceiling={sel_eval['candidate_ceiling_retrieved_coverage']:.4f}",
+              flush=True)
+        return report
 
     # Free the selection-phase tensors before building the refit set -- the
     # login-node cgroup cannot hold both generations at once.
@@ -396,8 +480,9 @@ def run(
     # ---- refit on train + selection rows, fixed epochs, no early stopping ----
     combined = pd.concat([cands["ranker_train"], cands["model_selection"]],
                          ignore_index=True)
-    spec_final = build_temporal_feature_spec(combined)
-    combined_inputs = build_temporal_tensors(combined, spec_final)
+    spec_final = build_temporal_feature_spec(combined, features, log1p)
+    combined_inputs = build_temporal_tensors(combined, spec_final,
+                                             features, log1p)
     n_pos_c = int(combined["label"].sum())
     n_neg_c = int((combined["label"] == 0).sum())
     pos_weight_c = n_neg_c / max(1, n_pos_c)
@@ -414,7 +499,8 @@ def run(
     # ---- final test -----------------------------------------------------------
     del combined_inputs
     gc.collect()
-    test_inputs = build_temporal_tensors(cands["test"], spec_final)
+    test_inputs = build_temporal_tensors(cands["test"], spec_final,
+                                         features, log1p)
     test_eval = _eval_test(final_model, cands["test"], test_inputs, gt_test, device)
 
     # Retrieval-only context on the same test candidates.
@@ -436,6 +522,8 @@ def run(
 
     report = {
         "category": category,
+        "variant": variant,
+        "features": list(features),
         "protocol": "three_snapshot_walk_forward",
         "started_utc": datetime.now(tz=timezone.utc).isoformat(),
         "elapsed_seconds": round(time.time() - t0, 2),
@@ -471,7 +559,8 @@ def run(
     }
     results_dir = Path(results_dir)
     results_dir.mkdir(parents=True, exist_ok=True)
-    out = results_dir / f"{category}_ranker.json"
+    suffix = f"_{variant}" if variant else ""
+    out = results_dir / f"{category}_ranker{suffix}.json"
     with open(out, "w") as f:
         json.dump(report, f, indent=2, default=str)
     print(f"[ranker] wrote {out} | final test R@10="
@@ -492,13 +581,19 @@ def _parse_args(argv=None):
     p.add_argument("--max-users", type=int, default=0,
                    help="Per-snapshot deterministic user cap (0 = all users). "
                         "For memory-bounded smoke runs only.")
+    p.add_argument("--variant", default=None,
+                   help="Read candidates from temporal_ranker/variants/{name}/")
+    p.add_argument("--stage-b", action="store_true",
+                   help="Stop after model selection; never touch the test "
+                        "snapshot (Phase 3A Stage B confirmation).")
     return p.parse_args(argv)
 
 
 def main(argv=None):
     args = _parse_args(argv)
     run(args.category, max_epochs=args.max_epochs, batch_size=args.batch_size,
-        seed=args.seed, smoke=args.smoke, max_users_per_snapshot=args.max_users)
+        seed=args.seed, smoke=args.smoke, max_users_per_snapshot=args.max_users,
+        variant=args.variant, stage_b_only=args.stage_b)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,94 @@
+{
+  "category": "Electronics",
+  "variant": "C2_k500_recent",
+  "retrieval_config": {
+    "top_k": 500,
+    "tt_k": 500,
+    "min_item_history": null,
+    "extra_sources": [
+      {
+        "name": "recent_pop",
+        "type": "decayed_pop",
+        "half_life_days": 30
+      }
+    ]
+  },
+  "built_utc": "2026-07-26T23:53:35.004950+00:00",
+  "elapsed_seconds": 879.83,
+  "snapshots": {
+    "test": {
+      "snapshot": "test",
+      "n_positive_eval_users": 37721,
+      "candidate_catalog_size": 32690,
+      "coverage": {
+        "historical_catalog": 0.6477293815116248,
+        "eligible_pool": 0.4373691047427163,
+        "retrieved_union": 0.1981654781156385
+      },
+      "cold_users": 7354,
+      "cold_items_not_in_history": 13288,
+      "history_cohorts": {
+        "0": 7354,
+        "1": 5208,
+        "2": 3815,
+        "3+": 21344
+      },
+      "sources": {
+        "popularity": {
+          "Recall@10": 0.006627607963733729,
+          "Precision@10": 0.0006627607963733729,
+          "Recall@50": 0.03912939741788394,
+          "Precision@50": 0.0007825879483576788,
+          "Recall@100": 0.04994565361469738,
+          "Precision@100": 0.0004994565361469738
+        },
+        "rule": {
+          "Recall@10": 0.006229951485909706,
+          "Precision@10": 0.0006229951485909706,
+          "Recall@50": 0.027782932583971794,
+          "Precision@50": 0.0005556586516794359,
+          "Recall@100": 0.036425333368680576,
+          "Precision@100": 0.00036425333368680576
+        },
+        "two_tower": {
+          "Recall@10": 0.004427242119774131,
+          "Precision@10": 0.00044272421197741313,
+          "Recall@50": 0.021340897643222608,
+          "Precision@50": 0.0004268179528644522,
+          "Recall@100": 0.031945070385196575,
+          "Precision@100": 0.00031945070385196574
+        },
+        "recent_pop": {
+          "Recall@10": 0.0374327297791681,
+          "Precision@10": 0.00374327297791681,
+          "Recall@50": 0.07931921210996527,
+          "Precision@50": 0.0015863842421993055,
+          "Recall@100": 0.09898995254632698,
+          "Precision@100": 0.0009898995254632697
+        }
+      },
+      "retrieval_config": {
+        "top_k": 500,
+        "min_item_history": null,
+        "tt_k": 500,
+        "extra_sources": [
+          {
+            "name": "recent_pop",
+            "type": "decayed_pop",
+            "half_life_days": 30
+          }
+        ]
+      },
+      "rule_weights": {
+        "w_store": 0.5,
+        "w_cat": 0.5,
+        "w_pop": 1.0
+      },
+      "rule_tuning": null,
+      "n_rows": 48038097,
+      "n_positive_rows": 7475,
+      "top_k": 500,
+      "elapsed_seconds": 878.54
+    }
+  }
+}
