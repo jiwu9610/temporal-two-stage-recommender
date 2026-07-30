@@ -1,0 +1,52 @@
+{
+  "category": "All_Beauty",
+  "variant": "C2_k500_recent",
+  "fitted_on": "selection_model_model_selection.parquet (out-of-sample, pre-test)",
+  "pred_subdir": "predictions",
+  "capped_run": false,
+  "dump_fingerprint": {
+    "created_utc": "2026-07-30T23:04:13.405671+00:00",
+    "n_rows": {
+      "ranker_train": 46267789,
+      "model_selection": 43526922,
+      "test": 44430110
+    },
+    "max_users_per_snapshot": 0,
+    "smoke": false,
+    "seed": 42
+  },
+  "pos_weight_selection": 4645.293331994377,
+  "pos_weight_refit": 4596.783461341526,
+  "prior_shift_rule": "logit - log(pos_weight of the scored model)",
+  "platt": {
+    "a": 0.709036394417873,
+    "b": -8.330748823907088,
+    "init_shift": -8.44360979930667,
+    "init_nll": 0.001955512946824627,
+    "final_nll": 0.0019325903451972572,
+    "monotone": true
+  },
+  "chosen_calibrator": "platt",
+  "cohort_thresholds": {
+    "0": 0.0,
+    "1": 0.0,
+    "2": 0.0,
+    "3+": 0.0
+  },
+  "threshold_quantile_grid": [
+    0.5,
+    0.75,
+    0.9,
+    0.95,
+    0.99
+  ],
+  "prob_bins": 15,
+  "item_bucket_edges": [
+    10.0,
+    30.0,
+    100.0,
+    300.0
+  ],
+  "created_utc": "2026-07-30T23:08:48.918741+00:00",
+  "test_dump_untouched": true
+}

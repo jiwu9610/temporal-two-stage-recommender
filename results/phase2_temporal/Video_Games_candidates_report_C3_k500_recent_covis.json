@@ -1,0 +1,211 @@
+{
+  "category": "Video_Games",
+  "variant": "C3_k500_recent_covis",
+  "retrieval_config": {
+    "top_k": 500,
+    "tt_k": 500,
+    "min_item_history": null,
+    "extra_sources": [
+      {
+        "name": "recent_pop",
+        "type": "decayed_pop",
+        "half_life_days": 7
+      },
+      {
+        "name": "covis",
+        "type": "covis",
+        "min_support": 2,
+        "normalization": "cosine",
+        "max_seeds": 5,
+        "seed_decay": 0.7,
+        "max_neighbors_per_seed": 50
+      }
+    ]
+  },
+  "built_utc": "2026-07-26T20:07:31.398770+00:00",
+  "elapsed_seconds": 1725.39,
+  "snapshots": {
+    "ranker_train": {
+      "snapshot": "ranker_train",
+      "n_positive_eval_users": 60416,
+      "candidate_catalog_size": 18045,
+      "coverage": {
+        "historical_catalog": 0.7842127913135594,
+        "eligible_pool": 0.6654032044491526,
+        "retrieved_union": 0.3860401218220339
+      },
+      "cold_users": 41292,
+      "cold_items_not_in_history": 13037,
+      "history_cohorts": {
+        "0": 41292,
+        "1": 7921,
+        "2": 3635,
+        "3+": 7568
+      },
+      "sources": {
+        "popularity": {
+          "Recall@10": 0.02992584745762712,
+          "Precision@10": 0.002992584745762712,
+          "Recall@50": 0.05942134533898305,
+          "Precision@50": 0.001188426906779661,
+          "Recall@100": 0.0874271716101695,
+          "Precision@100": 0.0008742717161016949
+        },
+        "rule": {
+          "Recall@10": 0.02914790783898305,
+          "Precision@10": 0.002914790783898305,
+          "Recall@50": 0.058246159957627115,
+          "Precision@50": 0.0011649231991525423,
+          "Recall@100": 0.0850436970338983,
+          "Precision@100": 0.0008504369703389831
+        },
+        "two_tower": {
+          "Recall@10": 0.006670418432203389,
+          "Precision@10": 0.000667041843220339,
+          "Recall@50": 0.018140889830508475,
+          "Precision@50": 0.0003628177966101695,
+          "Recall@100": 0.025473384533898306,
+          "Precision@100": 0.00025473384533898305
+        },
+        "recent_pop": {
+          "Recall@10": 0.04566671080508475,
+          "Precision@10": 0.0045666710805084745,
+          "Recall@50": 0.1111129502118644,
+          "Precision@50": 0.0022222590042372883,
+          "Recall@100": 0.1735632944915254,
+          "Precision@100": 0.0017356329449152543
+        },
+        "covis": {
+          "Recall@10": 0.0033931408898305085,
+          "Precision@10": 0.00033931408898305086,
+          "Recall@50": 0.008524231991525424,
+          "Precision@50": 0.00017048463983050847,
+          "Recall@100": 0.010560116525423728,
+          "Precision@100": 0.00010560116525423729
+        }
+      },
+      "retrieval_config": {
+        "top_k": 500,
+        "min_item_history": null,
+        "tt_k": 500,
+        "extra_sources": [
+          {
+            "name": "recent_pop",
+            "type": "decayed_pop",
+            "half_life_days": 7
+          },
+          {
+            "name": "covis",
+            "type": "covis",
+            "min_support": 2,
+            "normalization": "cosine",
+            "max_seeds": 5,
+            "seed_decay": 0.7,
+            "max_neighbors_per_seed": 50
+          }
+        ]
+      },
+      "rule_weights": {
+        "w_store": 0.5,
+        "w_cat": 0.5,
+        "w_pop": 1.0
+      },
+      "rule_tuning": null,
+      "n_rows": 62479105,
+      "n_positive_rows": 23323,
+      "top_k": 500,
+      "elapsed_seconds": 842.08
+    },
+    "model_selection": {
+      "snapshot": "model_selection",
+      "n_positive_eval_users": 58267,
+      "candidate_catalog_size": 20422,
+      "coverage": {
+        "historical_catalog": 0.7641375049341823,
+        "eligible_pool": 0.6348361851476823,
+        "retrieved_union": 0.3489625345392761
+      },
+      "cold_users": 37748,
+      "cold_items_not_in_history": 13743,
+      "history_cohorts": {
+        "0": 37748,
+        "1": 8330,
+        "2": 3920,
+        "3+": 8269
+      },
+      "sources": {
+        "popularity": {
+          "Recall@10": 0.028626838519230438,
+          "Precision@10": 0.002862683851923044,
+          "Recall@50": 0.058969914359757666,
+          "Precision@50": 0.0011793982871951534,
+          "Recall@100": 0.0810235639384214,
+          "Precision@100": 0.0008102356393842141
+        },
+        "rule": {
+          "Recall@10": 0.02804331782998953,
+          "Precision@10": 0.002804331782998953,
+          "Recall@50": 0.05764841162235914,
+          "Precision@50": 0.001152968232447183,
+          "Recall@100": 0.07786568726723532,
+          "Precision@100": 0.0007786568726723532
+        },
+        "two_tower": {
+          "Recall@10": 0.006092642490603601,
+          "Precision@10": 0.0006092642490603601,
+          "Recall@50": 0.016149793193402782,
+          "Precision@50": 0.00032299586386805567,
+          "Recall@100": 0.02382137401959943,
+          "Precision@100": 0.0002382137401959943
+        },
+        "recent_pop": {
+          "Recall@10": 0.04197916487891946,
+          "Precision@10": 0.004197916487891946,
+          "Recall@50": 0.11062865773079102,
+          "Precision@50": 0.0022125731546158204,
+          "Recall@100": 0.15543961418985017,
+          "Precision@100": 0.0015543961418985016
+        },
+        "covis": {
+          "Recall@10": 0.0034839617622324814,
+          "Precision@10": 0.00034839617622324813,
+          "Recall@50": 0.008031990663668971,
+          "Precision@50": 0.00016063981327337943,
+          "Recall@100": 0.009816877477817633,
+          "Precision@100": 9.816877477817632e-05
+        }
+      },
+      "retrieval_config": {
+        "top_k": 500,
+        "min_item_history": null,
+        "tt_k": 500,
+        "extra_sources": [
+          {
+            "name": "recent_pop",
+            "type": "decayed_pop",
+            "half_life_days": 7
+          },
+          {
+            "name": "covis",
+            "type": "covis",
+            "min_support": 2,
+            "normalization": "cosine",
+            "max_seeds": 5,
+            "seed_decay": 0.7,
+            "max_neighbors_per_seed": 50
+          }
+        ]
+      },
+      "rule_weights": {
+        "w_store": 0.5,
+        "w_cat": 0.5,
+        "w_pop": 1.0
+      },
+      "rule_tuning": null,
+      "n_rows": 62307082,
+      "n_positive_rows": 20333,
+      "top_k": 500,
+      "elapsed_seconds": 881.74
+    }
+  }
+}

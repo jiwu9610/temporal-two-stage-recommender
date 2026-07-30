@@ -1,0 +1,134 @@
+{
+  "category": "All_Beauty",
+  "variant": "C1_k500",
+  "retrieval_config": {
+    "top_k": 500,
+    "tt_k": 500,
+    "min_item_history": null,
+    "extra_sources": []
+  },
+  "built_utc": "2026-07-26T19:32:30.629690+00:00",
+  "elapsed_seconds": 626.92,
+  "snapshots": {
+    "ranker_train": {
+      "snapshot": "ranker_train",
+      "n_positive_eval_users": 50413,
+      "candidate_catalog_size": 18962,
+      "coverage": {
+        "historical_catalog": 0.655446015908595,
+        "eligible_pool": 0.4485152639200206,
+        "retrieved_union": 0.11120147580981096
+      },
+      "cold_users": 46913,
+      "cold_items_not_in_history": 17370,
+      "history_cohorts": {
+        "0": 46913,
+        "1": 2469,
+        "2": 506,
+        "3+": 525
+      },
+      "sources": {
+        "popularity": {
+          "Recall@10": 0.013369567373494932,
+          "Precision@10": 0.0013369567373494931,
+          "Recall@50": 0.03419752841528971,
+          "Precision@50": 0.0006839505683057941,
+          "Recall@100": 0.04233035129827624,
+          "Precision@100": 0.00042330351298276237
+        },
+        "rule": {
+          "Recall@10": 0.013528256600480034,
+          "Precision@10": 0.0013528256600480034,
+          "Recall@50": 0.03453474302263305,
+          "Precision@50": 0.000690694860452661,
+          "Recall@100": 0.04264772975224644,
+          "Precision@100": 0.00042647729752246443
+        },
+        "two_tower": {
+          "Recall@10": 0.00047606768095530917,
+          "Precision@10": 4.7606768095530916e-05,
+          "Recall@50": 0.0014480391962390653,
+          "Precision@50": 2.8960783924781308e-05,
+          "Recall@100": 0.002181976871045167,
+          "Precision@100": 2.181976871045167e-05
+        }
+      },
+      "retrieval_config": {
+        "top_k": 500,
+        "min_item_history": null,
+        "tt_k": 500,
+        "extra_sources": []
+      },
+      "rule_weights": {
+        "w_store": 0.5,
+        "w_cat": 0.5,
+        "w_pop": 0.5
+      },
+      "rule_tuning": null,
+      "n_rows": 26587917,
+      "n_positive_rows": 5606,
+      "top_k": 500,
+      "elapsed_seconds": 332.27
+    },
+    "model_selection": {
+      "snapshot": "model_selection",
+      "n_positive_eval_users": 47062,
+      "candidate_catalog_size": 21859,
+      "coverage": {
+        "historical_catalog": 0.6638901874123496,
+        "eligible_pool": 0.46304874420976583,
+        "retrieved_union": 0.10394798351111299
+      },
+      "cold_users": 43165,
+      "cold_items_not_in_history": 15818,
+      "history_cohorts": {
+        "0": 43165,
+        "1": 2746,
+        "2": 533,
+        "3+": 618
+      },
+      "sources": {
+        "popularity": {
+          "Recall@10": 0.013067867918915474,
+          "Precision@10": 0.0013067867918915472,
+          "Recall@50": 0.03503888487527092,
+          "Precision@50": 0.0007007776975054184,
+          "Recall@100": 0.04587565339339594,
+          "Precision@100": 0.00045875653393395943
+        },
+        "rule": {
+          "Recall@10": 0.013641579193404444,
+          "Precision@10": 0.0013641579193404444,
+          "Recall@50": 0.035676341846925336,
+          "Precision@50": 0.0007135268369385067,
+          "Recall@100": 0.0465768560622158,
+          "Precision@100": 0.000465768560622158
+        },
+        "two_tower": {
+          "Recall@10": 0.0005099655773235307,
+          "Precision@10": 5.099655773235306e-05,
+          "Recall@50": 0.001338659640474268,
+          "Precision@50": 2.677319280948536e-05,
+          "Recall@100": 0.001827376652075985,
+          "Precision@100": 1.827376652075985e-05
+        }
+      },
+      "retrieval_config": {
+        "top_k": 500,
+        "min_item_history": null,
+        "tt_k": 500,
+        "extra_sources": []
+      },
+      "rule_weights": {
+        "w_store": 0.5,
+        "w_cat": 0.5,
+        "w_pop": 0.5
+      },
+      "rule_tuning": null,
+      "n_rows": 25087170,
+      "n_positive_rows": 4892,
+      "top_k": 500,
+      "elapsed_seconds": 293.85
+    }
+  }
+}

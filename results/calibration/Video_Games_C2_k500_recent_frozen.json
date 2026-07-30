@@ -1,0 +1,52 @@
+{
+  "category": "Video_Games",
+  "variant": "C2_k500_recent",
+  "fitted_on": "selection_model_model_selection.parquet (out-of-sample, pre-test)",
+  "pred_subdir": "predictions",
+  "capped_run": false,
+  "dump_fingerprint": {
+    "created_utc": "2026-07-30T23:34:03.078655+00:00",
+    "n_rows": {
+      "ranker_train": 62053461,
+      "model_selection": 61857086,
+      "test": 58199915
+    },
+    "max_users_per_snapshot": 0,
+    "smoke": false,
+    "seed": 42
+  },
+  "pos_weight_selection": 2668.195672746043,
+  "pos_weight_refit": 2845.6859722477484,
+  "prior_shift_rule": "logit - log(pos_weight of the scored model)",
+  "platt": {
+    "a": 0.7857018120594444,
+    "b": -8.013247588731412,
+    "init_shift": -7.889157744955685,
+    "init_nll": 0.002753003581237205,
+    "final_nll": 0.002702625956275856,
+    "monotone": true
+  },
+  "chosen_calibrator": "platt",
+  "cohort_thresholds": {
+    "0": 0.0,
+    "1": 0.0,
+    "2": 0.0,
+    "3+": 0.0
+  },
+  "threshold_quantile_grid": [
+    0.5,
+    0.75,
+    0.9,
+    0.95,
+    0.99
+  ],
+  "prob_bins": 15,
+  "item_bucket_edges": [
+    10.0,
+    30.0,
+    100.0,
+    300.0
+  ],
+  "created_utc": "2026-07-30T23:41:19.135532+00:00",
+  "test_dump_untouched": true
+}

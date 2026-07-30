@@ -87,7 +87,7 @@ TEMPORAL_CATEGORICALS = ("main_category", "store")
 
 
 def resolve_feature_list(df: pd.DataFrame):
-    """Dense feature list for a candidates table: the frozen base tuple plus
+    r"""Dense feature list for a candidates table: the frozen base tuple plus
     any Phase 3A extra-source columns (source_*/\*_rank/\*_score triplets),
     sorted for a stable order. Extra ranks/scores get log1p (non-negative,
     long-tailed)."""
@@ -224,15 +224,38 @@ def _cohort_of(n: int) -> str:
     return "0" if n == 0 else "1" if n == 1 else "2" if n == 2 else "3+"
 
 
+# Columns carried into prediction dumps so the calibration analysis never has
+# to re-open the multi-GB candidate tables: ids + label + the two bucketing
+# keys from the advisor spec (user history cohort, item review-count bucket).
+def _dump_prediction_frame(path: Path, df: pd.DataFrame, logits: np.ndarray) -> None:
+    if len(df) != len(logits):
+        raise ValueError(f"logits/rows mismatch: {len(logits)} vs {len(df)}")
+    out = pd.DataFrame({
+        "user_id": df["user_id"].astype(str).to_numpy(),
+        "parent_asin": df["parent_asin"].astype(str).to_numpy(),
+        "label": pd.to_numeric(df["label"], errors="coerce").fillna(0).to_numpy(np.int8),
+        "logit": logits.astype(np.float32),
+        "n_history_events": pd.to_numeric(
+            df["n_history_events"], errors="coerce").fillna(0).to_numpy(np.int32),
+        "item_n_reviews_hist": pd.to_numeric(
+            df["item_n_reviews_hist"], errors="coerce").fillna(0).to_numpy(np.float32),
+    })
+    tmp = path.with_name(path.name + ".tmp")
+    out.to_parquet(tmp, index=False)
+    tmp.replace(path)
+
+
 def _eval_test(
     model: nn.Module,
     test_df: pd.DataFrame,
     test_inputs: Dict[str, torch.Tensor],
     gt_df: pd.DataFrame,
     device: str,
+    logits: Optional[np.ndarray] = None,
 ) -> Dict:
     """Final test evaluation with all spec-required breakdowns."""
-    logits = _score_df(model, test_inputs, device)
+    if logits is None:
+        logits = _score_df(model, test_inputs, device)
     topk = _scores_to_topk(
         logits, test_df["user_id"].to_numpy(), test_df["parent_asin"].to_numpy(), k=100,
     )
@@ -307,6 +330,7 @@ def run(
     results_dir: Path = RESULTS_DIR,
     variant: Optional[str] = None,
     stage_b_only: bool = False,
+    dump_predictions: bool = False,
 ) -> Dict:
     """Full run: selection -> refit -> single locked test eval.
 
@@ -315,8 +339,24 @@ def run(
     base dir -- it is split-defined, not config-defined). `stage_b_only`
     stops after model selection and reports selection-snapshot metrics ONLY;
     the test snapshot is neither read nor required to exist.
+
+    Evaluation & Calibration additions: `dump_predictions` writes per-row
+    logits to {candidate_dir}/predictions/ — the SELECTION-phase best model
+    scored on model_selection (out-of-sample; the only legal fitting data for
+    calibration under test-lock) plus the refit model scored on all three
+    snapshots (train/selection are in-sample for it). Dump runs should pass a
+    non-default `results_dir` so the locked one-shot test report is never
+    overwritten. Ignored in stage_b_only mode.
     """
     t0 = time.time()
+    # Value-level guard (the CLI has its own): a dump run re-executes the
+    # locked test eval, so its report must never land where the frozen
+    # one-shot reports live — whatever path the caller passed.
+    if (dump_predictions and not stage_b_only
+            and Path(results_dir).resolve() == RESULTS_DIR.resolve()):
+        raise ValueError(
+            "dump_predictions reruns the locked test eval; pass a results_dir "
+            f"outside {RESULTS_DIR} so the frozen report is never overwritten")
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
     tdir = Path(processed_dir) / category / "temporal_ranker"
@@ -429,7 +469,7 @@ def run(
         key = (summary["best_ranker_val_recall@100"], -gi)
         if best is None or key > best[0]:
             best = (key, run_rec)
-            if stage_b_only:
+            if stage_b_only or dump_predictions:
                 # train_pointwise_bce reloaded the run's best epoch already.
                 best_model_state = {k: v.detach().cpu().clone()
                                     for k, v in model.state_dict().items()}
@@ -471,6 +511,16 @@ def run(
               flush=True)
         return report
 
+    # Out-of-sample selection-model scores on model_selection: fitted before
+    # the selection tensors are freed. This is the calibration fitting set.
+    selmodel_sel_logits: Optional[np.ndarray] = None
+    if dump_predictions:
+        sel_model = _make_model(chosen["arch"], spec_sel).to(device)
+        sel_model.load_state_dict(best_model_state)
+        selmodel_sel_logits = _score_df(sel_model, sel_inputs, device)
+        del sel_model
+        best_model_state = None
+
     # Free the selection-phase tensors before building the refit set -- the
     # login-node cgroup cannot hold both generations at once.
     import gc
@@ -496,12 +546,74 @@ def run(
         device=device, seed=seed, pos_weight=pos_weight_c,
     )
 
+    # Refit-model scores on the refit rows (combined = train then selection,
+    # order preserved by concat) captured before the tensors are freed.
+    refit_combined_logits: Optional[np.ndarray] = None
+    if dump_predictions:
+        refit_combined_logits = _score_df(final_model, combined_inputs, device)
+
     # ---- final test -----------------------------------------------------------
     del combined_inputs
     gc.collect()
     test_inputs = build_temporal_tensors(cands["test"], spec_final,
                                          features, log1p)
-    test_eval = _eval_test(final_model, cands["test"], test_inputs, gt_test, device)
+    test_logits = _score_df(final_model, test_inputs, device)
+    test_eval = _eval_test(final_model, cands["test"], test_inputs, gt_test,
+                           device, logits=test_logits)
+
+    if dump_predictions:
+        # Capped/smoke dumps are NOT the canonical scored model — quarantine
+        # them so a full-scale analysis can never silently read them.
+        capped = bool(max_users_per_snapshot) or smoke
+        pred_dir = cdir / ("predictions_smoke" if capped else "predictions")
+        pred_dir.mkdir(parents=True, exist_ok=True)
+        n_train = len(cands["ranker_train"])
+        _dump_prediction_frame(
+            pred_dir / "selection_model_model_selection.parquet",
+            cands["model_selection"], selmodel_sel_logits)
+        _dump_prediction_frame(
+            pred_dir / "refit_model_ranker_train.parquet",
+            cands["ranker_train"], refit_combined_logits[:n_train])
+        _dump_prediction_frame(
+            pred_dir / "refit_model_model_selection.parquet",
+            cands["model_selection"], refit_combined_logits[n_train:])
+        _dump_prediction_frame(
+            pred_dir / "refit_model_test.parquet", cands["test"], test_logits)
+        meta = {
+            "category": category,
+            "variant": variant,
+            "seed": seed,
+            "device": device,
+            "max_users_per_snapshot": max_users_per_snapshot,
+            "smoke": smoke,
+            "created_utc": datetime.now(tz=timezone.utc).isoformat(),
+            "selection_model": {
+                "arch": chosen["arch"], "lr": chosen["lr"],
+                "best_epoch": chosen["best_epoch"],
+                "pos_weight": pos_weight,
+                "trained_on": "candidates_ranker_train (labels T0->T1)",
+                "out_of_sample_on": ["model_selection"],
+            },
+            "refit_model": {
+                "arch": chosen["arch"], "lr": chosen["lr"],
+                "fixed_epochs": chosen["best_epoch"],
+                "pos_weight": pos_weight_c,
+                "trained_on": "ranker_train + model_selection",
+                "out_of_sample_on": ["test"],
+            },
+            "n_rows": {
+                "ranker_train": n_train,
+                "model_selection": int(len(cands["model_selection"])),
+                "test": int(len(cands["test"])),
+            },
+            "note": ("calibration must be FITTED on "
+                     "selection_model_model_selection.parquet only "
+                     "(out-of-sample, pre-test); refit train/selection dumps "
+                     "are in-sample and for distribution analysis only"),
+        }
+        with open(pred_dir / "meta.json", "w") as f:
+            json.dump(meta, f, indent=2)
+        print(f"[ranker] dumped predictions to {pred_dir}", flush=True)
 
     # Retrieval-only context on the same test candidates.
     retrieval_only = {}
@@ -586,14 +698,28 @@ def _parse_args(argv=None):
     p.add_argument("--stage-b", action="store_true",
                    help="Stop after model selection; never touch the test "
                         "snapshot (Phase 3A Stage B confirmation).")
+    p.add_argument("--dump-predictions", action="store_true",
+                   help="Write per-row logits to the candidate dir's "
+                        "predictions/ subdir (calibration analysis input).")
+    p.add_argument("--results-dir", default=None,
+                   help="Override the report output dir. REQUIRED with "
+                        "--dump-predictions so the locked one-shot test "
+                        "report is never overwritten by a rerun.")
     return p.parse_args(argv)
 
 
 def main(argv=None):
     args = _parse_args(argv)
+    if args.dump_predictions and not args.stage_b and args.results_dir is None:
+        raise SystemExit("--dump-predictions reruns the locked test eval; "
+                         "pass --results-dir to keep the frozen report intact")
+    kwargs = {}
+    if args.results_dir:
+        kwargs["results_dir"] = Path(args.results_dir)
     run(args.category, max_epochs=args.max_epochs, batch_size=args.batch_size,
         seed=args.seed, smoke=args.smoke, max_users_per_snapshot=args.max_users,
-        variant=args.variant, stage_b_only=args.stage_b)
+        variant=args.variant, stage_b_only=args.stage_b,
+        dump_predictions=args.dump_predictions, **kwargs)
 
 
 if __name__ == "__main__":

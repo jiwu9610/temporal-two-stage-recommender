@@ -1,0 +1,134 @@
+{
+  "category": "Books",
+  "variant": "C1_k500",
+  "retrieval_config": {
+    "top_k": 500,
+    "tt_k": 500,
+    "min_item_history": null,
+    "extra_sources": []
+  },
+  "built_utc": "2026-07-26T19:53:30.542935+00:00",
+  "elapsed_seconds": 885.85,
+  "snapshots": {
+    "ranker_train": {
+      "snapshot": "ranker_train",
+      "n_positive_eval_users": 35741,
+      "candidate_catalog_size": 21786,
+      "coverage": {
+        "historical_catalog": 0.48507316527237626,
+        "eligible_pool": 0.25833076858509835,
+        "retrieved_union": 0.08049578914971602
+      },
+      "cold_users": 13331,
+      "cold_items_not_in_history": 18404,
+      "history_cohorts": {
+        "0": 13331,
+        "1": 4960,
+        "2": 3168,
+        "3+": 14282
+      },
+      "sources": {
+        "popularity": {
+          "Recall@10": 0.020256847877787414,
+          "Precision@10": 0.0020256847877787414,
+          "Recall@50": 0.02957387873870345,
+          "Precision@50": 0.000591477574774069,
+          "Recall@100": 0.03847122352480345,
+          "Precision@100": 0.0003847122352480345
+        },
+        "rule": {
+          "Recall@10": 0.020592596737640245,
+          "Precision@10": 0.0020592596737640245,
+          "Recall@50": 0.031196664894658794,
+          "Precision@50": 0.0006239332978931759,
+          "Recall@100": 0.038834951456310676,
+          "Precision@100": 0.0003883495145631068
+        },
+        "two_tower": {
+          "Recall@10": 0.005539856187571696,
+          "Precision@10": 0.0005539856187571696,
+          "Recall@50": 0.011891105453121066,
+          "Precision@50": 0.0002378221090624213,
+          "Recall@100": 0.01729106628242075,
+          "Precision@100": 0.0001729106628242075
+        }
+      },
+      "retrieval_config": {
+        "top_k": 500,
+        "min_item_history": null,
+        "tt_k": 500,
+        "extra_sources": []
+      },
+      "rule_weights": {
+        "w_store": 1.0,
+        "w_cat": 0.5,
+        "w_pop": 1.0
+      },
+      "rule_tuning": null,
+      "n_rows": 23955882,
+      "n_positive_rows": 2877,
+      "top_k": 500,
+      "elapsed_seconds": 454.39
+    },
+    "model_selection": {
+      "snapshot": "model_selection",
+      "n_positive_eval_users": 35926,
+      "candidate_catalog_size": 25640,
+      "coverage": {
+        "historical_catalog": 0.5001113399766186,
+        "eligible_pool": 0.28207983076323556,
+        "retrieved_union": 0.07913488838167344
+      },
+      "cold_users": 12695,
+      "cold_items_not_in_history": 17959,
+      "history_cohorts": {
+        "0": 12695,
+        "1": 5101,
+        "2": 3031,
+        "3+": 15099
+      },
+      "sources": {
+        "popularity": {
+          "Recall@10": 0.02357624004898959,
+          "Precision@10": 0.002357624004898959,
+          "Recall@50": 0.036630852307521014,
+          "Precision@50": 0.0007326170461504203,
+          "Recall@100": 0.041891666202750096,
+          "Precision@100": 0.000418916662027501
+        },
+        "rule": {
+          "Recall@10": 0.022852530200968658,
+          "Precision@10": 0.0022852530200968657,
+          "Recall@50": 0.03543394755887101,
+          "Precision@50": 0.0007086789511774203,
+          "Recall@100": 0.04141847130212103,
+          "Precision@100": 0.0004141847130212103
+        },
+        "two_tower": {
+          "Recall@10": 0.006402048655569782,
+          "Precision@10": 0.0006402048655569782,
+          "Recall@50": 0.01402883705394422,
+          "Precision@50": 0.0002805767410788844,
+          "Recall@100": 0.017981406223904692,
+          "Precision@100": 0.00017981406223904693
+        }
+      },
+      "retrieval_config": {
+        "top_k": 500,
+        "min_item_history": null,
+        "tt_k": 500,
+        "extra_sources": []
+      },
+      "rule_weights": {
+        "w_store": 1.0,
+        "w_cat": 0.5,
+        "w_pop": 1.0
+      },
+      "rule_tuning": null,
+      "n_rows": 24755226,
+      "n_positive_rows": 2843,
+      "top_k": 500,
+      "elapsed_seconds": 429.66
+    }
+  }
+}
