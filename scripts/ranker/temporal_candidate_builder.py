@@ -315,9 +315,17 @@ def build_snapshot_candidates(
         list(USER_FEATURE_RENAME)
     ].rename(columns=USER_FEATURE_RENAME)
 
-    gt_map = dict(zip(gt_df["user_id"], gt_df["parent_asin"]))
+    # Set-valued: dict(zip(...)) is last-wins, so with several groundtruth
+    # rows per user every target but the latest silently disappears from the
+    # labels AND from every coverage number below.
+    gt_map: Dict[str, Set[str]] = (
+        gt_df.groupby("user_id")["parent_asin"].agg(set).to_dict())
+    assert sum(len(v) for v in gt_map.values()) == len(
+        gt_df.drop_duplicates(["user_id", "parent_asin"])), "groundtruth rows dropped"
+    # n_history_events is constant within a user, so last-wins is harmless here.
     n_hist_map = dict(zip(gt_df["user_id"], gt_df["n_history_events"].astype(int)))
     eval_users = sorted(gt_map)
+    n_positives_total = sum(len(v) for v in gt_map.values())
 
     # ---- extra point-in-time sources (Phase 3A) --------------------------------
     as_of_ms = int(manifest["snapshots"][snapshot]["history_end_ms"])
@@ -359,8 +367,13 @@ def build_snapshot_candidates(
 
     # ---- per-source metric accumulators ----------------------------------------
     all_source_names = ["popularity", "rule", "two_tower", *extra_names]
-    src_hits = {s: {k: 0 for k in KS} for s in all_source_names}
-    retrieved_cov_n = 0
+    # Float accumulators: each user contributes the FRACTION of their positives
+    # a source retrieved, so the per-source figures stay macro recalls rather
+    # than becoming hit counts once a user has several targets.
+    src_hits = {s: {k: 0.0 for k in KS} for s in all_source_names}
+    retrieved_cov_n = 0        # users with >= 1 positive in the union
+    retrieved_cov_macro = 0.0  # sum over users of covered-fraction
+    retrieved_cov_pos = 0      # positives covered, pooled
     dest_dir = Path(out_dir) if out_dir is not None else tdir
     dest_dir.mkdir(parents=True, exist_ok=True)
     out_path = dest_dir / f"candidates_{snapshot}.parquet"
@@ -501,7 +514,7 @@ def build_snapshot_candidates(
 
         # Label + cohort.
         merged["label"] = np.array([
-            1 if gt_map.get(u) == pa else 0
+            1 if pa in gt_map.get(u, ()) else 0
             for u, pa in zip(merged["user_id"], merged["parent_asin"])
         ], dtype=np.int8)
         merged["n_history_events"] = (
@@ -522,22 +535,26 @@ def build_snapshot_candidates(
             u: set(g) for u, g in merged.groupby("user_id")["parent_asin"].agg(set).items()
         }
         for u in chunk:
-            target = gt_map[u]
+            targets = gt_map[u]
+            n_t = len(targets)
             for src, topk_dict in (("popularity", pop_topk), ("rule", rule_topk)):
                 items = topk_dict.get(u, [])
                 for k in KS:
-                    src_hits[src][k] += int(target in items[:k])
+                    src_hits[src][k] += len(targets & set(items[:k])) / n_t
             tt_items = (tt_by_user[u]["parent_asin"].tolist()[:top_k]
                         if u in tt_by_user else [])
             for k in KS:
-                src_hits["two_tower"][k] += int(target in tt_items[:k])
+                src_hits["two_tower"][k] += len(targets & set(tt_items[:k])) / n_t
             for name in extra_names:
                 items = extra_chunk_topk[name].get(u, [])
                 for k in KS:
-                    src_hits[name][k] += int(target in items[:k])
+                    src_hits[name][k] += len(targets & set(items[:k])) / n_t
             cand_set = by_user_items.get(u, set())
-            if target in cand_set:
+            hit_n = len(targets & cand_set)
+            if hit_n:
                 retrieved_cov_n += 1
+            retrieved_cov_macro += hit_n / n_t
+            retrieved_cov_pos += hit_n
 
         n_rows_total += len(merged)
         n_pos_rows += int(merged["label"].sum())
@@ -581,15 +598,30 @@ def build_snapshot_candidates(
         "n_positive_eval_users": n_users,
         "candidate_catalog_size": len(pool),
         "coverage": {
+            # Macro (mean over users of the fraction of THEIR positives that
+            # are covered) -- the form that bounds grouped_eval's macro recall.
             "historical_catalog": float(np.mean(
-                [gt_map[u] in hist_item_set for u in eval_users])) if n_users else 0.0,
+                [len(gt_map[u] & hist_item_set) / len(gt_map[u])
+                 for u in eval_users])) if n_users else 0.0,
             "eligible_pool": float(np.mean(
-                [gt_map[u] in pool for u in eval_users])) if n_users else 0.0,
-            "retrieved_union": retrieved_cov_n / n_users if n_users else 0.0,
+                [len(gt_map[u] & pool) / len(gt_map[u])
+                 for u in eval_users])) if n_users else 0.0,
+            "retrieved_union": retrieved_cov_macro / n_users if n_users else 0.0,
+            # Any-hit (fraction of users with >=1 positive covered) and micro
+            # (fraction of all positives covered). Under one positive per user
+            # all three collapse to the same number.
+            "retrieved_union_any_hit": retrieved_cov_n / n_users if n_users else 0.0,
+            "retrieved_union_per_positive": (
+                retrieved_cov_pos / n_positives_total) if n_positives_total else 0.0,
         },
         "cold_users": n_cold_users,
-        "cold_items_not_in_history": int(sum(
-            gt_map[u] not in hist_item_set for u in eval_users)),
+        # Counts POSITIVES whose item never appears in history (this is what
+        # the field always meant; under one row per user it equalled a user
+        # count by coincidence).
+        "n_positives": n_positives_total,
+        "cold_items_not_in_history": int(
+            (gt_df.drop_duplicates(["user_id", "parent_asin"])["item_in_history"]
+             .astype(int) == 0).sum()),
         "history_cohorts": cohort_counts,
         "sources": {s: _src_metrics(s) for s in all_source_names},
         "retrieval_config": {

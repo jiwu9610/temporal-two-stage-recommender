@@ -359,7 +359,14 @@ def train_snapshot_checkpoint(
     # fallback is the popularity source of the candidate union).
     labels["user_id"] = labels["user_id"].astype(str)
     labels["parent_asin"] = labels["parent_asin"].astype(str)
-    gt = {u: {pa} for u, pa in zip(labels["user_id"], labels["parent_asin"])}
+    # Set-valued per user. The old `{u: {pa} for u, pa in zip(...)}` reads like
+    # it builds sets but is a per-ROW comprehension: with several groundtruth
+    # rows per user, later keys overwrite earlier ones and each user silently
+    # keeps one item. (n_history_events is a per-user constant, so building
+    # hist_events by zip stays correct either way.)
+    gt = {u: set(g) for u, g in
+          labels.groupby("user_id")["parent_asin"].agg(set).items()}
+    assert sum(len(v) for v in gt.values()) == len(labels), "groundtruth rows dropped"
     hist_events = dict(zip(labels["user_id"], labels["n_history_events"]))
     eval_users = sorted(u for u in gt if hist_events.get(u, 0) >= 1)
     n_zero_history = len(gt) - len(eval_users)
@@ -577,8 +584,10 @@ def infer_snapshot_checkpoint(
     labels["user_id"] = labels["user_id"].astype(str)
     hist_events = dict(zip(labels["user_id"],
                            labels["n_history_events"].astype(int)))
-    eval_users = sorted(u for u in labels["user_id"]
-                        if hist_events.get(u, 0) >= 1)
+    # unique(): several groundtruth rows per user must not yield duplicate
+    # eval users, which would double-count them in the emitted predictions.
+    eval_users = sorted({u for u in labels["user_id"]
+                         if hist_events.get(u, 0) >= 1})
     if not eval_users:
         pred_df = pd.DataFrame(columns=["user_id", "parent_asin", "score", "rank"])
     else:

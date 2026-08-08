@@ -26,6 +26,8 @@ Padding positions are masked out and never affect metric computation.
     - Recall@k: fraction of all relevant items captured in top-k
 """
 
+from typing import Optional
+
 import torch
 
 
@@ -199,6 +201,7 @@ def ndcg_at_k(
     labels: torch.Tensor,
     mask: torch.Tensor,
     k: int,
+    n_true_positives: Optional[torch.Tensor] = None,
 ) -> torch.Tensor:
     """Per-sample Normalized Discounted Cumulative Gain at cutoff k.
 
@@ -208,6 +211,12 @@ def ndcg_at_k(
     nDCG@k = DCG@k / IDCG@k where:
       DCG@k  = sum_{i=1}^{k} rel_i / log2(i+1)        (actual ranking)
       IDCG@k = same formula but with labels sorted by relevance (ideal ranking)
+
+    `n_true_positives` — [B] tensor of |P_u|, counting positives that retrieval
+    never surfaced. Without it the ideal ranking is built from `labels`, i.e.
+    only the retrieved positives, which inflates nDCG for exactly the users
+    retrieval served worst. Harmless under one positive per user (the ideal is
+    1 whenever the positive is present, and absent users are dropped upstream).
 
     Returns:
         ndcg: [B]  (0.0 if no relevant items or k=0)
@@ -229,10 +238,22 @@ def ndcg_at_k(
     ).unsqueeze(0)                                              # [1, eff_k]
     dcg = (topk_labels / discounts).sum(dim=1)                  # [B]
 
-    # Ideal DCG: what DCG would be if we ranked all relevant items first
-    ideal_labels = labels.masked_fill(~mask, 0.0).float()
-    ideal_sorted = ideal_labels.sort(dim=1, descending=True).values[:, :eff_k]
-    idcg = (ideal_sorted / discounts).sum(dim=1)                # [B]
+    # Ideal DCG. Built from `labels` -- i.e. from the positives that candidate
+    # generation actually surfaced -- so with several positives per user the
+    # ideal shrinks by exactly the amount retrieval failed and nDCG is inflated
+    # for precisely the users the system served worst. `n_true_positives` is
+    # |P_u| including positives that never became candidates; when supplied,
+    # IDCG is built analytically as the first min(|P_u|, k) discounts, which is
+    # what a perfect ranking over the full ground truth would score.
+    if n_true_positives is None:
+        ideal_labels = labels.masked_fill(~mask, 0.0).float()
+        ideal_sorted = ideal_labels.sort(dim=1, descending=True).values[:, :eff_k]
+        idcg = (ideal_sorted / discounts).sum(dim=1)            # [B]
+    else:
+        n_ideal = n_true_positives.to(labels.device).float().clamp(max=eff_k)
+        positions = torch.arange(eff_k, device=labels.device).float().unsqueeze(0)
+        take = (positions < n_ideal.unsqueeze(1)).float()       # [B, eff_k]
+        idcg = (take / discounts).sum(dim=1)                    # [B]
 
     # Normalize: nDCG = DCG / IDCG (handle edge case where IDCG = 0)
     valid = idcg > 0

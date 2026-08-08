@@ -229,22 +229,49 @@ def classify_targets(
     item_col: str = "parent_asin",
     user_col: str = "user_id",
 ) -> pd.Series:
-    """Per ground-truth user, classify the target item:
+    """Classify every ground-truth (user, target) pair:
 
         cold                    never appeared before the snapshot
         low_support             appeared, but below the eligibility threshold
         eligible_not_retrieved  in the eligible pool, absent from the user's
                                 candidate union
         retrieved               present in the user's candidate union
+
+    Returns a Series indexed by MultiIndex (user_col, item_col). The status is
+    a property of the TARGET ITEM -- the same user can hold a retrieved and a
+    cold target at once -- so it cannot be keyed by user. It used to be: the
+    loop wrote `out[u] = status` per gt ROW, so under all_positive_labels a
+    user with n positives kept only the LAST row's status and the returned
+    Series had one entry per user instead of per target. That silently shrank
+    the Stage A `target_status_counts` histogram from #(user, target) pairs to
+    #users and biased it toward whichever status the user's latest positive
+    happened to have. With one gt row per user both indexings carry the same
+    information and value_counts() is unchanged.
     """
-    out = {}
-    for u, target in zip(gt_df[user_col].astype(str), gt_df[item_col].astype(str)):
+    pairs = pd.DataFrame({
+        user_col: gt_df[user_col].astype(str).to_numpy(),
+        item_col: gt_df[item_col].astype(str).to_numpy(),
+    }).drop_duplicates()
+    status: List[str] = []
+    for u, target in zip(pairs[user_col], pairs[item_col]):
         if target in retrieved_per_user.get(u, set()):
-            out[u] = "retrieved"
+            status.append("retrieved")
         elif target in eligible_items:
-            out[u] = "eligible_not_retrieved"
+            status.append("eligible_not_retrieved")
         elif hist_item_counts.get(target, 0) > 0:
-            out[u] = "low_support"
+            status.append("low_support")
         else:
-            out[u] = "cold"
-    return pd.Series(out, name="target_status")
+            status.append("cold")
+    out = pd.Series(status, index=pd.MultiIndex.from_frame(pairs),
+                    name="target_status", dtype=object)
+    # Guard against the real failure mode -- one entry per distinct (user,
+    # target), never per user. Comparing against `pairs` would be a tautology
+    # since `out` is built FROM `pairs`; compare against the input frame's own
+    # deduplicated pair count instead, which is what a re-keying regression
+    # would collapse.
+    n_distinct_pairs = len(gt_df[[user_col, item_col]].drop_duplicates())
+    assert len(out) == n_distinct_pairs and out.index.is_unique, (
+        f"target_status has {len(out)} entries for {n_distinct_pairs} distinct "
+        f"(user, target) pairs -- targets were dropped or re-keyed by user"
+    )
+    return out

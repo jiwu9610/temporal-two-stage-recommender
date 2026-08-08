@@ -5,9 +5,16 @@ CLI:
 
 Four global cutoffs shared by every user, T0 < T1 < T2 < T3:
 
-    ranker_train      history ts < T0    labels = first positive in [T0, T1)
-    model_selection   history ts < T1    labels = first positive in [T1, T2)
-    test              history ts < T2    labels = first positive in [T2, T3)
+    ranker_train      history ts < T0    labels from [T0, T1)
+    model_selection   history ts < T1    labels from [T1, T2)
+    test              history ts < T2    labels from [T2, T3)
+
+Two label frames are emitted per snapshot from the SAME history and window:
+groundtruth_{s}.parquet keeps only each user's FIRST positive (the frozen
+next-item framing every existing artifact keys off), and
+groundtruth_all_{s}.parquet keeps EVERY distinct positive (the coverage
+framing: "did we recommend what the user went on to buy"). No consumer reads
+the _all_ frame yet; switching one over is a deliberate, separate step.
 
 Histories therefore expand: history(T0) subset history(T1) subset history(T2).
 Every snapshot gets its OWN feature stores (all `_hist` aggregates recomputed
@@ -16,9 +23,8 @@ ground-truth table. Nothing is shared or copied across snapshots.
 
 Outputs (data/processed/{category}/temporal_ranker/):
 
-    history_ranker_train.parquet          groundtruth_ranker_train.parquet
-    history_model_selection.parquet       groundtruth_model_selection.parquet
-    history_test.parquet                  groundtruth_test.parquet
+    history_{snapshot}.parquet            groundtruth_{snapshot}.parquet
+    groundtruth_all_{snapshot}.parquet
     user_features_{snapshot}.parquet      item_features_{snapshot}.parquet
     snapshot_manifest.json
 
@@ -46,7 +52,13 @@ from .temporal_feature_store import (
     build_snapshot_item_features,
     build_snapshot_user_features,
 )
-from .temporal_split import Snapshot, build_snapshot, iso_to_ms, ms_to_iso
+from .temporal_split import (
+    Snapshot,
+    build_snapshot,
+    iso_to_ms,
+    ms_to_iso,
+    relabel_snapshot_all_positive,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONFIG_PATH = REPO_ROOT / "configs" / "preprocessing.yaml"
@@ -57,6 +69,7 @@ SNAPSHOT_NAMES = ("ranker_train", "model_selection", "test")
 TEMPORAL_RANKER_OUTPUT_FILES = {
     *(f"history_{s}.parquet" for s in SNAPSHOT_NAMES),
     *(f"groundtruth_{s}.parquet" for s in SNAPSHOT_NAMES),
+    *(f"groundtruth_all_{s}.parquet" for s in SNAPSHOT_NAMES),
     *(f"user_features_{s}.parquet" for s in SNAPSHOT_NAMES),
     *(f"item_features_{s}.parquet" for s in SNAPSHOT_NAMES),
     "snapshot_manifest.json",
@@ -112,10 +125,14 @@ def build_three_snapshots(
     cutoffs: Dict[str, Any],
     min_item_history_interactions: int = 5,
     warm_user_min_history: int = 3,
+    label_mode: str = "first_positive",
 ) -> Dict[str, Snapshot]:
     """The three walk-forward snapshots. Reuses the audited 2-snapshot builder
-    (strict `ts < cutoff` history, first-positive labels, history-only
-    eligibility, warm/cold flags)."""
+    (strict `ts < cutoff` history, history-only eligibility, warm/cold flags).
+
+    label_mode is forwarded to build_snapshot; history and eligibility are
+    identical across modes, so first_positive and all_positive snapshots differ
+    only in their label frame and stay directly comparable."""
     bounds = {
         "ranker_train": (cutoffs["t0_ms"], cutoffs["t1_ms"]),
         "model_selection": (cutoffs["t1_ms"], cutoffs["t2_ms"]),
@@ -125,6 +142,7 @@ def build_three_snapshots(
         name: build_snapshot(
             clean_df, name, hist_end, label_end,
             min_item_history_interactions, warm_user_min_history,
+            label_mode=label_mode,
         )
         for name, (hist_end, label_end) in bounds.items()
     }
@@ -189,10 +207,17 @@ def run_category(
     snapshots = build_three_snapshots(clean, cutoffs, min_item_hist, warm_user_min)
     for name in SNAPSHOT_NAMES:
         s = snapshots[name]
+        lab = s.stats["labels"]
+        # `labels={len(s.labels)} users` printed a label ROW count under the
+        # word "users" -- only equal while label_mode == "first_positive".
+        # Under all_positive that reads e.g. "labels=41,203 users" next to
+        # warm/cold counts summing to 18,760 (those already use nunique()), a
+        # line contradicting itself. Rows, DISTINCT users and the mode are now
+        # printed separately so the provenance line holds in either mode.
         print(f"        {name}: history={len(s.history):,} rows | "
-              f"labels={len(s.labels):,} users "
-              f"(warm={s.stats['labels']['n_warm_users']:,} "
-              f"cold={s.stats['labels']['n_cold_users']:,}) | "
+              f"labels[{lab['label_mode']}]={lab['n_rows']:,} rows over "
+              f"{lab['n_users']:,} users "
+              f"(warm={lab['n_warm_users']:,} cold={lab['n_cold_users']:,}) | "
               f"pool={s.stats['eligibility']['n_eligible_items']:,}", flush=True)
 
     # Nesting sanity (guaranteed by construction; asserted for the manifest).
@@ -210,11 +235,51 @@ def run_category(
             catalog, s.history, s.eligible_items, as_of_ms=s.history_end_ms,
         )
 
+    # All-positive labels for the coverage framing ("did we cover what the
+    # user actually bought"), emitted ALONGSIDE the frozen first-positive
+    # ground truth rather than replacing it: every frozen artifact, the
+    # test-lock and all cross-phase comparisons key off groundtruth_{name}.
+    # History, cutoffs and eligibility are shared, so the two are comparable.
+    labels_all: Dict[str, pd.DataFrame] = {}
+    all_label_stats: Dict[str, Dict[str, Any]] = {}
+    for name in SNAPSHOT_NAMES:
+        s = snapshots[name]
+        lab = relabel_snapshot_all_positive(s, clean, warm_user_min)
+        labels_all[name] = lab
+        # Real invariants, not tautologies. History and the user set are shared
+        # by construction (both label rules start from the same in-window
+        # positives), so asserting on them proves nothing. These two CAN fail —
+        # they catch a dedup or ordering bug in all_positive_labels.
+        first_pairs = set(map(tuple, s.labels[["user_id", "parent_asin"]].to_numpy()))
+        all_pairs = set(map(tuple, lab[["user_id", "parent_asin"]].to_numpy()))
+        assert first_pairs <= all_pairs, (
+            f"{name}: {len(first_pairs - all_pairs)} first-positive targets are "
+            f"missing from the all-positive frame"
+        )
+        assert len(all_pairs) == len(lab), (
+            f"{name}: all-positive frame carries duplicate (user, item) rows"
+        )
+        n_rows, n_users = len(lab), int(lab["user_id"].nunique())
+        all_label_stats[name] = {
+            "label_mode": "all_positive",
+            "n_rows": n_rows,
+            "n_users": n_users,
+            "positives_per_user": (n_rows / n_users) if n_users else 0.0,
+            "n_label_items_in_history": int(lab["item_in_history"].sum()),
+            "n_label_items_in_eligible_pool": int(lab["item_in_eligible_pool"].sum()),
+        }
+        print(f"        {name}: all-positive labels = {n_rows:,} rows "
+              f"over {n_users:,} users "
+              f"({all_label_stats[name]['positives_per_user']:.2f} per user)",
+              flush=True)
+
     print("[4/4] writing temporal_ranker artifacts...", flush=True)
     for name in SNAPSHOT_NAMES:
         s = snapshots[name]
         s.history.to_parquet(out_dir / f"history_{name}.parquet", index=False)
         s.labels.to_parquet(out_dir / f"groundtruth_{name}.parquet", index=False)
+        labels_all[name].to_parquet(
+            out_dir / f"groundtruth_all_{name}.parquet", index=False)
     for fname, df in stores.items():
         df.to_parquet(out_dir / f"{fname}.parquet", index=False)
 
@@ -231,6 +296,10 @@ def run_category(
             "n_items": int(clean["parent_asin"].nunique()),
         },
         "snapshots": {name: snapshots[name].stats for name in SNAPSHOT_NAMES},
+        # The all-positive frames are written to disk, so their provenance
+        # belongs in the manifest too -- otherwise n_rows / positives_per_user
+        # for those files exist nowhere and a reader cannot tell what they hold.
+        "snapshots_all_positive_labels": all_label_stats,
         "config": {
             "config_path": str(config_path),
             "three_snapshot": three,

@@ -218,6 +218,211 @@ class TestEvaluateFlat:
             assert got[f"recall@{k}_overall"] == pytest.approx(legacy_r, abs=1e-9)
 
 
+class TestMultiPositiveSemantics:
+    """recall@k_overall must stay a RECALL when a user has several positives.
+
+    The snapshot protocol used to emit exactly one groundtruth row per user
+    (first positive in the label window), under which mean-per-user-recall and
+    mean-hit-count are the same number. Moving to all-positives-in-the-window
+    separates them, and only the first is a recall.
+    """
+
+    def test_backward_compatible_under_one_positive_per_user(self):
+        # a: positive at rank 1. b: positive at rank 2. Plus 2 gt users with
+        # no candidate rows at all. All three overall flavours must coincide.
+        users = np.array(["a", "a", "b", "b"])
+        scores = np.array([2.0, 1.0, 2.0, 1.0])
+        labels = np.array([1.0, 0.0, 0.0, 1.0])
+        got = evaluate_flat(users, scores, labels, ks=(1,), n_gt_users=4)
+        assert got["recall@1_overall"] == pytest.approx(0.25)
+        assert got["hit_rate@1_overall"] == pytest.approx(0.25)
+        assert got["hits@1_per_gt_user"] == pytest.approx(0.25)
+
+    def test_recall_is_macro_average_not_hit_count(self):
+        # a: 4 rows, positives at ranks 1 and 3 -> recall@2 = 1/2, hits@2 = 1
+        # b: 4 rows, single positive at rank 4  -> recall@2 = 0,   hits@2 = 0
+        # 2 further gt users contribute no rows. n_gt_users = 4.
+        users = np.array(["a"] * 4 + ["b"] * 4)
+        scores = np.array([4.0, 3.0, 2.0, 1.0] * 2)
+        labels = np.array([1.0, 0.0, 1.0, 0.0,
+                           0.0, 0.0, 0.0, 1.0])
+        got = evaluate_flat(users, scores, labels, ks=(2,), n_gt_users=4)
+        assert got["recall@2_overall"] == pytest.approx(0.5 / 4)
+        assert got["hits@2_per_gt_user"] == pytest.approx(1 / 4)
+        assert got["hit_rate@2_overall"] == pytest.approx(1 / 4)
+        # The three genuinely disagree -> the distinction is load bearing.
+        assert got["recall@2_overall"] != pytest.approx(got["hits@2_per_gt_user"])
+        assert got["recall@2_conditional"] == pytest.approx(0.25)
+
+    def test_recall_overall_never_exceeds_one(self):
+        # One gt user holding three positives, all inside top-3. The pre-fix
+        # numerator (sum of hit COUNTS) would report 3.0 here.
+        users = np.array(["a"] * 3)
+        scores = np.array([3.0, 2.0, 1.0])
+        labels = np.array([1.0, 1.0, 1.0])
+        got = evaluate_flat(users, scores, labels, ks=(3,), n_gt_users=1)
+        assert got["recall@3_overall"] == pytest.approx(1.0)
+        assert got["hits@3_per_gt_user"] == pytest.approx(3.0)
+
+    def test_matches_legacy_evaluator_under_multi_positive(self):
+        # scripts/retrieval/evaluator.py has always divided by |gt[u]|, so it
+        # was already multi-positive correct. The two paths must now agree on
+        # data where several positives per user are the norm, not just on the
+        # one-positive data the older test had to construct.
+        from scripts.ranker.ranker_features import _scores_to_topk
+        from scripts.retrieval.evaluator import recall_precision_at_k
+        rng = np.random.default_rng(11)
+        users_l, scores_l, labels_l = [], [], []
+        for u in range(40):
+            L = int(rng.integers(4, 25))
+            n_pos = int(rng.integers(0, 5))
+            pos_at = set(rng.choice(L, size=min(n_pos, L), replace=False).tolist())
+            users_l += [f"u{u:03d}"] * L
+            scores_l += list(rng.normal(size=L))
+            labels_l += [1.0 if j in pos_at else 0.0 for j in range(L)]
+        users = np.array(users_l)
+        scores = np.array(scores_l)
+        labels = np.array(labels_l)
+        asins = np.array([f"i{j}" for j in range(len(users))])
+        gt = {}
+        for u, l, a in zip(users, labels, asins):
+            if l == 1:
+                gt.setdefault(u, set()).add(a)
+        assert max(len(v) for v in gt.values()) > 1, "fixture must be multi-positive"
+
+        topk = _scores_to_topk(scores, users, asins, k=10)
+        keep = np.isin(users, list(gt))
+        for k in (3, 10):
+            legacy_r, legacy_p, _ = recall_precision_at_k(topk, gt, k)
+            got = evaluate_flat(users[keep], scores[keep], labels[keep],
+                                ks=(k,), n_gt_users=len(gt))
+            # 1e-6 is this module's house tolerance against the pure-Python
+            # references: evaluate_flat accumulates per-user values in float32,
+            # which drifts ~1e-8 over these fixtures. It still pins semantics —
+            # the pre-fix numerator was off by whole multiples here, not 1e-8.
+            assert got[f"recall@{k}_overall"] == pytest.approx(legacy_r, abs=1e-6)
+            # Precision stops being recall/k once |gt[u]| varies across users.
+            assert got[f"precision@{k}"] == pytest.approx(legacy_p, abs=1e-6)
+
+    def test_precision_is_independent_information_under_multi_positive(self):
+        users = np.array(["a"] * 4 + ["b"] * 4)
+        scores = np.array([4.0, 3.0, 2.0, 1.0] * 2)
+        labels = np.array([1.0, 1.0, 0.0, 0.0,      # a: 2 positives, both top-2
+                           1.0, 0.0, 0.0, 0.0])     # b: 1 positive at rank 1
+        got = evaluate_flat(users, scores, labels, ks=(2,), n_gt_users=2)
+        # Both users have recall@2 == 1.0, but precision differs (2/2 vs 1/2).
+        assert got["recall@2_overall"] == pytest.approx(1.0)
+        assert got["precision@2"] == pytest.approx((1.0 + 0.5) / 2)
+        assert got["precision@2"] != pytest.approx(got["recall@2_overall"] / 2)
+
+    def test_missed_positives_must_cost_recall(self):
+        # User bought 4 things; retrieval surfaced exactly one of them and the
+        # ranker put it first. The rows alone cannot show the other three, so
+        # without true_positives_per_user this scores a perfect 1.0.
+        users = np.array(["a"] * 3)
+        scores = np.array([3.0, 2.0, 1.0])
+        labels = np.array([1.0, 0.0, 0.0])
+
+        blind = evaluate_flat(users, scores, labels, ks=(3,), n_gt_users=1)
+        assert blind["recall@3_overall"] == pytest.approx(1.0)
+
+        honest = evaluate_flat(users, scores, labels, ks=(3,), n_gt_users=1,
+                               true_positives_per_user={"a": 4})
+        assert honest["recall@3_overall"] == pytest.approx(0.25)
+        # hit_rate ignores how many were missed -- that is its job, and it is
+        # why it must not stand in for recall.
+        assert honest["hit_rate@3_overall"] == pytest.approx(1.0)
+
+    def test_ndcg_ideal_uses_full_ground_truth(self):
+        # Retrieval surfaced 1 of the user's 4 purchases; the ranker put it
+        # first. Judged against only what was retrieved that is a perfect
+        # ranking (nDCG 1.0) -- the users retrieval served worst score best.
+        users = np.array(["a"] * 10)
+        scores = np.arange(10, 0, -1).astype(float)
+        labels = np.zeros(10)
+        labels[0] = 1.0
+
+        blind = evaluate_flat(users, scores, labels, ks=(10,), n_gt_users=1)
+        assert blind["ndcg@10"] == pytest.approx(1.0)
+
+        # IDCG over the true ground truth is the first min(|P_u|, k) discounts:
+        # 1/log2(2) + 1/log2(3) + 1/log2(4) + 1/log2(5) = 2.561606…
+        idcg = sum(1.0 / math.log2(i + 2) for i in range(4))
+        honest = evaluate_flat(users, scores, labels, ks=(10,), n_gt_users=1,
+                               true_positives_per_user={"a": 4})
+        assert honest["ndcg@10"] == pytest.approx(1.0 / idcg, abs=1e-6)
+        assert honest["ndcg@10"] < blind["ndcg@10"]
+
+    def test_ndcg_unchanged_when_all_positives_were_retrieved(self):
+        users = np.array(["a"] * 10)
+        scores = np.arange(10, 0, -1).astype(float)
+        labels = np.zeros(10)
+        labels[[0, 3]] = 1.0
+        a = evaluate_flat(users, scores, labels, ks=(10,), n_gt_users=1)
+        b = evaluate_flat(users, scores, labels, ks=(10,), n_gt_users=1,
+                          true_positives_per_user={"a": 2})
+        assert a["ndcg@10"] == pytest.approx(b["ndcg@10"], abs=1e-6)
+
+    def test_listed_recall_also_honours_true_counts(self):
+        users = np.array(["a"] * 3)
+        scores = np.array([3.0, 2.0, 1.0])
+        labels = np.array([1.0, 0.0, 0.0])
+        got = evaluate_flat(users, scores, labels, ks=(3,), n_gt_users=1,
+                            true_positives_per_user={"a": 4})
+        assert got["recall@3_listed"] == pytest.approx(0.25)
+        # _conditional keeps the retrieved-positive denominator on purpose:
+        # it isolates the ranker from retrieval.
+        assert got["recall@3_conditional"] == pytest.approx(1.0)
+
+    def test_true_positive_count_below_retrieved_is_rejected(self):
+        users = np.array(["a", "a"])
+        scores = np.array([2.0, 1.0])
+        labels = np.array([1.0, 1.0])
+        with pytest.raises(ValueError, match="must be part of the user"):
+            evaluate_flat(users, scores, labels, ks=(2,), n_gt_users=1,
+                          true_positives_per_user={"a": 1})
+
+    def test_true_positive_counts_are_noop_under_one_positive(self):
+        users = np.array(["a", "a", "b", "b"])
+        scores = np.array([2.0, 1.0, 2.0, 1.0])
+        labels = np.array([1.0, 0.0, 0.0, 1.0])
+        a = evaluate_flat(users, scores, labels, ks=(1,), n_gt_users=4)
+        b = evaluate_flat(users, scores, labels, ks=(1,), n_gt_users=4,
+                          true_positives_per_user={"a": 1, "b": 1})
+        assert a["recall@1_overall"] == pytest.approx(b["recall@1_overall"])
+
+    def test_auc_scale_context_recovers_the_true_rank(self):
+        # One user: 1 positive at rank 3 among 10 negatives.
+        # AUC = 8/10 = 0.8; implied mean rank = 1 + (1-0.8)*10 = 3 exactly;
+        # the AUC needed to reach top-3 is 1 - 2/10 = 0.8, i.e. exactly at the
+        # boundary -- which is where this positive actually sits.
+        scores = np.arange(11, 0, -1).astype(float)
+        labels = np.zeros(11)
+        labels[2] = 1.0
+        users = np.array(["a"] * 11)
+        got = evaluate_flat(users, scores, labels, ks=(3,), n_gt_users=1)
+        assert got["auc"] == pytest.approx(0.8)
+        assert got["mean_negatives_per_auc_user"] == pytest.approx(10.0)
+        assert got["auc_implied_mean_rank"] == pytest.approx(3.0)
+        assert got["auc_needed_for_top3"] == pytest.approx(0.8)
+        assert got["recall@3_overall"] == pytest.approx(1.0)
+
+    def test_auc_threshold_explains_high_auc_with_low_recall(self):
+        # The reported paradox, in miniature: a good percentile on a long list
+        # is still a bad absolute rank. Positive at rank 30 of 201 -> AUC 0.855
+        # (looks strong) yet it misses top-10 entirely.
+        n = 201
+        scores = np.arange(n, 0, -1).astype(float)
+        labels = np.zeros(n)
+        labels[29] = 1.0
+        users = np.array(["a"] * n)
+        got = evaluate_flat(users, scores, labels, ks=(10,), n_gt_users=1)
+        assert got["auc"] == pytest.approx(171 / 200)
+        assert got["recall@10_overall"] == pytest.approx(0.0)
+        assert got["auc"] < got["auc_needed_for_top10"]
+        assert got["auc_implied_mean_rank"] == pytest.approx(30.0)
+
+
 class TestCalibrationPrimitives:
     def test_sigmoid_matches_and_is_stable(self):
         x = np.array([-800.0, -30.0, -1.0, 0.0, 1.0, 30.0, 800.0])
@@ -272,6 +477,109 @@ class TestCalibrationPrimitives:
         assert list(out) == [0.0, 0.5, 0.1, 0.5]
         # input untouched
         assert list(probs) == [0.1, 0.5, 0.1, 0.5]
+
+
+def _write_gt(tdir: Path, snapshot: str, rows):
+    """rows: (user_id, parent_asin, n_history_events) triples."""
+    tdir.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(rows, columns=["user_id", "parent_asin", "n_history_events"]
+                 ).to_parquet(tdir / f"groundtruth_{snapshot}.parquet",
+                              index=False)
+
+
+class TestGroundTruthDenominators:
+    """n_gt_users must count USERS, and |P_u| must come from the label frame.
+
+    Under all_positive_labels the groundtruth frame holds one row per
+    (user, positive item). Counting rows inflates every recall@k_overall /
+    hit_rate@k_overall denominator by the positives-per-user ratio, and
+    reading |P_u| off the dump instead of the frame hides the positives
+    retrieval never surfaced.
+    """
+
+    def test_cohort_counts_are_distinct_users_not_positives(self, tmp_path):
+        _write_gt(tmp_path / "Toy" / "temporal_ranker", "test", [
+            ("u1", "a", 0), ("u1", "b", 0), ("u1", "c", 0),
+            ("u2", "d", 2), ("u2", "e", 2),
+            ("u3", "f", 7),
+        ])
+        got = tc._gt_cohort_counts("Toy", "test", tmp_path)
+        # 3 users over 6 rows: the row count would say total=6 and put three
+        # users in cohort "0" where there is one.
+        assert got == {"total": 3, "0": 1, "1": 0, "2": 1, "3+": 1}
+
+    def test_cohort_counts_unchanged_under_one_positive(self, tmp_path):
+        rows = [(f"u{i:02d}", f"i{i:02d}", i % 5) for i in range(20)]
+        _write_gt(tmp_path / "Toy" / "temporal_ranker", "test", rows)
+        got = tc._gt_cohort_counts("Toy", "test", tmp_path)
+        assert got["total"] == 20
+        assert sum(got[c] for c in tc.COHORT_NAMES) == 20
+
+    def test_cohort_counts_reject_ambiguous_history(self, tmp_path):
+        _write_gt(tmp_path / "Toy" / "temporal_ranker", "test", [
+            ("u1", "a", 0), ("u1", "b", 4)])
+        with pytest.raises(AssertionError, match="varies within a user"):
+            tc._gt_cohort_counts("Toy", "test", tmp_path)
+
+    def test_true_positive_counts_keyed_by_dump_code(self, tmp_path):
+        _write_gt(tmp_path / "Toy" / "temporal_ranker", "test", [
+            ("u1", "a", 0), ("u1", "b", 0), ("u1", "a", 0),   # dup (u1, a)
+            ("u2", "d", 2),
+        ])
+        # user_ids are the factorize uniques, so position == user code.
+        got = tc._true_positive_counts(np.array(["u2", "u1"], dtype=object),
+                                       "Toy", "test", tmp_path)
+        assert got == {0: 1, 1: 2}
+
+    def test_true_positive_counts_reject_unknown_scored_user(self, tmp_path):
+        _write_gt(tmp_path / "Toy" / "temporal_ranker", "test",
+                  [("u1", "a", 0)])
+        with pytest.raises(ValueError, match="out of sync"):
+            tc._true_positive_counts(np.array(["u1", "zz"], dtype=object),
+                                     "Toy", "test", tmp_path)
+
+    def test_metrics_block_divides_by_full_ground_truth(self):
+        # One user, 4 true positives, retrieval surfaced 1 and it ranks first.
+        d = {"user": np.array([0, 0, 0]),
+             "label": np.array([1.0, 0.0, 0.0]),
+             "cohort": np.zeros(3, dtype=np.int64),
+             "item_bucket": np.zeros(3, dtype=np.int64)}
+        scores = np.array([3.0, 2.0, 1.0])
+        counts = {"total": 1, "0": 1, "1": 0, "2": 0, "3+": 0}
+        blind = tc.metrics_block(d, scores, counts, batch_users=8,
+                                 device="cpu")
+        honest = tc.metrics_block(d, scores, counts, batch_users=8,
+                                  device="cpu", true_positives={0: 4})
+        assert blind["overall"]["recall@10_overall"] == pytest.approx(1.0)
+        assert honest["overall"]["recall@10_overall"] == pytest.approx(0.25)
+        assert honest["cohort_0"]["recall@10_overall"] == pytest.approx(0.25)
+
+    def test_label_mode_inferred_from_frame(self, tmp_path):
+        tdir = tmp_path / "Toy" / "temporal_ranker"
+        _write_gt(tdir, "test", [("u1", "a", 0), ("u2", "b", 1)])
+        assert tc._label_mode_of("Toy", "test", tmp_path) == "first_positive"
+        _write_gt(tdir, "test", [("u1", "a", 0), ("u1", "b", 0)])
+        assert tc._label_mode_of("Toy", "test", tmp_path) == "all_positive"
+
+    def test_label_mode_prefers_the_manifest(self, tmp_path):
+        tdir = tmp_path / "Toy" / "temporal_ranker"
+        # One positive per user by accident, all_positive by protocol: only
+        # the manifest can tell the two apart.
+        _write_gt(tdir, "test", [("u1", "a", 0), ("u2", "b", 1)])
+        (tdir / "snapshot_manifest.json").write_text(json.dumps(
+            {"snapshots": {"test": {"labels": {"label_mode": "all_positive"}}}}))
+        assert tc._label_mode_of("Toy", "test", tmp_path) == "all_positive"
+
+    def test_published_label_mode_inference(self):
+        assert tc._published_label_mode(
+            {"final_test": {"n_groundtruth_users": 10,
+                            "n_groundtruth_positives": 24}})["mode"] == "all_positive"
+        assert tc._published_label_mode(
+            {"final_test": {"n_groundtruth_users": 10,
+                            "n_groundtruth_positives": 10}})["mode"] == "first_positive"
+        # Pre-switch reports record no positive count at all.
+        old = tc._published_label_mode({"final_test": {"n_groundtruth_users": 10}})
+        assert old["mode"] == "first_positive" and "assumed" in old["source"]
 
 
 # ---------------------------------------------------------------------------
@@ -430,6 +738,29 @@ class TestStages:
             d["refit_model@test_calibrated"]["overall"]["prob"]["mean"]
             - pos_rate)
         assert cal_gap <= raw_gap
+
+    def test_consistency_anchor_states_both_label_modes(
+            self, fixture_dirs, monkeypatch, tmp_path):
+        # The anchor is the reproducibility tripwire; across a label_mode
+        # change the two sides stop answering the same question, so the report
+        # has to say which mode each side used instead of silently comparing.
+        processed, results, cat, var, _, _ = fixture_dirs
+        pub_dir = tmp_path / "repo" / "results" / "phase2_temporal"
+        pub_dir.mkdir(parents=True)
+        (pub_dir / f"{cat}_ranker_{var}.json").write_text(json.dumps({
+            "final_test": {"overall": {"Recall@100": 0.5},
+                           "n_groundtruth_users": 60,
+                           "n_groundtruth_positives": 150}}))
+        monkeypatch.setattr(tc, "REPO_ROOT", tmp_path / "repo")
+        tc.run_fit(cat, var, processed_dir=processed, results_dir=results)
+        rep = tc.run_test(cat, var, processed_dir=processed,
+                          results_dir=results)
+        a = rep["consistency_anchor"]
+        assert a["published_recall@100"] == 0.5
+        assert a["published_label_mode"] == "all_positive"
+        assert a["this_rerun_label_mode"] == "first_positive"
+        assert a["label_modes_match"] is False
+        assert "NOT VALID HERE" in a["note"]
 
 
 class TestPredictionDump:

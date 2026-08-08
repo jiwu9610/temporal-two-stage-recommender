@@ -20,6 +20,12 @@ Covers:
   4. co-visitation grid -- standalone, marginal gain, history cohorts,
      low-support-target reach.
 
+Ground truth is whatever the snapshot's label frame holds: one first-positive
+row per user under the default label_mode, every distinct in-window positive
+(rows > users) under "all_positive". Recalls stay USER-level (a user is a hit
+once >=1 of their targets is retrieved) and carry a _per_positive sibling that
+divides by targets instead; n_users and n_positives are reported separately.
+
 Ranking determinism: pools are alphabetically sorted; scores are ranked with
 a stable argsort on (-score) so ties break by item id, never by catalog row
 order. Two-tower lists come from infer_snapshot_checkpoint (frozen weights).
@@ -88,40 +94,82 @@ def _ranked_by_scores(
     return out
 
 
-def _target_rank(lst: Sequence[str], target: str) -> int:
-    """1-based rank of target in lst, 0 if absent."""
-    try:
-        return lst.index(target) + 1
-    except ValueError:
-        return 0
+def _target_ranks(lst: Sequence[str], targets: Set[str]) -> Dict[str, int]:
+    """1-based rank of EVERY target in lst, 0 for the ones absent.
+
+    One pass over lst instead of a per-target list.index(): a user can hold
+    several positives once the groundtruth is all_positive_labels.
+    """
+    if isinstance(targets, str):        # a bare item id would iterate its chars
+        raise TypeError("targets must be a set of item ids, not a single id")
+    # Single target is the overwhelmingly common case (it is the ONLY case
+    # under first_positive labels): keep the original list.index() path, which
+    # scans in C and stops at the hit. A plain Python sweep of the full list
+    # measured ~3.4x slower here, and this is the hottest loop in the sweep.
+    if len(targets) == 1:
+        t = next(iter(targets))
+        try:
+            return {t: lst.index(t) + 1}
+        except ValueError:
+            return {t: 0}
+    pos: Dict[str, int] = {}
+    remaining = len(targets)
+    for i, it in enumerate(lst):
+        if it in targets and it not in pos:
+            pos[it] = i + 1
+            remaining -= 1
+            if not remaining:                  # every target located; stop
+                break
+    return {t: pos.get(t, 0) for t in targets}
 
 
 class SourceLists:
-    """Per-user ranked lists at max K + per-user target rank for one source."""
+    """Per-user ranked lists at max K + the rank of every target, one source."""
 
     def __init__(self, name: str, lists: Dict[str, List[str]],
-                 targets: Mapping[str, str]):
+                 targets: Mapping[str, Set[str]]):
         self.name = name
         self.lists = lists
-        self.rank = {u: _target_rank(lists.get(u, []), t)
-                     for u, t in targets.items()}
+        self.ranks = {u: _target_ranks(lists.get(u, []), ts)
+                      for u, ts in targets.items()}
+        # `rank` keeps its old scalar meaning by collapsing to the BEST
+        # (smallest non-zero) rank the user's targets reach, 0 if none does, so
+        # hits_at() still answers "this user has >=1 target in the top-k" and is
+        # unchanged while every user carries exactly one target.
+        self.rank = {u: min((r for r in rs.values() if r > 0), default=0)
+                     for u, rs in self.ranks.items()}
 
     def hits_at(self, k: int) -> Set[str]:
         return {u for u, r in self.rank.items() if 0 < r <= k}
+
+    def hit_pairs_at(self, k: int) -> Set[Tuple[str, str]]:
+        """(user, target) pairs covered at k -- the micro counterpart of
+        hits_at(), which collapses a heavy user's n positives into one hit."""
+        return {(u, t) for u, rs in self.ranks.items()
+                for t, r in rs.items() if 0 < r <= k}
 
 
 def _union_stats(sources: List[SourceLists], users: Sequence[str],
                  ks: Sequence[int], sample_for_size: int = 8000,
                  seed: int = 42) -> Dict:
     """Union hits at each K + avg unique candidates per user (sampled) +
-    per-source unique incremental hits."""
+    per-source unique incremental hits.
+
+    `users` must be DISTINCT users -- it is the recall denominator and the
+    row-count multiplier below. Every source is built from the same target map,
+    so sources[0].ranks carries the per-user target counts for all of them.
+    """
     out: Dict = {}
     rng = np.random.default_rng(seed)
     sample = (list(rng.choice(users, size=sample_for_size, replace=False))
               if len(users) > sample_for_size else list(users))
+    uset = set(users)
+    n_pos = sum(len(sources[0].ranks.get(u, ())) for u in users)
     for k in ks:
         hit_sets = {s.name: s.hits_at(k) for s in sources}
         union_hits = set().union(*hit_sets.values())
+        pair_hits = {p for s in sources for p in s.hit_pairs_at(k)
+                     if p[0] in uset}
         uniq = {
             s.name: len(hit_sets[s.name]
                         - set().union(*(h for n, h in hit_sets.items()
@@ -135,8 +183,13 @@ def _union_stats(sources: List[SourceLists], users: Sequence[str],
                 cand.update(s.lists.get(u, [])[:k])
             sizes.append(len(cand))
         out[f"K={k}"] = {
+            # union_hits / union_recall stay USER-level (>=1 target covered),
+            # the frozen meaning every Stage A/B comparison keys off; the
+            # _per_positive pair counts are the coverage-of-purchases view.
             "union_hits": len(union_hits),
             "union_recall": len(union_hits) / len(users) if users else 0.0,
+            "union_hits_per_positive": len(pair_hits),
+            "union_recall_per_positive": len(pair_hits) / n_pos if n_pos else 0.0,
             "per_source_hits": {n: len(h) for n, h in hit_sets.items()},
             "per_source_unique_hits": uniq,
             "avg_unique_candidates_per_user": float(np.mean(sizes)),
@@ -162,6 +215,16 @@ def _pairwise_overlap(sources: List[SourceLists], users: Sequence[str],
     return out
 
 
+def _gt_target_sets(gt_df: pd.DataFrame) -> Dict[str, Set[str]]:
+    """gt[u] = the SET of that user's target items (mirrors
+    train_temporal_ranker._gt_sets / evaluator.build_groundtruth)."""
+    s = pd.DataFrame({"u": gt_df["user_id"].astype(str),
+                      "i": gt_df["parent_asin"].astype(str)}).drop_duplicates()
+    out = {u: set(g) for u, g in s.groupby("u")["i"].agg(set).items()}
+    assert sum(len(v) for v in out.values()) == len(s), "groundtruth rows dropped"
+    return out
+
+
 def run_category(
     category: str,
     max_k: int = 500,
@@ -184,11 +247,23 @@ def run_category(
                   (item_features, "parent_asin")):
         df[c] = df[c].astype(str)
 
-    users = sorted(gt["user_id"])
-    targets = dict(zip(gt["user_id"], gt["parent_asin"]))
+    # targets[u] = the SET of u's positives in the label window. Both lines
+    # below used to be per-ROW: `sorted(gt["user_id"])` keeps one entry per
+    # groundtruth ROW, so under all_positive_labels `users` became a duplicated
+    # list of length n_positives -- it is the denominator of every Stage A
+    # recall AND the row multiplier of est_candidate_rows / est_ranker_tensor_gb
+    # (the numbers the K=500-vs-6GB decision rests on, inflated up to 2.6x), and
+    # nothing downstream deduped it. `dict(zip(...))` kept exactly one target
+    # per user, whichever row came last.
+    targets = _gt_target_sets(gt)
+    users = sorted(targets)
+    n_positives = sum(len(t) for t in targets.values())
+    # n_history_events is a per-USER attribute repeated identically on each of
+    # that user's label rows, so the last-row-wins zip stays correct here.
     n_hist_map = dict(zip(gt["user_id"], gt["n_history_events"].astype(int)))
     seen = user_seen_from_train(history, users=users)
     hist_item_counts = history["parent_asin"].value_counts()
+    hist_items = set(hist_item_counts.index)
     rw = json.loads((tdir / "rule_weights.json").read_text())
     weights = (rw["w_store"], rw["w_cat"], rw["w_pop"])
     ks_report = [k for k in KS_DEFAULT if k <= max_k]
@@ -297,9 +372,12 @@ def run_category(
     t0 = time.time()
     k_sweep = {
         "singles": {
-            s.name: {f"K={k}": {"hits": len(s.hits_at(k)),
-                                "recall": len(s.hits_at(k)) / len(users)}
-                     for k in ks_report}
+            s.name: {f"K={k}": {
+                "hits": len(s.hits_at(k)),
+                "recall": len(s.hits_at(k)) / len(users),
+                "recall_per_positive": (len(s.hit_pairs_at(k)) / n_positives
+                                        if n_positives else 0.0),
+            } for k in ks_report}
             for s in base_sources
         },
         "pop∪rule": _union_stats([pop_src, rule_src], users, ks_report),
@@ -328,18 +406,34 @@ def run_category(
         }
         status = classify_targets(gt, hist_item_counts, pool_set,
                                   retrieved_per_user)
+        # One entry per (user, target) pair, not per user: with several
+        # positives per user the histogram sums to the number of targets.
+        # Identical to the frozen numbers under one-gt-row-per-user.
         counts = status.value_counts().to_dict()
         pos_counts = lifetime_pop.reindex(pool_t).fillna(0.0)
         top1pct = max(1, int(len(pool_t) * 0.01))
         conc = float(pos_counts.nlargest(top1pct).sum() / max(pos_counts.sum(), 1))
         union100 = _union_stats(srcs, users, [100])["K=100"]
+        # The two catalog-coverage ceilings are MACRO (mean over users of the
+        # user's own covered fraction), matching the label_item_in_*_rate keys
+        # temporal_split emits for exactly these quantities; the _per_positive
+        # siblings are the micro rate over all targets. All three coincide, and
+        # equal the old `target in pool` mean, while a user has one target.
         ablation[f"min_item_history={thr}"] = {
             "eligible_catalog_size": int(len(pool_t)),
             "historical_catalog_coverage": float(np.mean(
-                [targets[u] in hist_item_counts.index for u in users])),
+                [len(targets[u] & hist_items) / len(targets[u]) for u in users])),
+            "historical_catalog_coverage_per_positive": (
+                sum(len(targets[u] & hist_items) for u in users) / n_positives
+                if n_positives else 0.0),
             "eligible_pool_coverage": float(np.mean(
-                [targets[u] in pool_set for u in users])),
+                [len(targets[u] & pool_set) / len(targets[u]) for u in users])),
+            "eligible_pool_coverage_per_positive": (
+                sum(len(targets[u] & pool_set) for u in users) / n_positives
+                if n_positives else 0.0),
             "retrieved_coverage@100": union100["union_recall"],
+            "retrieved_coverage@100_per_positive":
+                union100["union_recall_per_positive"],
             "avg_candidates_per_user@100":
                 union100["avg_unique_candidates_per_user"],
             "target_status_counts": {k: int(v) for k, v in counts.items()},
@@ -405,9 +499,11 @@ def run_category(
                     "recall@100": (len([u for u in cu if u in hits]) / len(cu))
                     if cu else 0.0,
                 }
+            # Counted over COVERED (user, target) pairs: `for u in hits` with a
+            # scalar targets[u] only asked about the one target a user had.
             low_support_hits = sum(
-                1 for u in hits
-                if 0 < hist_item_counts.get(targets[u], 0) < 5
+                1 for _, t in src.hit_pairs_at(100)
+                if 0 < hist_item_counts.get(t, 0) < 5
             )
             covis_results[json.dumps(g, sort_keys=True)] = {
                 "standalone_recall@100": len(hits) / len(users),
@@ -435,7 +531,8 @@ def run_category(
         "snapshot": SNAPSHOT,
         "test_lock": "groundtruth_test never read by this module",
         "started_utc": datetime.now(tz=timezone.utc).isoformat(),
-        "n_users": len(users),
+        "n_users": len(users),          # DISTINCT users, == n_positives only
+        "n_positives": n_positives,     # under first_positive groundtruth
         "max_k": max_k,
         "rule_weights": dict(zip(("w_store", "w_cat", "w_pop"), weights)),
         "k_sweep": k_sweep,

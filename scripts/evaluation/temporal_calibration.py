@@ -271,20 +271,144 @@ def load_dump(path: Path, *, need_user: bool) -> Dict[str, np.ndarray]:
             df["item_n_reviews_hist"].to_numpy()),
     }
     if need_user:
-        out["user"] = pd.factorize(df["user_id"])[0]
+        codes, uniq = pd.factorize(df["user_id"])
+        out["user"] = codes
+        # Keep the code -> user_id map: |P_u| lives in the groundtruth frame
+        # keyed by the string id, while every metric here is keyed by code.
+        out["user_ids"] = np.asarray(uniq.astype(str), dtype=object)
     return out
 
 
+def _gt_path(category: str, snapshot: str, processed_dir: Path,
+             label_mode: str = "first_positive") -> Path:
+    """The groundtruth frame for `snapshot` under the requested label rule.
+
+    "first_positive" -> groundtruth_{snapshot}.parquet (each user's first
+    positive in the window; the frozen frame every published number keys off)
+    "all_positive"   -> groundtruth_all_{snapshot}.parquet (every distinct
+    positive). Reading the wrong one against an all-positive prediction dump
+    silently sets |P_u| = 1 for every user and inflates recall.
+    """
+    if label_mode not in ("first_positive", "all_positive"):
+        raise ValueError(f"unknown label_mode {label_mode!r}")
+    prefix = "groundtruth_" if label_mode == "first_positive" else "groundtruth_all_"
+    return processed_dir / category / "temporal_ranker" / f"{prefix}{snapshot}.parquet"
+
+
 def _gt_cohort_counts(category: str, snapshot: str,
-                      processed_dir: Path = PROCESSED_DIR) -> Dict[str, int]:
-    gt = pd.read_parquet(
-        processed_dir / category / "temporal_ranker" /
-        f"groundtruth_{snapshot}.parquet",
-        columns=["user_id", "n_history_events"])
-    codes = _cohort_codes(gt["n_history_events"].to_numpy())
+                      processed_dir: Path = PROCESSED_DIR,
+                      label_mode: str = "first_positive") -> Dict[str, int]:
+    """DISTINCT ground-truth USERS, overall and per history cohort.
+
+    These are the n_gt_users denominators of recall@k_overall /
+    hit_rate@k_overall / hits@k_per_gt_user. The groundtruth frame carries one
+    row per (user, positive item), so `len(gt)` and a bincount over every row
+    count POSITIVES: at 2.4 positives per user the denominators come out 2.4x
+    too large and every headline rate is deflated by the same factor (and the
+    inflation is uneven across cohorts, so the cohort ordering moves too).
+    n_history_events is a property of the user's history, constant within a
+    user, so deduplicating on user_id first is lossless — asserted, because a
+    user with two different values would be counted in two cohorts at once.
+    """
+    gt = pd.read_parquet(_gt_path(category, snapshot, processed_dir, label_mode),
+                         columns=["user_id", "n_history_events"])
+    users = gt.drop_duplicates(subset=["user_id"])
+    assert len(users) == len(gt.drop_duplicates(
+        subset=["user_id", "n_history_events"])), (
+        "n_history_events varies within a user — cohort assignment ambiguous")
+    codes = _cohort_codes(users["n_history_events"].to_numpy())
     counts = np.bincount(codes, minlength=4)
-    return {"total": int(len(gt)),
+    return {"total": int(len(users)),
             **{COHORT_NAMES[i]: int(counts[i]) for i in range(4)}}
+
+
+def _true_positive_counts_lm(label_mode, *args, **kw):
+    """Thin adapter: keeps label_mode out of the positional signature that
+    existing call sites and tests rely on."""
+    return _true_positive_counts(*args, label_mode=label_mode, **kw)
+
+
+def _true_positive_counts(user_ids: np.ndarray, category: str, snapshot: str,
+                          processed_dir: Path = PROCESSED_DIR,
+                          label_mode: str = "first_positive"
+                          ) -> Optional[Dict[int, int]]:
+    """|P_u| per dump user CODE — every positive the user has in the label
+    window, including the ones retrieval never surfaced.
+
+    The dump's `label` column only marks positives that made the candidate
+    list, so without this evaluate_flat divides by the retrieved-positive
+    count: a user who bought 4 items, of which we retrieved 1 and ranked it
+    first, scores recall 1.0 instead of 0.25. Under one-positive-per-user
+    groundtruth every value here is 1 and the whole thing is a no-op (a missed
+    target leaves the user with no positive row at all), which is why it can be
+    wired in unconditionally. Returns None when the frame is absent (capped
+    smoke fixtures), leaving the old retrieved-positive behaviour.
+    """
+    import pyarrow.parquet as pq
+
+    path = _gt_path(category, snapshot, processed_dir, label_mode)
+    if not path.exists():
+        return None
+    cols = ["user_id"]
+    if "parent_asin" in pq.read_schema(path).names:
+        cols.append("parent_asin")
+    gt = pd.read_parquet(path, columns=cols)
+    gt["user_id"] = gt["user_id"].astype(str)
+    if "parent_asin" in gt.columns:
+        # Both label builders dedup (user, item) upstream; repeating it here
+        # keeps a duplicated row from inflating |P_u| and deflating recall.
+        gt = gt.drop_duplicates(subset=["user_id", "parent_asin"])
+    n_pos = gt.groupby("user_id").size()
+    aligned = n_pos.reindex(np.asarray(user_ids, dtype=object))
+    missing = int(aligned.isna().sum())
+    if missing:
+        # Loud on purpose: a scored user with no groundtruth row means the dump
+        # and the label frame are from different generations, and a silent
+        # |P_u| = 0 would clamp that user's recall denominator to 1.
+        raise ValueError(
+            f"{missing} of {len(user_ids)} scored users have no row in "
+            f"{path.name} — the prediction dump and the "
+            "label frame are out of sync; regenerate one of them")
+    return {i: int(v) for i, v in enumerate(aligned.to_numpy())}
+
+
+def _label_mode_of(category: str, snapshot: str,
+                   processed_dir: Path = PROCESSED_DIR) -> str:
+    """Which label protocol the groundtruth frame for `snapshot` follows.
+
+    Preferred source is the pipeline's own manifest, which names the mode even
+    when an all_positive window happens to hold one positive per user; the
+    fallback counts rows against distinct users, which is exactly what decides
+    whether recall@k_overall and hits@k_per_gt_user are the same number.
+    """
+    tdir = processed_dir / category / "temporal_ranker"
+    manifest = tdir / "snapshot_manifest.json"
+    if manifest.exists():
+        try:
+            with open(manifest) as f:
+                labels = json.load(f)["snapshots"][snapshot]["labels"]
+            if labels.get("label_mode"):
+                return str(labels["label_mode"])
+        except (KeyError, TypeError, ValueError):
+            pass
+    gt_path = _gt_path(category, snapshot, processed_dir)
+    if not gt_path.exists():
+        return "unknown"
+    u = pd.read_parquet(gt_path, columns=["user_id"])["user_id"]
+    return "first_positive" if u.nunique() == len(u) else "all_positive"
+
+
+def _published_label_mode(pub: Dict) -> Dict[str, str]:
+    """Label mode behind a published results/phase2_temporal report."""
+    ft = pub.get("final_test", {})
+    n_users = ft.get("n_groundtruth_users")
+    n_pos = ft.get("n_groundtruth_positives")
+    if n_pos is not None and n_users:
+        return {"mode": "all_positive" if n_pos > n_users else "first_positive",
+                "source": "n_groundtruth_positives vs n_groundtruth_users"}
+    return {"mode": "first_positive",
+            "source": "assumed — the report predates the label_mode switch "
+                      "and records no positive count"}
 
 
 # ---------------------------------------------------------------------------
@@ -333,11 +457,13 @@ def calibration_block(d: Dict[str, np.ndarray], probs: np.ndarray,
 
 def metrics_block(d: Dict[str, np.ndarray], scores: np.ndarray,
                   gt_counts: Dict[str, int], *, batch_users: int,
-                  device: str) -> Dict:
+                  device: str,
+                  true_positives: Optional[Dict[int, int]] = None) -> Dict:
     """Grouped ranking metrics overall + per user cohort."""
     block = {"overall": evaluate_flat(
         d["user"], scores, d["label"], ks=KS, batch_users=batch_users,
-        n_gt_users=gt_counts["total"], device=device)}
+        n_gt_users=gt_counts["total"],
+        true_positives_per_user=true_positives, device=device)}
     for i, name in enumerate(COHORT_NAMES):
         m = d["cohort"] == i
         block[f"cohort_{name}"] = evaluate_flat(
@@ -345,7 +471,7 @@ def metrics_block(d: Dict[str, np.ndarray], scores: np.ndarray,
             batch_users=batch_users, n_gt_users=max(
                 gt_counts[name],
                 len(np.unique(d["user"][m])) if m.any() else 0),
-            device=device)
+            true_positives_per_user=true_positives, device=device)
     return block
 
 
@@ -363,7 +489,8 @@ def apply_thresholds(probs: np.ndarray, cohort: np.ndarray,
 
 def sweep_thresholds(d: Dict[str, np.ndarray], probs_cal: np.ndarray,
                      gt_counts: Dict[str, int], *, batch_users: int,
-                     device: str) -> Dict:
+                     device: str,
+                     true_positives: Optional[Dict[int, int]] = None) -> Dict:
     """Per-cohort threshold sweep on the SELECTION snapshot only.
 
     Pre-declared choice rule: the LARGEST grid threshold whose cohort metrics
@@ -385,9 +512,16 @@ def sweep_thresholds(d: Dict[str, np.ndarray], probs_cal: np.ndarray,
             result["chosen"][name] = 0.0
             continue
         users, probs, labels = d["user"][m], probs_cal[m], d["label"][m]
+        # Hoisted deliberately: a threshold only rewrites SCORES, never the row
+        # or user set, so the cohort's denominator is the same on every rung of
+        # the grid (verified: rows / distinct users / positives are constant
+        # across the sweep). It therefore cancels in the accept test AND is the
+        # right divisor for the reported recalls. What it must be is the count
+        # of distinct ground-truth USERS — gt_counts supplies that.
         n_gt = max(gt_counts[name], len(np.unique(users)))
         base = evaluate_flat(users, probs, labels, ks=KS,
                              batch_users=batch_users, n_gt_users=n_gt,
+                             true_positives_per_user=true_positives,
                              device=device)
         base_ece = ece_table(probs, labels)["ece"]
         rows = []
@@ -399,6 +533,7 @@ def sweep_thresholds(d: Dict[str, np.ndarray], probs_cal: np.ndarray,
             s = np.where(probs >= t, probs, 0.0)
             met = evaluate_flat(users, s, labels, ks=KS,
                                 batch_users=batch_users, n_gt_users=n_gt,
+                                true_positives_per_user=true_positives,
                                 device=device)
             e = ece_table(s, labels)["ece"]
             ok = (met["recall@100_overall"] >= base["recall@100_overall"] - 1e-12
@@ -436,6 +571,7 @@ def run_fit(category: str, variant: Optional[str], *,
             processed_dir: Path = PROCESSED_DIR,
             results_dir: Path = RESULTS_DIR,
             pred_subdir: str = "predictions",
+            label_mode: str = "first_positive",
             force: bool = False) -> Dict:
     """Distribution analysis on the pre-test sets + calibration fitting +
     threshold sweep. NEVER touches the test dump."""
@@ -475,11 +611,19 @@ def run_fit(category: str, variant: Optional[str], *,
         sel, probs_raw)
 
     gt_counts = (_dump_gt_counts(sel) if capped else
-                 _gt_cohort_counts(category, "model_selection", processed_dir))
+                 _gt_cohort_counts(category, "model_selection", processed_dir,
+                                   label_mode))
+    # |P_u| for the fitting snapshot. Without it every recall below divides by
+    # the positives retrieval happened to surface instead of the ones the user
+    # actually has, so a threshold could be accepted on a recall that cannot
+    # see the misses it is being judged on.
+    true_pos = _true_positive_counts_lm(label_mode, sel["user_ids"], category,
+                                     "model_selection", processed_dir)
 
     # --- grouped ranking metrics on raw scores -----------------------------
     metrics_raw = metrics_block(sel, sel["logit"], gt_counts,
-                                batch_users=batch_users, device=device)
+                                batch_users=batch_users, device=device,
+                                true_positives=true_pos)
 
     # --- calibrators --------------------------------------------------------
     prior_shift = -math.log(w_sel)
@@ -501,7 +645,8 @@ def run_fit(category: str, variant: Optional[str], *,
 
     # --- rule layer: per-cohort threshold sweep -----------------------------
     sweep = sweep_thresholds(sel, probs_cal, gt_counts,
-                             batch_users=batch_users, device=device)
+                             batch_users=batch_users, device=device,
+                             true_positives=true_pos)
 
     frozen = {
         "category": category,
@@ -554,6 +699,7 @@ def run_test(category: str, variant: Optional[str], *,
              processed_dir: Path = PROCESSED_DIR,
              results_dir: Path = RESULTS_DIR,
              pred_subdir: str = "predictions",
+             label_mode: str = "first_positive",
              force: bool = False) -> Dict:
     """Single locked application of the frozen calibration chain to the refit
     model's test predictions."""
@@ -588,7 +734,9 @@ def run_test(category: str, variant: Optional[str], *,
         print("[calibration] WARNING: capped/smoke dump — denominators from "
               "the dump itself; NOT full-scale results", flush=True)
     gt_counts = (_dump_gt_counts(test) if capped else
-                 _gt_cohort_counts(category, "test", processed_dir))
+                 _gt_cohort_counts(category, "test", processed_dir, label_mode))
+    true_pos = _true_positive_counts_lm(label_mode, test["user_ids"], category, "test",
+                                     processed_dir)
 
     w_refit = float(frozen["pos_weight_refit"])
     platt = frozen["platt"]
@@ -616,10 +764,12 @@ def run_test(category: str, variant: Optional[str], *,
     # the only chain that can move them.
     metrics = {
         "raw": metrics_block(test, test["logit"], gt_counts,
-                             batch_users=batch_users, device=device),
+                             batch_users=batch_users, device=device,
+                             true_positives=true_pos),
         "final_with_thresholds": metrics_block(
             test, probs_final, gt_counts,
-            batch_users=batch_users, device=device),
+            batch_users=batch_users, device=device,
+            true_positives=true_pos),
     }
 
     # Consistency anchor vs the published locked ranker report (read-only).
@@ -631,13 +781,38 @@ def run_test(category: str, variant: Optional[str], *,
     if published.exists():
         with open(published) as f:
             pub = json.load(f)
+        # Both sides are macro per-user recall, but only against the SAME
+        # ground truth. A first_positive number answers "did we surface the
+        # user's next purchase"; an all_positive one answers "what fraction of
+        # everything they bought did we surface" — on the same model the second
+        # is the smaller number. Comparing them silently would read a protocol
+        # change as a reproducibility failure (or, worse, hide a real drift
+        # behind an expected one), so the mode is recorded on both sides and
+        # the tripwire only means anything when they match.
+        pub_mode = _published_label_mode(pub)
+        rerun_mode = _label_mode_of(category, "test", processed_dir)
+        modes_match = pub_mode["mode"] == rerun_mode
         anchor = {
             "published_recall@100": pub["final_test"]["overall"].get("Recall@100"),
+            "published_label_mode": pub_mode["mode"],
+            "published_label_mode_source": pub_mode["source"],
             "this_rerun_recall@100_overall":
                 metrics["raw"]["overall"].get("recall@100_overall"),
+            "this_rerun_label_mode": rerun_mode,
+            "label_modes_match": bool(modes_match),
             "note": "rerun uses identical frozen config + seed; small drift "
                     "= GPU nondeterminism, large drift = investigate",
         }
+        if not modes_match:
+            anchor["note"] += (
+                f" — NOT VALID HERE: published label_mode={pub_mode['mode']} "
+                f"vs rerun label_mode={rerun_mode}, so the two sides answer "
+                "different questions and any gap is the protocol change, not "
+                "the model; re-anchor against a report built in the same mode")
+            print("[calibration] WARNING: consistency anchor is comparing "
+                  f"label_mode={pub_mode['mode']} (published) with "
+                  f"label_mode={rerun_mode} (this rerun) — not like for like",
+                  flush=True)
 
     ece_raw = calibration["raw"]["ece"]
     ece_final = calibration["final_with_thresholds"]["ece"]
@@ -691,6 +866,12 @@ def _parse_args(argv=None):
     p.add_argument("--stage", required=True, choices=["fit", "test"])
     p.add_argument("--batch-users", type=int, default=4096)
     p.add_argument("--device", default="cpu")
+    p.add_argument("--label-mode", default="first_positive",
+                   choices=["first_positive", "all_positive"],
+                   help="Which groundtruth frame supplies n_gt_users and |P_u|. "
+                        "Must match the label rule the prediction dump was "
+                        "produced under, or recall is computed against the "
+                        "wrong denominator.")
     p.add_argument("--pred-subdir", default="predictions",
                    help="predictions_smoke to analyze a quarantined capped "
                         "dump (results are flagged capped_run)")
@@ -704,7 +885,8 @@ def main(argv=None):
     variant = args.variant or None
     fn = run_fit if args.stage == "fit" else run_test
     fn(args.category, variant, batch_users=args.batch_users,
-       device=args.device, pred_subdir=args.pred_subdir, force=args.force)
+       device=args.device, pred_subdir=args.pred_subdir,
+       label_mode=args.label_mode, force=args.force)
 
 
 if __name__ == "__main__":

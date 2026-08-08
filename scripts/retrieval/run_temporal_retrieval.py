@@ -18,7 +18,10 @@ INDEPENDENTLY, exactly as production would at that calendar instant:
                                          window); rule weights REUSED from val
 
 No single frozen prediction set is shared across snapshots. Ground truth is
-each snapshot's first-positive-in-window labels: one positive item per user.
+whatever the snapshot's label frame holds: one first-positive row per user
+under the default label_mode, every distinct in-window positive (rows > users)
+under "all_positive" -- so the payload reports n_eval_users and n_label_rows
+separately and never lets one stand in for the other.
 Every label user is evaluated -- cold users (no history) receive
 popularity-fallback style recommendations and out-of-pool positives stay in
 the denominator (they bound recall by the reported pool coverage).
@@ -125,6 +128,11 @@ def _score_snapshot(
     eval_users = sorted(labels["user_id"].astype(str).unique())
     user_seen = user_seen_from_train(history, users=eval_users)
     gt = build_groundtruth(labels)
+    # The label frame is positives-only and already unique on (user, item) in
+    # both label modes, so gt must carry every row. Fires loudly if a future
+    # label frame grows negatives or duplicates rather than letting positives
+    # vanish from the recall denominator.
+    assert sum(len(v) for v in gt.values()) == len(labels), "groundtruth rows dropped"
 
     print(f"[{snap_name}] pool={len(pool)} eval_users={len(eval_users)}", flush=True)
 
@@ -245,12 +253,25 @@ def _score_snapshot(
     }
     del rule_topk
 
+    # Label ROWS != users once label_mode == "all_positive". n_eval_users was
+    # len(labels), i.e. a positive count published under a user-count name (the
+    # synthetic val snapshot has 7 users but 8 positives, because UC buys twice
+    # in the window), and cold_user_rate divided a deduplicated user SET by that
+    # row count -- a mismatched quotient, not just a mislabelled one: on Books,
+    # where first-positive keeps only 38.7% of the window's positives, the
+    # published cold rate would have come out 61.3% below the true user-level
+    # rate. Both now use the count of users actually scored (eval_users is what
+    # every recommender above was asked to serve), with the row count kept as an
+    # explicitly named sibling.
     n_labels = len(labels)
+    n_eval_users = len(eval_users)
     payload = {
-        "n_eval_users": n_labels,
+        "n_eval_users": n_eval_users,
+        "n_label_rows": n_labels,
+        "positives_per_user": (n_labels / n_eval_users) if n_eval_users else 0.0,
         "n_warm_users": len(warm_users),
         "n_cold_users": len(cold_users),
-        "cold_user_rate": (len(cold_users) / n_labels) if n_labels else 0.0,
+        "cold_user_rate": (len(cold_users) / n_eval_users) if n_eval_users else 0.0,
         "cold_item_stats": {
             "n_label_items_not_in_history": int(
                 (labels["item_in_history"] == 0).sum()
@@ -258,9 +279,20 @@ def _score_snapshot(
             "n_label_items_not_in_eligible_pool": int(
                 (labels["item_in_eligible_pool"] == 0).sum()
             ),
-            "label_item_in_history_rate": float(labels["item_in_history"].mean())
-            if n_labels else 0.0,
-            "label_item_in_eligible_pool_rate":
+            # Same key, same aggregation as scripts/data/temporal_split.py's
+            # build_snapshot: MACRO (mean over users of their covered fraction),
+            # because the headline recall these bound is macro per user. The
+            # row-level micro rate is published beside it rather than under the
+            # same name -- one key must not mean two things across two files.
+            "label_item_in_history_rate": float(
+                labels.groupby("user_id")["item_in_history"].mean().mean()
+            ) if n_labels else 0.0,
+            "label_item_in_eligible_pool_rate": float(
+                labels.groupby("user_id")["item_in_eligible_pool"].mean().mean()
+            ) if n_labels else 0.0,
+            "label_item_in_history_rate_per_positive":
+                float(labels["item_in_history"].mean()) if n_labels else 0.0,
+            "label_item_in_eligible_pool_rate_per_positive":
                 float(labels["item_in_eligible_pool"].mean()) if n_labels else 0.0,
         },
         "candidate_pool": {"type": pool_type, "size": len(pool)},

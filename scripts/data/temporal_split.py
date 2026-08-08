@@ -161,10 +161,79 @@ def first_positive_labels(
 
     Same deterministic ordering convention as leave_last_two_split: stable
     mergesort on (user, ts, item) so millisecond ties resolve alphabetically.
+
+    This answers "is the user's NEXT positive in our top-K". It is the wrong
+    target when the question is coverage of everything they went on to buy --
+    see all_positive_labels, and note that under this mode Precision@K is
+    exactly Recall@K / K and therefore carries no independent information.
     """
     pos = window_df[window_df["label"] == 1]
     pos = pos.sort_values([user_col, time_col, item_col], kind="mergesort")
     return pos.drop_duplicates(subset=[user_col], keep="first").reset_index(drop=True)
+
+
+def all_positive_labels(
+    window_df: pd.DataFrame,
+    user_col: str = "user_id",
+    item_col: str = "parent_asin",
+    time_col: str = "timestamp",
+) -> pd.DataFrame:
+    """Every distinct positive a user has in the window -- several rows per user.
+
+    This is the ground truth for "did the recommender cover what the user
+    actually bought over the window", as opposed to first_positive_labels'
+    next-item framing. Keeping only the first positive discards 5.9% (All_Beauty)
+    to 61.3% (Books) of the window's positives, measured on the T2->T3 window.
+
+    Deduplicated on (user, item) keeping the EARLIEST occurrence, so a user who
+    reviews one item twice still contributes a single target -- otherwise
+    |gt[u]| would double-count and depress per-user recall for no reason.
+    Same stable mergesort convention as first_positive_labels, so row order is
+    a function of the data alone and never of input order.
+    """
+    pos = window_df[window_df["label"] == 1]
+    pos = pos.sort_values([user_col, time_col, item_col], kind="mergesort")
+    return pos.drop_duplicates(
+        subset=[user_col, item_col], keep="first"
+    ).reset_index(drop=True)
+
+
+def relabel_snapshot_all_positive(
+    snapshot: "Snapshot",
+    clean_df: pd.DataFrame,
+    warm_user_min_history: int = 3,
+    user_col: str = "user_id",
+    item_col: str = "parent_asin",
+    time_col: str = "timestamp",
+) -> pd.DataFrame:
+    """All-positive label frame for an ALREADY BUILT snapshot.
+
+    Rebuilding the whole snapshot just to swap the label rule costs a second
+    full pass over ~1M rows per category and recomputes history, eligibility
+    and value_counts that cannot possibly differ: build_snapshot derives
+    history purely from `ts < history_end_ms`, which does not depend on
+    label_mode. This re-derives ONLY the label frame, annotated from the
+    snapshot's own history and eligible pool, so the two modes are identical
+    by construction rather than by coincidence.
+    """
+    ts = clean_df[time_col]
+    window = clean_df[(ts >= snapshot.history_end_ms) & (ts < snapshot.label_end_ms)]
+    labels = all_positive_labels(window, user_col, item_col, time_col)
+
+    history = snapshot.history
+    item_hist_index = pd.Index(history[item_col].unique())
+    eligible = set(snapshot.eligible_items)
+    user_hist_counts = history.groupby(user_col).size()
+
+    labels = labels.assign(
+        n_history_events=labels[user_col].map(user_hist_counts).fillna(0).astype(int),
+        item_in_history=labels[item_col].isin(item_hist_index).astype(int),
+        item_in_eligible_pool=labels[item_col].isin(eligible).astype(int),
+    )
+    labels["is_warm_user"] = (
+        labels["n_history_events"] >= warm_user_min_history
+    ).astype(int)
+    return labels
 
 
 def build_snapshot(
@@ -177,13 +246,27 @@ def build_snapshot(
     user_col: str = "user_id",
     item_col: str = "parent_asin",
     time_col: str = "timestamp",
+    label_mode: str = "first_positive",
 ) -> Snapshot:
     """Build one snapshot: history strictly before the cutoff, labels in
-    [history_end_ms, label_end_ms), history-only eligibility, warm/cold flags."""
+    [history_end_ms, label_end_ms), history-only eligibility, warm/cold flags.
+
+    label_mode:
+      "first_positive"  one row per user, the earliest positive (default —
+                        preserves every frozen artifact byte for byte)
+      "all_positive"    every distinct positive in the window, several rows
+                        per user; the coverage framing
+    Only the label frame changes; history, eligibility and cutoffs are
+    identical across modes, so the two are directly comparable.
+    """
+    if label_mode not in ("first_positive", "all_positive"):
+        raise ValueError(f"unknown label_mode {label_mode!r}")
     ts = clean_df[time_col]
     history = clean_df[ts < history_end_ms].reset_index(drop=True)
     window = clean_df[(ts >= history_end_ms) & (ts < label_end_ms)]
-    labels = first_positive_labels(window, user_col, item_col, time_col)
+    label_fn = (first_positive_labels if label_mode == "first_positive"
+                else all_positive_labels)
+    labels = label_fn(window, user_col, item_col, time_col)
 
     item_hist_counts = history[item_col].value_counts()
     eligible_items = item_hist_counts[
@@ -200,8 +283,13 @@ def build_snapshot(
         labels["n_history_events"] >= warm_user_min_history
     ).astype(int)
 
+    # Rows != users once label_mode == "all_positive". Every "…_users" stat
+    # below must count DISTINCT users or it silently reports a row count.
     n_labels = len(labels)
-    n_warm = int(labels["is_warm_user"].sum())
+    n_label_users = int(labels[user_col].nunique()) if n_labels else 0
+    warm_users = (labels.loc[labels["is_warm_user"] == 1, user_col].nunique()
+                  if n_labels else 0)
+    n_warm = int(warm_users)
     stats = {
         "name": name,
         "history_end_ms": history_end_ms,
@@ -216,20 +304,39 @@ def build_snapshot(
         },
         "window_n_rows": int(len(window)),
         "labels": {
-            "n_users": n_labels,
+            "label_mode": label_mode,
+            # n_rows == n_users only under first_positive. Both are reported so
+            # a consumer can never mistake one for the other.
+            "n_rows": n_labels,
+            "n_users": n_label_users,
+            "positives_per_user": (n_labels / n_label_users) if n_label_users else 0.0,
             "n_items": int(labels[item_col].nunique()),
             "ts_min": int(labels[time_col].min()) if n_labels else None,
             "ts_max": int(labels[time_col].max()) if n_labels else None,
             "n_warm_users": n_warm,
-            "n_cold_users": n_labels - n_warm,
+            "n_cold_users": n_label_users - n_warm,
             "warm_user_min_history": warm_user_min_history,
             "n_label_items_in_history": int(labels["item_in_history"].sum()),
             "n_label_items_in_eligible_pool": int(labels["item_in_eligible_pool"].sum()),
-            "label_item_in_history_rate": (
+            # These two are the coverage ceilings quoted against the headline
+            # recall, and the headline recall is MACRO per user on both eval
+            # paths. A .mean() over label ROWS is the MICRO rate, which only
+            # coincides with the macro one while rows == users. Publish both
+            # under explicit names rather than letting the old key quietly
+            # change which aggregation it denotes.
+            "label_item_in_history_rate_per_positive": (
                 float(labels["item_in_history"].mean()) if n_labels else 0.0
             ),
-            "label_item_in_eligible_pool_rate": (
+            "label_item_in_eligible_pool_rate_per_positive": (
                 float(labels["item_in_eligible_pool"].mean()) if n_labels else 0.0
+            ),
+            "label_item_in_history_rate": (
+                float(labels.groupby(user_col)["item_in_history"].mean().mean())
+                if n_labels else 0.0
+            ),
+            "label_item_in_eligible_pool_rate": (
+                float(labels.groupby(user_col)["item_in_eligible_pool"].mean().mean())
+                if n_labels else 0.0
             ),
         },
         "eligibility": {

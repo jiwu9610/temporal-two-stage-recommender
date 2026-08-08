@@ -182,10 +182,38 @@ def test_classify_targets_four_way():
     eligible = {"IR", "IE"}                                  # threshold 5
     retrieved = {"U1": {"IR"}, "U2": set(), "U3": set(), "U4": set()}
     s = classify_targets(gt, hist_counts, eligible, retrieved)
-    assert s["U1"] == "retrieved"
-    assert s["U2"] == "eligible_not_retrieved"
-    assert s["U3"] == "low_support"
-    assert s["U4"] == "cold"
+    assert s[("U1", "IR")] == "retrieved"
+    assert s[("U2", "IE")] == "eligible_not_retrieved"
+    assert s[("U3", "IL")] == "low_support"
+    assert s[("U4", "IC")] == "cold"
+    # One gt row per user: the histogram is exactly the legacy per-user one.
+    assert s.value_counts().to_dict() == {"retrieved": 1,
+                                          "eligible_not_retrieved": 1,
+                                          "low_support": 1, "cold": 1}
+
+
+def test_classify_targets_keeps_every_positive_of_a_user():
+    """A user's targets can hold different statuses -- the classification is a
+    property of the item, so keying by user dropped all but the last row."""
+    gt = pd.DataFrame({
+        "user_id": ["U1", "U1", "U1", "U2"],
+        "parent_asin": ["IR", "IE", "IC", "IR"],
+    })
+    hist_counts = pd.Series({"IR": 10, "IE": 8})            # IC never seen
+    eligible = {"IR", "IE"}
+    retrieved = {"U1": {"IR"}, "U2": {"IR"}}
+    s = classify_targets(gt, hist_counts, eligible, retrieved)
+    assert len(s) == 4                                       # not 2 (per user)
+    assert s[("U1", "IR")] == "retrieved"
+    assert s[("U1", "IE")] == "eligible_not_retrieved"
+    assert s[("U1", "IC")] == "cold"
+    assert s[("U2", "IR")] == "retrieved"
+    # Pre-fix U1 kept only its LAST row ("cold") and the histogram read
+    # {"cold": 1, "retrieved": 1} -- 2 entries for 4 groundtruth targets.
+    assert s.value_counts().to_dict() == {"retrieved": 2,
+                                          "eligible_not_retrieved": 1,
+                                          "cold": 1}
+    assert list(s.index.names) == ["user_id", "parent_asin"]
 
 
 # ---------------------------------------------------------------------------
@@ -203,7 +231,7 @@ def test_ranked_by_scores_alphabetical_ties_and_seen():
 
 
 def test_source_lists_and_union_stats():
-    targets = {"U1": "IA", "U2": "IB", "U3": "IC"}
+    targets = {"U1": {"IA"}, "U2": {"IB"}, "U3": {"IC"}}
     s1 = SourceLists("s1", {"U1": ["IA", "IX"], "U2": ["IX"], "U3": ["IX"]}, targets)
     s2 = SourceLists("s2", {"U1": ["IX"], "U2": ["IX", "IB"], "U3": ["IX"]}, targets)
     assert s1.rank == {"U1": 1, "U2": 0, "U3": 0}
@@ -213,19 +241,45 @@ def test_source_lists_and_union_stats():
     st = _union_stats([s1, s2], ["U1", "U2", "U3"], [2])["K=2"]
     assert st["union_hits"] == 2
     assert st["union_recall"] == pytest.approx(2 / 3)
+    # One target per user -> the micro view is numerically the macro one.
+    assert st["union_hits_per_positive"] == 2
+    assert st["union_recall_per_positive"] == pytest.approx(2 / 3)
     # Each source uniquely contributes its own hit.
     assert st["per_source_unique_hits"] == {"s1": 1, "s2": 1}
     assert st["avg_unique_candidates_per_user"] == pytest.approx((2 + 2 + 1) / 3)
+
+
+def test_source_lists_multi_positive_user_vs_positive_denominator():
+    # U1 buys three things in the label window, U2 one. User-level recall must
+    # count U1 ONCE; the per-positive view must see all four targets.
+    targets = {"U1": {"IA", "IB", "IC"}, "U2": {"ID"}}
+    s = SourceLists("s", {"U1": ["IB", "IZ", "IA"], "U2": ["IZ"]}, targets)
+    assert s.ranks["U1"] == {"IA": 3, "IB": 1, "IC": 0}
+    assert s.rank["U1"] == 1                      # best rank, not last-row's
+    assert s.hits_at(1) == {"U1"} and s.hits_at(3) == {"U1"}
+    assert s.hit_pairs_at(1) == {("U1", "IB")}
+    assert s.hit_pairs_at(3) == {("U1", "IA"), ("U1", "IB")}
+    st = _union_stats([s], ["U1", "U2"], [3])["K=3"]
+    assert st["union_hits"] == 1
+    assert st["union_recall"] == pytest.approx(1 / 2)     # users, never rows
+    assert st["union_hits_per_positive"] == 2
+    assert st["union_recall_per_positive"] == pytest.approx(2 / 4)
+    # The K-vs-memory decision input scales with DISTINCT users.
+    assert st["est_candidate_rows"] == int(np.mean([3, 1]) * 2)
+
+
+def test_source_lists_rejects_scalar_target():
+    with pytest.raises(TypeError):
+        SourceLists("s", {"U1": ["IA"]}, {"U1": "IA"})   # would iterate chars
 
 
 # ---------------------------------------------------------------------------
 # test-lock: Stage A sweep must run WITHOUT groundtruth_test present
 # ---------------------------------------------------------------------------
 
-def test_stage_a_never_reads_groundtruth_test(tmp_path):
-    from scripts.retrieval.phase3a_sweep import run_category
-
-    tdir = tmp_path / "Cat" / "temporal_ranker"
+def _write_stage_a_fixture(tdir, gt: pd.DataFrame) -> None:
+    """History / item features / manifest / weights / cached two-tower dump for
+    a max_k=200 Stage A run. Only `gt` varies between the callers."""
     tdir.mkdir(parents=True)
     hist = _mk([
         ("P1", "IP", 5, day(10)), ("P2", "IP", 5, day(11)),
@@ -237,15 +291,6 @@ def test_stage_a_never_reads_groundtruth_test(tmp_path):
         ("UA", "IX", 5, day(30)), ("UA", "IY", 5, day(31)), ("UA", "IZ", 5, day(32)),
     ])
     hist["label_type"] = "positive"
-    gt = pd.DataFrame({
-        "user_id": ["UA", "UB"],
-        "parent_asin": ["IP", "IQ"],
-        "rating": [5, 5], "label": [1, 1],
-        "timestamp": [day(101), day(102)],
-        "n_history_events": [3, 0],
-        "item_in_history": [1, 1], "item_in_eligible_pool": [1, 1],
-        "is_warm_user": [1, 0],
-    })
     items = sorted(hist["parent_asin"].unique())
     item_features = pd.DataFrame({
         "parent_asin": items, "main_category": "C",
@@ -268,6 +313,21 @@ def test_stage_a_never_reads_groundtruth_test(tmp_path):
                   "score": [1.0], "rank": [1]}).to_parquet(
         tdir / "two_tower_predictions_model_selection_k200.parquet", index=False)
 
+
+def test_stage_a_never_reads_groundtruth_test(tmp_path):
+    from scripts.retrieval.phase3a_sweep import run_category
+
+    gt = pd.DataFrame({
+        "user_id": ["UA", "UB"],
+        "parent_asin": ["IP", "IQ"],
+        "rating": [5, 5], "label": [1, 1],
+        "timestamp": [day(101), day(102)],
+        "n_history_events": [3, 0],
+        "item_in_history": [1, 1], "item_in_eligible_pool": [1, 1],
+        "is_warm_user": [1, 0],
+    })
+    _write_stage_a_fixture(tmp_path / "Cat" / "temporal_ranker", gt)
+
     report = run_category("Cat", max_k=200, skip_covis=False,
                           processed_dir=tmp_path, results_dir=tmp_path / "res")
     # Ran fine with the test window entirely absent -> provably not consulted.
@@ -277,3 +337,45 @@ def test_stage_a_never_reads_groundtruth_test(tmp_path):
     assert report["k_sweep"]["singles"]["popularity"]["K=100"]["hits"] >= 1
     # UB is zero-history: contributes to denominator, never crashes.
     assert report["n_users"] == 2
+    assert report["n_positives"] == 2            # one gt row per user
+
+
+def test_stage_a_denominators_are_users_not_groundtruth_rows(tmp_path):
+    """all_positive_labels groundtruth: UA holds two positives, one of them a
+    cold item. `sorted(gt["user_id"])` used to make `users` 3 entries long, so
+    every recall denominator, every per-user candidate mean and n_users itself
+    counted UA twice."""
+    from scripts.retrieval.phase3a_sweep import run_category
+
+    gt = pd.DataFrame({
+        "user_id": ["UA", "UA", "UB"],
+        "parent_asin": ["IP", "ICOLD", "IQ"],
+        "rating": [5, 5, 5], "label": [1, 1, 1],
+        "timestamp": [day(101), day(103), day(102)],
+        "n_history_events": [3, 3, 0],
+        "item_in_history": [1, 0, 1], "item_in_eligible_pool": [1, 0, 1],
+        "is_warm_user": [1, 1, 0],
+    })
+    _write_stage_a_fixture(tmp_path / "Cat" / "temporal_ranker", gt)
+
+    report = run_category("Cat", max_k=200, skip_covis=True,
+                          processed_dir=tmp_path, results_dir=tmp_path / "res")
+    assert report["n_users"] == 2 and report["n_positives"] == 3
+    # Popularity ranks [IP, IQ] for both users: UA hits IP (ICOLD is not in the
+    # catalog at all), UB hits IQ -> 2/2 users but only 2/3 purchases.
+    pop100 = report["k_sweep"]["singles"]["popularity"]["K=100"]
+    assert pop100["hits"] == 2
+    assert pop100["recall"] == pytest.approx(1.0)
+    assert pop100["recall_per_positive"] == pytest.approx(2 / 3)
+    union = report["k_sweep"]["all_three"]["K=100"]
+    assert union["union_recall"] == pytest.approx(1.0)
+    assert union["union_recall_per_positive"] == pytest.approx(2 / 3)
+    assert union["est_candidate_rows"] == 4          # 2 candidates x 2 users
+    abl = report["eligibility_ablation"]["min_item_history=5"]
+    # Macro: UA covers 1 of its 2 targets, UB 1 of 1 -> 0.75; micro -> 2/3.
+    assert abl["historical_catalog_coverage"] == pytest.approx(0.75)
+    assert abl["historical_catalog_coverage_per_positive"] == pytest.approx(2 / 3)
+    assert abl["eligible_pool_coverage"] == pytest.approx(0.75)
+    # The status histogram covers every target, not every user.
+    assert sum(abl["target_status_counts"].values()) == 3
+    assert report["base_cohorts"]["3+"]["n_users"] == 1

@@ -41,6 +41,7 @@ from scripts.data.temporal_split import (  # noqa: E402
     MS_PER_DAY,
     CutoffSpec,
     build_snapshot,
+    all_positive_labels,
     build_temporal_snapshots,
     first_positive_labels,
     resolve_cutoffs,
@@ -542,3 +543,88 @@ def test_report_invariant_to_catalog_row_order(clean_df, tmp_path):
     rep_a = _run("orderA", all_items)
     rep_b = _run("orderB", list(reversed(all_items)))
     assert rep_a == rep_b
+
+
+class TestAllPositiveLabels:
+    """The coverage-framing ground truth: every positive in the window.
+
+    first_positive_labels answers "is the user's NEXT purchase in our top-K".
+    all_positive_labels answers "did we cover what they went on to buy". The
+    two must agree on WHICH users are evaluated and differ only in how many
+    targets each of them carries.
+    """
+
+    WINDOW = _mk([
+        # UA buys three distinct items, out of timestamp order in the frame.
+        ("UA", "I3", 5, day(62)),
+        ("UA", "I1", 5, day(55)),
+        ("UA", "I2", 4, day(58)),
+        # UA also re-reviews I1 later -> must NOT become a second target.
+        ("UA", "I1", 5, day(65)),
+        # UB has one positive and one negative.
+        ("UB", "I4", 5, day(56)),
+        ("UB", "I5", 1, day(57)),
+        # UC has negatives only -> not a label user in either mode.
+        ("UC", "I6", 2, day(59)),
+    ])
+
+    def test_keeps_every_distinct_positive(self):
+        got = all_positive_labels(self.WINDOW)
+        assert set(zip(got["user_id"], got["parent_asin"])) == {
+            ("UA", "I1"), ("UA", "I2"), ("UA", "I3"), ("UB", "I4"),
+        }
+
+    def test_deduplicates_repeat_reviews_keeping_earliest(self):
+        got = all_positive_labels(self.WINDOW)
+        ua_i1 = got[(got.user_id == "UA") & (got.parent_asin == "I1")]
+        assert len(ua_i1) == 1
+        assert int(ua_i1["timestamp"].iloc[0]) == day(55)
+
+    def test_same_user_set_as_first_positive(self):
+        first = first_positive_labels(self.WINDOW)
+        alls = all_positive_labels(self.WINDOW)
+        assert set(first["user_id"]) == set(alls["user_id"])
+        assert len(first) == first["user_id"].nunique()
+        assert len(alls) > len(first), "fixture must exercise multi-positive"
+
+    def test_first_positive_is_a_subset(self):
+        first = first_positive_labels(self.WINDOW)
+        alls = all_positive_labels(self.WINDOW)
+        assert set(zip(first["user_id"], first["parent_asin"])) <= set(
+            zip(alls["user_id"], alls["parent_asin"]))
+
+    def test_row_order_invariance(self):
+        shuffled = self.WINDOW.sample(frac=1.0, random_state=7).reset_index(drop=True)
+        a = all_positive_labels(self.WINDOW).reset_index(drop=True)
+        b = all_positive_labels(shuffled).reset_index(drop=True)
+        pd.testing.assert_frame_equal(
+            a.reset_index(drop=True), b.reset_index(drop=True))
+
+    def test_build_snapshot_modes_share_history_and_eligibility(self, clean_df):
+        kw = dict(name="test", history_end_ms=day(50), label_end_ms=day(100))
+        a = build_snapshot(clean_df, **kw, label_mode="first_positive")
+        b = build_snapshot(clean_df, **kw, label_mode="all_positive")
+        pd.testing.assert_frame_equal(a.history, b.history)
+        assert list(a.eligible_items) == list(b.eligible_items)
+        assert (a.stats["labels"]["n_users"] == b.stats["labels"]["n_users"])
+        assert b.stats["labels"]["n_rows"] >= a.stats["labels"]["n_rows"]
+        assert a.stats["labels"]["label_mode"] == "first_positive"
+        assert b.stats["labels"]["label_mode"] == "all_positive"
+
+    def test_label_stats_count_users_not_rows(self):
+        snap = build_snapshot(
+            pd.concat([self.WINDOW, _mk([("UA", "I0", 5, day(10))])],
+                      ignore_index=True),
+            name="t", history_end_ms=day(50), label_end_ms=day(100),
+            label_mode="all_positive",
+        )
+        lab = snap.stats["labels"]
+        assert lab["n_users"] == 2                      # UA, UB
+        assert lab["n_rows"] == 4                       # I1,I2,I3 + I4
+        assert lab["n_warm_users"] + lab["n_cold_users"] == lab["n_users"]
+        assert lab["positives_per_user"] == pytest.approx(2.0)
+
+    def test_unknown_label_mode_rejected(self, clean_df):
+        with pytest.raises(ValueError, match="unknown label_mode"):
+            build_snapshot(clean_df, "test", day(50), day(100),
+                           label_mode="every_other_tuesday")

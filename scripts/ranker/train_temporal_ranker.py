@@ -224,6 +224,23 @@ def _cohort_of(n: int) -> str:
     return "0" if n == 0 else "1" if n == 1 else "2" if n == 2 else "3+"
 
 
+def _gt_sets(gt_df: pd.DataFrame) -> Dict[str, Set[str]]:
+    """gt[u] = the SET of that user's target items.
+
+    Replaces `{u: {pa} for u, pa in zip(...)}`, which reads like it builds sets
+    but is a per-ROW dict comprehension: with several groundtruth rows per user
+    later keys overwrite earlier ones and each user silently keeps exactly one
+    item. Under all_positive_labels' (user, ts, item) ordering the survivor is
+    deterministically the user's LATEST positive, so the metric would answer a
+    third question that is neither the next-item nor the coverage one.
+    """
+    s = pd.DataFrame({"u": gt_df["user_id"].astype(str),
+                      "i": gt_df["parent_asin"].astype(str)})
+    out = {u: set(g) for u, g in s.groupby("u")["i"].agg(set).items()}
+    assert sum(len(v) for v in out.values()) == len(s), "groundtruth rows dropped"
+    return out
+
+
 # Columns carried into prediction dumps so the calibration analysis never has
 # to re-open the multi-GB candidate tables: ids + label + the two bucketing
 # keys from the advisor spec (user history cohort, item review-count bucket).
@@ -259,8 +276,7 @@ def _eval_test(
     topk = _scores_to_topk(
         logits, test_df["user_id"].to_numpy(), test_df["parent_asin"].to_numpy(), k=100,
     )
-    gt = {u: {pa} for u, pa in zip(gt_df["user_id"].astype(str),
-                                   gt_df["parent_asin"].astype(str))}
+    gt = _gt_sets(gt_df)
     pool = set(test_df["parent_asin"].astype(str))
     overall = build_split_report("test", topk, gt, pool,
                                  "candidate_union_top100", KS)
@@ -269,9 +285,20 @@ def _eval_test(
         u: set(g) for u, g in
         test_df.groupby("user_id")["parent_asin"].agg(set).items()
     }
+    # A user counts as "retrieved" if ANY of their positives made the candidate
+    # union. next(iter(g)) used to stand in for this -- correct only while g was
+    # a singleton, and nondeterministic once it is not (set iteration over str
+    # is hash-randomised per process).
     retrieved_users = {u for u, g in gt.items()
-                       if next(iter(g)) in cand_per_user.get(u, set())}
+                       if g & cand_per_user.get(u, set())}
     ceiling = len(retrieved_users) / len(gt) if gt else 0.0
+    # Item-level ceiling: the fraction of PURCHASES the union covers. Reported
+    # separately because the user-level figure above is the frozen key that
+    # every cross-phase comparison keys off -- its meaning must not drift.
+    n_pos_total = sum(len(g) for g in gt.values())
+    ceiling_positives = (
+        sum(len(g & cand_per_user.get(u, set())) for u, g in gt.items())
+        / n_pos_total) if n_pos_total else 0.0
     gt_retrieved = {u: g for u, g in gt.items() if u in retrieved_users}
     conditional = {}
     for k in KS:
@@ -281,8 +308,6 @@ def _eval_test(
 
     n_hist = dict(zip(gt_df["user_id"].astype(str),
                       gt_df["n_history_events"].astype(int)))
-    item_in_hist = dict(zip(gt_df["user_id"].astype(str),
-                            gt_df["item_in_history"].astype(int)))
     cohorts = {}
     for name in ("0", "1", "2", "3+"):
         users = {u for u in gt if _cohort_of(n_hist.get(u, 0)) == name}
@@ -293,20 +318,29 @@ def _eval_test(
             rep[f"Recall@{k}"] = r
             rep[f"Precision@{k}"] = p
         cohorts[name] = {"n_users": len(users), **rep}
+    # warm/cold is a property of the TARGET ITEM, not of the user, so the split
+    # has to be per (user, item). Keying it off a per-user dict assigned every
+    # user with mixed warm/cold targets wholly to whichever row came last.
     item_cohorts = {}
     for name, flag in (("warm_target_item", 1), ("cold_target_item", 0)):
-        users = {u for u in gt if item_in_hist.get(u, 0) == flag}
-        sub_gt = {u: g for u, g in gt.items() if u in users}
+        sub = gt_df[gt_df["item_in_history"].astype(int) == flag]
+        sub_gt = _gt_sets(sub)
         rep = {}
         for k in KS:
             r, p, n = recall_precision_at_k(topk, sub_gt, k)
             rep[f"Recall@{k}"] = r
-        item_cohorts[name] = {"n_users": len(users), **rep}
+        item_cohorts[name] = {
+            "n_users": len(sub_gt),
+            "n_targets": sum(len(g) for g in sub_gt.values()),
+            **rep,
+        }
 
     return {
         "n_groundtruth_users": len(gt),
+        "n_groundtruth_positives": n_pos_total,
         "overall": overall.metrics,
         "candidate_ceiling_retrieved_coverage": ceiling,
+        "candidate_ceiling_positive_coverage": ceiling_positives,
         "conditional_given_retrieved": {
             "n_users_retrieved": len(retrieved_users), **conditional,
         },
@@ -331,6 +365,7 @@ def run(
     variant: Optional[str] = None,
     stage_b_only: bool = False,
     dump_predictions: bool = False,
+    label_mode: str = "first_positive",
 ) -> Dict:
     """Full run: selection -> refit -> single locked test eval.
 
@@ -339,6 +374,15 @@ def run(
     base dir -- it is split-defined, not config-defined). `stage_b_only`
     stops after model selection and reports selection-snapshot metrics ONLY;
     the test snapshot is neither read nor required to exist.
+
+    `label_mode` selects the ground-truth frame: "first_positive" reads the
+    frozen groundtruth_{snapshot}.parquet (each user's FIRST positive in the
+    window -- next-item framing), "all_positive" reads
+    groundtruth_all_{snapshot}.parquet (every distinct positive -- the
+    coverage framing "did we recommend what the user went on to buy"). The
+    candidate rows are identical either way; only the label column and the
+    evaluation denominators differ. Both stay runnable so the frozen numbers
+    remain reproducible.
 
     Evaluation & Calibration additions: `dump_predictions` writes per-row
     logits to {candidate_dir}/predictions/ — the SELECTION-phase best model
@@ -389,9 +433,12 @@ def run(
         df["user_id"] = df["user_id"].astype(str)
         df["parent_asin"] = df["parent_asin"].astype(str)
         cands[snap] = df.reset_index(drop=True)
-    gt_sel = pd.read_parquet(tdir / "groundtruth_model_selection.parquet")
+    if label_mode not in ("first_positive", "all_positive"):
+        raise ValueError(f"unknown label_mode {label_mode!r}")
+    gt_prefix = "groundtruth_" if label_mode == "first_positive" else "groundtruth_all_"
+    gt_sel = pd.read_parquet(tdir / f"{gt_prefix}model_selection.parquet")
     gt_test = (None if stage_b_only
-               else pd.read_parquet(tdir / "groundtruth_test.parquet"))
+               else pd.read_parquet(tdir / f"{gt_prefix}test.parquet"))
     if "model_selection" in kept_users:
         gt_sel = gt_sel[gt_sel["user_id"].astype(str).isin(
             kept_users["model_selection"])]
@@ -419,8 +466,7 @@ def run(
                                           features, log1p)
     sel_inputs = build_temporal_tensors(cands["model_selection"], spec_sel,
                                         features, log1p)
-    sel_gt = {u: {pa} for u, pa in zip(gt_sel["user_id"].astype(str),
-                                       gt_sel["parent_asin"].astype(str))}
+    sel_gt = _gt_sets(gt_sel)
     sel_pool = set(cands["model_selection"]["parent_asin"])
     n_pos = int(cands["ranker_train"]["label"].sum())
     n_neg = int((cands["ranker_train"]["label"] == 0).sum())
@@ -492,6 +538,7 @@ def run(
         report = {
             "category": category,
             "variant": variant,
+        "label_mode": label_mode,
             "stage": "B (model-selection confirmation; test snapshot untouched)",
             "started_utc": datetime.now(tz=timezone.utc).isoformat(),
             "elapsed_seconds": round(time.time() - t0, 2),
@@ -582,6 +629,7 @@ def run(
         meta = {
             "category": category,
             "variant": variant,
+        "label_mode": label_mode,
             "seed": seed,
             "device": device,
             "max_users_per_snapshot": max_users_per_snapshot,
@@ -617,8 +665,7 @@ def run(
 
     # Retrieval-only context on the same test candidates.
     retrieval_only = {}
-    gt_all = {u: {pa} for u, pa in zip(gt_test["user_id"].astype(str),
-                                       gt_test["parent_asin"].astype(str))}
+    gt_all = _gt_sets(gt_test)
     test_pool = set(cands["test"]["parent_asin"])
     for col, name in (("two_tower_score", "two_tower"),
                       ("popularity_score", "popularity"),
@@ -635,6 +682,7 @@ def run(
     report = {
         "category": category,
         "variant": variant,
+        "label_mode": label_mode,
         "features": list(features),
         "protocol": "three_snapshot_walk_forward",
         "started_utc": datetime.now(tz=timezone.utc).isoformat(),
@@ -695,6 +743,10 @@ def _parse_args(argv=None):
                         "For memory-bounded smoke runs only.")
     p.add_argument("--variant", default=None,
                    help="Read candidates from temporal_ranker/variants/{name}/")
+    p.add_argument("--label-mode", default="first_positive",
+                   choices=["first_positive", "all_positive"],
+                   help="Ground-truth frame: each user's first window positive "
+                        "(frozen default) or every distinct window positive")
     p.add_argument("--stage-b", action="store_true",
                    help="Stop after model selection; never touch the test "
                         "snapshot (Phase 3A Stage B confirmation).")
@@ -719,6 +771,7 @@ def main(argv=None):
     run(args.category, max_epochs=args.max_epochs, batch_size=args.batch_size,
         seed=args.seed, smoke=args.smoke, max_users_per_snapshot=args.max_users,
         variant=args.variant, stage_b_only=args.stage_b,
+        label_mode=args.label_mode,
         dump_predictions=args.dump_predictions, **kwargs)
 
 
