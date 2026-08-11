@@ -34,12 +34,13 @@ import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Sequence, Set
+from typing import Dict, List, Optional, Sequence, Set
 
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from scripts.retrieval.evaluator import build_groundtruth, build_split_report
 from scripts.retrieval.two_tower import (
@@ -47,6 +48,7 @@ from scripts.retrieval.two_tower import (
     TwoTower,
     TwoTowerConfig,
     UserTower,
+    build_optimizer,
 )
 from scripts.retrieval.two_tower_dataset import (
     FeatureSpec,
@@ -116,18 +118,38 @@ class TrainConfig:
     # these to small numbers so a smoke loop completes in seconds, not minutes.
     max_train_pairs: int = 0          # 0 = no cap
     max_eval_users: int = 0           # 0 = no cap
+    # v2: 'adam' reproduces v1 exactly; 'adamw' = decoupled decay with wd=0 on
+    # all embedding groups + logit_scale (see two_tower.build_optimizer).
+    optimizer: str = "adam"
 
 
 def _move_spec_to_tensors(spec: FeatureSpec, device: str) -> Dict[str, torch.Tensor]:
     """Pre-stage feature tables as device tensors so per-batch indexing has no
     host->device copy in the hot path."""
-    return {
+    out = {
         "user_dense": torch.from_numpy(spec.user_dense).to(device),
         "item_dense": torch.from_numpy(spec.item_dense).to(device),
         "item_store_idx": torch.from_numpy(spec.item_store_idx).to(device),
         "item_main_cat_idx": torch.from_numpy(spec.item_main_cat_idx).to(device),
         "item_deeper_cat_idx": torch.from_numpy(spec.item_deeper_cat_idx).to(device),
     }
+    # v2 taste channel: history arrays exist only when the temporal spec was
+    # built with build_hist_pool=True.
+    if spec.user_hist_idx is not None:
+        assert spec.user_hist_w is not None, "user_hist_idx without user_hist_w"
+        out["user_hist_idx"] = torch.from_numpy(spec.user_hist_idx).to(device)
+        out["user_hist_w"] = torch.from_numpy(spec.user_hist_w).to(device)
+    return out
+
+
+def _gather_item_inputs(spec_t: Dict[str, torch.Tensor], i_idx: torch.Tensor):
+    """(store_idx, main_cat_idx, deeper_cat_idx, item_dense) rows for i_idx."""
+    return (
+        spec_t["item_store_idx"].index_select(0, i_idx),
+        spec_t["item_main_cat_idx"].index_select(0, i_idx),
+        spec_t["item_deeper_cat_idx"].index_select(0, i_idx),
+        spec_t["item_dense"].index_select(0, i_idx),
+    )
 
 
 def train_one_epoch(
@@ -147,6 +169,13 @@ def train_one_epoch(
     actual forward/backward is sub-ms.
     """
     model.train()
+    # v2 taste channel: gather per-batch history rows when the model uses them.
+    use_hist = bool(getattr(model.user_tower, "use_hist_pool", False))
+    if use_hist:
+        assert "user_hist_idx" in spec_t and "user_hist_w" in spec_t, (
+            "use_hist_pool=True but spec_t carries no history arrays -- build "
+            "the FeatureSpec with build_hist_pool=True (temporal driver only)"
+        )
     # Pull the four flat tensors directly off the dataset and stage them on
     # device (small ints/floats; total ~few hundred MB even for Books).
     user_all = dataset._user_t.to(device)
@@ -180,10 +209,16 @@ def train_one_epoch(
         store_idx = spec_t["item_store_idx"].index_select(0, i_idx)
         maincat_idx = spec_t["item_main_cat_idx"].index_select(0, i_idx)
         deeper_idx = spec_t["item_deeper_cat_idx"].index_select(0, i_idx)
+        hist_idx = spec_t["user_hist_idx"].index_select(0, u_idx) if use_hist else None
+        hist_w = spec_t["user_hist_w"].index_select(0, u_idx) if use_hist else None
 
         logits = model(
             u_idx, u_dense,
             i_idx, store_idx, maincat_idx, deeper_idx, i_dense,
+            hist_idx=hist_idx, hist_w=hist_w,
+            # Target masking: the scored item never appears in its own pooled
+            # history (training pairs are drawn FROM the history).
+            hist_exclude_item_idx=i_idx if use_hist else None,
         )
         per_row = bce(logits, label) * weight
         loss = per_row.mean()
@@ -217,6 +252,226 @@ def train_one_epoch(
         "n_examples": int(n_examples),
         "n_pos": n_pos,
         "n_neg": n_neg,
+    }
+
+
+# ---- v2 loss: in-batch sampled softmax + logQ + uniform MNS tail -------------
+
+def inbatch_softmax_ce(
+    u_vec: torch.Tensor,                     # [B, d] user vectors
+    i_vec: torch.Tensor,                     # [B, d] batch positive item vectors
+    u_idx: torch.Tensor,                     # [B] user idxs
+    i_idx: torch.Tensor,                     # [B] item idxs of the positives
+    log_q_in: torch.Tensor,                  # [B] exact-unigram log q per column
+    scale: torch.Tensor,                     # clamped logit scale (scalar tensor)
+    tail_vec: Optional[torch.Tensor] = None,  # [B', d] uniform-tail item vectors
+    tail_idx: Optional[torch.Tensor] = None,  # [B'] uniform-tail item idxs
+    log_q_tail: float = 0.0,                  # log(1/pool_size) of the tail
+):
+    """Per-row sampled-softmax cross-entropy with logQ correction.
+
+    Row r's candidate set = the B in-batch positives + the shared B' uniform
+    tail. Corrected logits s - log q (Yi et al., RecSys 2019 -- streaming
+    frequency estimation replaced by the exact unigram over this epoch's
+    positive pairs); the diagonal (row's own positive) is corrected too. The
+    tail uses its own sampling distribution, uniform over the candidate pool
+    (Yang et al., WWW 2020 Companion mixed negative sampling).
+
+    Three masks (-inf, excluded from the partition function):
+      1. in-batch duplicate items:  column item == row's positive, off-diagonal
+                                    (accidental hit -- it IS the label);
+      2. in-batch same-user columns: column user == row's user, off-diagonal
+                                    (that column's item is a known positive of
+                                    this user, not a valid negative);
+      3. tail collisions:           tail item == row's positive item.
+    The diagonal target is never masked.
+
+    Returns (ce, n_valid_neg): per-row cross-entropy [B] and the per-row count
+    of unmasked negative candidates [B] (diagnostics).
+    """
+    B = u_vec.shape[0]
+    raw_in = (u_vec @ i_vec.T) * scale                       # [B, B]
+    logits_in = raw_in - log_q_in.unsqueeze(0)
+    off_diag = ~torch.eye(B, dtype=torch.bool, device=u_vec.device)
+    dup_item = i_idx.unsqueeze(0) == i_idx.unsqueeze(1)      # [B, B]
+    same_user = u_idx.unsqueeze(0) == u_idx.unsqueeze(1)     # [B, B]
+    mask_in = (dup_item | same_user) & off_diag
+    logits_in = logits_in.masked_fill(mask_in, float("-inf"))
+    n_valid_neg = (~mask_in).sum(dim=1) - 1                  # off-diag survivors
+    if tail_vec is not None and tail_vec.shape[0] > 0:
+        assert tail_idx is not None, "tail_vec without tail_idx"
+        logits_tail = (u_vec @ tail_vec.T) * scale - log_q_tail
+        mask_tail = tail_idx.unsqueeze(0) == i_idx.unsqueeze(1)  # [B, B']
+        logits_tail = logits_tail.masked_fill(mask_tail, float("-inf"))
+        n_valid_neg = n_valid_neg + (~mask_tail).sum(dim=1)
+        logits = torch.cat([logits_in, logits_tail], dim=1)
+    else:
+        logits = logits_in
+    target = torch.arange(B, device=u_vec.device)
+    ce = F.cross_entropy(logits, target, reduction="none")
+    return ce, n_valid_neg
+
+
+def train_one_epoch_softmax(
+    model: TwoTower,
+    dataset: TwoTowerPairDataset,
+    spec_t: Dict[str, torch.Tensor],
+    optimizer: torch.optim.Optimizer,
+    device: str,
+    grad_clip: float,
+    batch_size: int,
+    rng: torch.Generator,
+    tail_size: int = 4096,
+    hard_negative_lambda: float = 0.0,
+) -> Dict[str, float]:
+    """One epoch of the v2 objective: in-batch sampled softmax over the
+    positive pairs (exact-unigram logQ correction) + a shared uniform MNS tail
+    of `tail_size` items per batch. Explicit label==0 pairs (the decoupled
+    hard-negative pool) enter as an auxiliary BCE-to-0 term weighted by
+    `hard_negative_lambda`. Recency weights (positive_pair_weights) multiply
+    the per-row softmax loss.
+    """
+    model.train()
+    use_hist = bool(getattr(model.user_tower, "use_hist_pool", False))
+    if use_hist:
+        assert "user_hist_idx" in spec_t and "user_hist_w" in spec_t, (
+            "use_hist_pool=True but spec_t carries no history arrays -- build "
+            "the FeatureSpec with build_hist_pool=True (temporal driver only)"
+        )
+
+    pos_u = torch.from_numpy(dataset._pos_uidx.astype(np.int64)).to(device)
+    pos_i = torch.from_numpy(dataset._pos_iidx.astype(np.int64)).to(device)
+    pos_w = torch.from_numpy(dataset.positive_pair_weights).to(device)
+    n_pos_total = int(pos_u.numel())
+    assert n_pos_total > 0, "softmax loss_mode with zero positive pairs"
+
+    n_items = int(spec_t["item_dense"].shape[0])   # includes the PAD row 0
+    n_real_items = n_items - 1
+    assert n_real_items > 0, "empty candidate pool"
+
+    # Exact unigram over the positive pairs. Items with zero positive count can
+    # never appear as an in-batch candidate column, so NaN there is a loud
+    # tripwire (a NaN loss), never a silently wrong correction.
+    counts = np.bincount(dataset._pos_iidx, minlength=n_items).astype(np.float64)
+    log_q_np = np.full(n_items, np.nan, dtype=np.float32)
+    observed = counts > 0
+    log_q_np[observed] = (np.log(counts[observed]) - math.log(n_pos_total)).astype(np.float32)
+    log_q = torch.from_numpy(log_q_np).to(device)
+    log_q_tail = -math.log(n_real_items)   # uniform over real item idxs [1, n_items)
+
+    n_hard = dataset.n_hard_pool
+    if hard_negative_lambda > 0:
+        assert n_hard > 0, (
+            "hard_negative_lambda > 0 but the label==0 pool is empty -- this "
+            "snapshot has no hard negatives to train on"
+        )
+        hard_u_all = torch.from_numpy(dataset._hard_uidx.astype(np.int64)).to(device)
+        hard_i_all = torch.from_numpy(dataset._hard_iidx.astype(np.int64)).to(device)
+
+    perm = torch.randperm(n_pos_total, generator=rng, device="cpu").to(device)
+
+    n_examples = 0
+    sum_loss = 0.0
+    sum_softmax = 0.0
+    sum_hard = 0.0
+    sum_pos_logit = 0.0
+    sum_neg_logit = 0.0
+    n_neg_logit = 0
+    sum_valid_neg = 0
+    n_batches_total = (n_pos_total + batch_size - 1) // batch_size
+
+    for batch_i, start in enumerate(range(0, n_pos_total, batch_size)):
+        end = min(start + batch_size, n_pos_total)
+        idx = perm[start:end]
+        u_idx = pos_u.index_select(0, idx)
+        i_idx = pos_i.index_select(0, idx)
+        w = pos_w.index_select(0, idx)
+        B = int(u_idx.numel())
+
+        u_dense = spec_t["user_dense"].index_select(0, u_idx)
+        hist_idx = spec_t["user_hist_idx"].index_select(0, u_idx) if use_hist else None
+        hist_w = spec_t["user_hist_w"].index_select(0, u_idx) if use_hist else None
+        u_vec = model.encode_users(
+            u_idx, u_dense, hist_idx=hist_idx, hist_w=hist_w,
+            hist_exclude_item_idx=i_idx if use_hist else None,
+        )
+        store_idx, maincat_idx, deeper_idx, i_dense = _gather_item_inputs(spec_t, i_idx)
+        i_vec = model.encode_items(i_idx, store_idx, maincat_idx, deeper_idx, i_dense)
+
+        if tail_size > 0:
+            tail_idx = torch.randint(
+                1, n_items, (tail_size,), generator=rng, device="cpu",
+            ).to(device)
+            t_store, t_main, t_deep, t_dense = _gather_item_inputs(spec_t, tail_idx)
+            tail_vec = model.encode_items(tail_idx, t_store, t_main, t_deep, t_dense)
+        else:
+            tail_idx = tail_vec = None
+
+        scale = model.clamped_logit_scale()
+        ce, n_valid_neg = inbatch_softmax_ce(
+            u_vec, i_vec, u_idx, i_idx,
+            log_q.index_select(0, i_idx), scale,
+            tail_vec, tail_idx, log_q_tail,
+        )
+        softmax_loss = (ce * w).mean()
+        loss = softmax_loss
+
+        hard_loss_val = 0.0
+        if hard_negative_lambda > 0:
+            hsel = torch.randint(
+                0, n_hard, (B,), generator=rng, device="cpu",
+            ).to(device)
+            h_u = hard_u_all.index_select(0, hsel)
+            h_i = hard_i_all.index_select(0, hsel)
+            h_udense = spec_t["user_dense"].index_select(0, h_u)
+            h_store, h_main, h_deep, h_idense = _gather_item_inputs(spec_t, h_i)
+            h_hist_idx = spec_t["user_hist_idx"].index_select(0, h_u) if use_hist else None
+            h_hist_w = spec_t["user_hist_w"].index_select(0, h_u) if use_hist else None
+            h_logits = model(
+                h_u, h_udense, h_i, h_store, h_main, h_deep, h_idense,
+                hist_idx=h_hist_idx, hist_w=h_hist_w,
+                hist_exclude_item_idx=h_i if use_hist else None,
+            )
+            hard_loss = F.binary_cross_entropy_with_logits(
+                h_logits, torch.zeros_like(h_logits), reduction="mean",
+            )
+            hard_loss_val = float(hard_loss.detach())
+            loss = loss + hard_negative_lambda * hard_loss
+
+        optimizer.zero_grad(set_to_none=True)
+        loss.backward()
+        if grad_clip and grad_clip > 0:
+            torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
+        optimizer.step()
+
+        loss_val = float(loss.detach())
+        n_examples += B
+        sum_loss += loss_val * B
+        sum_softmax += float(softmax_loss.detach()) * B
+        sum_hard += hard_loss_val * B
+        with torch.no_grad():
+            raw = (u_vec @ i_vec.T) * scale
+            diag = raw.diagonal()
+            sum_pos_logit += float(diag.sum())
+            if B > 1:
+                sum_neg_logit += float(raw.sum() - diag.sum())
+                n_neg_logit += B * B - B
+            sum_valid_neg += int(n_valid_neg.sum())
+
+        if (batch_i + 1) % 100 == 0 or batch_i == 0 or batch_i + 1 == n_batches_total:
+            print(f"    batch {batch_i+1}/{n_batches_total}  loss={loss_val:.4f}  "
+                  f"running_mean={sum_loss/max(1,n_examples):.4f}", flush=True)
+
+    return {
+        "loss": sum_loss / max(1, n_examples),
+        "softmax_loss": sum_softmax / max(1, n_examples),
+        "hard_neg_loss": sum_hard / max(1, n_examples),
+        "mean_logit_pos": sum_pos_logit / max(1, n_examples),
+        "mean_logit_neg": sum_neg_logit / max(1, n_neg_logit),
+        "mean_valid_neg_per_row": sum_valid_neg / max(1, n_examples),
+        "n_examples": int(n_examples),
+        "n_pos": int(n_examples),
+        "n_neg": int(sum_valid_neg),
     }
 
 
@@ -254,13 +509,29 @@ def encode_users_subset(
     batch_size: int = 8192,
     device: str = "cpu",
 ) -> torch.Tensor:
-    """Encode a list of user_idxs into [n, embedding_dim] CPU tensor."""
+    """Encode a list of user_idxs into [n, embedding_dim] CPU tensor.
+
+    v2 taste channel: at inference the FULL pooled history is used (no target
+    to mask -- masking only applies to training pairs drawn from the history).
+    """
     model.eval()
+    use_hist = bool(getattr(model.user_tower, "use_hist_pool", False))
+    if use_hist:
+        assert "user_hist_idx" in spec_t and "user_hist_w" in spec_t, (
+            "use_hist_pool=True but spec_t carries no history arrays"
+        )
     out = []
     for start in range(0, len(user_idxs), batch_size):
         idx = user_idxs[start:start + batch_size].to(device)
         u_dense = spec_t["user_dense"][idx]
-        out.append(model.encode_users(idx, u_dense).cpu())
+        if use_hist:
+            out.append(model.encode_users(
+                idx, u_dense,
+                hist_idx=spec_t["user_hist_idx"][idx],
+                hist_w=spec_t["user_hist_w"][idx],
+            ).cpu())
+        else:
+            out.append(model.encode_users(idx, u_dense).cpu())
     return torch.cat(out, dim=0)
 
 
@@ -330,6 +601,13 @@ def run_category(
     toggles live in `cfg` (use_user_id_emb, use_item_id_emb, ...).
     """
     t0 = time.time()
+    # The phase1 spec (`build_feature_spec`) never builds history arrays; the
+    # taste channel is a temporal-driver-only feature (Track A correction 1).
+    assert not cfg.use_hist_pool, (
+        "use_hist_pool=True is not supported on the phase1 path -- "
+        "build_feature_spec builds no user history arrays; use "
+        "scripts.retrieval.temporal_two_tower instead"
+    )
     torch.manual_seed(seed)
     np.random.seed(seed)
 
@@ -432,6 +710,7 @@ def run_category(
         # (no-op in smoke since epochs=1) stay consistent.
         dataset._pos_uidx = dataset._pos_uidx[pos_pick]
         dataset._pos_iidx = dataset._pos_iidx[pos_pick]
+        dataset._pos_recency_w = dataset._pos_recency_w[pos_pick]
         dataset._hard_uidx = dataset._hard_uidx[hard_pick]
         dataset._hard_iidx = dataset._hard_iidx[hard_pick]
         dataset._soft_uidx = dataset._soft_uidx[soft_pick]
@@ -451,11 +730,9 @@ def run_category(
         has_deeper_cat=spec.has_deeper_cat,
     )
     model = TwoTower(user_tower, item_tower).to(train_cfg.device)
-    optimizer = torch.optim.Adam(
-        model.parameters(),
-        lr=train_cfg.lr,
-        weight_decay=train_cfg.weight_decay,
-    )
+    # 'adam' (default) is byte-identical to the v1 construction.
+    optimizer = build_optimizer(model, train_cfg.optimizer, train_cfg.lr,
+                                train_cfg.weight_decay)
     bce = nn.BCEWithLogitsLoss(reduction="none")
     train_rng = torch.Generator(device="cpu")
     train_rng.manual_seed(seed)
@@ -502,11 +779,20 @@ def run_category(
     patience_left = train_cfg.early_stopping_patience
     for epoch in range(1, train_cfg.epochs + 1):
         ep_t0 = time.time()
-        train_metrics = train_one_epoch(
-            model, dataset, spec_t, optimizer, bce,
-            train_cfg.device, train_cfg.grad_clip,
-            train_cfg.batch_size, train_rng,
-        )
+        if pair_cfg.loss_mode == "softmax":
+            train_metrics = train_one_epoch_softmax(
+                model, dataset, spec_t, optimizer,
+                train_cfg.device, train_cfg.grad_clip,
+                train_cfg.batch_size, train_rng,
+                tail_size=pair_cfg.softmax_tail_size,
+                hard_negative_lambda=pair_cfg.hard_negative_lambda,
+            )
+        else:
+            train_metrics = train_one_epoch(
+                model, dataset, spec_t, optimizer, bce,
+                train_cfg.device, train_cfg.grad_clip,
+                train_cfg.batch_size, train_rng,
+            )
         ep_elapsed = time.time() - ep_t0
 
         eval_metrics: Dict[str, float] = {}

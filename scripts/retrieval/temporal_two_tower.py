@@ -33,6 +33,22 @@ Point-in-time rules enforced here:
 Each checkpoint saves: state dict (.pt), metadata JSON (training boundary,
 seed, dataset composition, config + config_hash -- hash must be identical
 across A/B/C), and a per-user top-K predictions parquet.
+
+v2 (rebuild wave, Track A) -- all default-off; defaults reproduce v1:
+  * selection/reporting labels come from groundtruth_all_{snapshot}.parquet
+    (all-positive) with a HARD-WARNING fallback to the single-positive file;
+    metrics are dual-reported (all-positive + single-positive gt);
+  * taste channel (cfg.use_hist_pool): user_hist_idx/user_hist_w built here
+    from the snapshot history (positive, in-pool, most recent L);
+  * loss_mode='softmax' dispatches to train_one_epoch_softmax (in-batch
+    sampled softmax + exact-unigram logQ + uniform MNS tail), with the
+    decoupled hard-negative pool as an auxiliary lambda-weighted BCE term;
+  * pair_recency_decay_days weights positive pairs by recency against the
+    snapshot boundary (as_of_ms = history_end_ms);
+  * deeper_category's raw-metadata read is gated by cfg.use_deeper_cat_emb
+    (kept for v1 checkpoint re-export through infer_snapshot_checkpoint);
+  * pre-v2 frozen configs (missing loss_mode/optimizer) are refused for
+    frozen-schedule retraining (validate_frozen_config).
 """
 
 from __future__ import annotations
@@ -52,8 +68,15 @@ import torch
 import torch.nn as nn
 
 from scripts.retrieval.evaluator import build_split_report
-from scripts.retrieval.two_tower import ItemTower, TwoTower, TwoTowerConfig, UserTower
+from scripts.retrieval.two_tower import (
+    ItemTower,
+    TwoTower,
+    TwoTowerConfig,
+    UserTower,
+    build_optimizer,
+)
 from scripts.retrieval.two_tower_dataset import (
+    MS_PER_DAY,
     FeatureSpec,
     PairSamplingConfig,
     TwoTowerPairDataset,
@@ -68,6 +91,7 @@ from scripts.retrieval.train_two_tower import (
     encode_users_subset,
     topk_per_user_chunked,
     train_one_epoch,
+    train_one_epoch_softmax,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -116,11 +140,23 @@ def build_temporal_feature_spec(
     item_features_hist: pd.DataFrame,
     raw_metadata: Optional[pd.DataFrame] = None,
     use_deeper_cat: bool = True,
+    build_hist_pool: bool = False,
+    hist_pool_len: int = 20,
+    hist_pool_recency_days: Optional[float] = None,
+    boundary_ms: Optional[int] = None,
 ) -> FeatureSpec:
     """Snapshot-scoped FeatureSpec: vocabularies from the snapshot's history
     users + eligible catalog, dense tables from the snapshot feature stores.
     Future users/items cannot enter any vocabulary because the inputs are all
-    history-bounded artifacts."""
+    history-bounded artifacts.
+
+    v2 taste channel (`build_hist_pool=True`): additionally builds
+    user_hist_idx/user_hist_w -- per user, the `hist_pool_len` most recent
+    POSITIVE (label==1) history items that are inside the eligible-pool vocab
+    (out-of-pool items have no embedding slot and are dropped). Weights are
+    uniform 1.0, or exp(-age/`hist_pool_recency_days`) against `boundary_ms`.
+    Users with no in-pool positive history keep an all-PAD, all-zero-weight
+    row, which the model pools to the exact zero vector."""
     history_df = history_df.copy()
     history_df["user_id"] = history_df["user_id"].astype(str)
     history_df["parent_asin"] = history_df["parent_asin"].astype(str)
@@ -193,6 +229,25 @@ def build_temporal_feature_spec(
 
     candidate_item_idx = np.array([item_id_to_idx[pa] for pa in pool_pa], dtype=np.int64)
 
+    user_hist_idx = None
+    user_hist_w = None
+    if build_hist_pool:
+        assert hist_pool_len > 0, "hist_pool_len must be positive"
+        assert "label" in history_df.columns, (
+            "build_hist_pool needs the history 'label' column (positives only "
+            "enter the taste pool)"
+        )
+        assert "timestamp" in history_df.columns, (
+            "build_hist_pool needs the history 'timestamp' column"
+        )
+        if hist_pool_recency_days is not None:
+            assert hist_pool_recency_days > 0, "hist_pool_recency_days must be positive"
+            assert boundary_ms is not None, (
+                "hist_pool_recency_days is set but no boundary_ms was passed"
+            )
+        user_hist_idx = np.zeros((n_users, hist_pool_len), dtype=np.int64)
+        user_hist_w = np.zeros((n_users, hist_pool_len), dtype=np.float32)
+
     user_seen_per_user_idx: Dict[int, set] = {}
     for u, g in history_df.groupby("user_id"):
         u_idx = user_id_to_idx.get(u, 0)
@@ -202,6 +257,29 @@ def build_temporal_feature_spec(
             item_id_to_idx[p] for p in g["parent_asin"].to_numpy()
             if p in item_id_to_idx
         }
+        if build_hist_pool:
+            pos_g = g[(g["label"] == 1) & g["parent_asin"].isin(item_id_to_idx)]
+            if len(pos_g) == 0:
+                continue   # zero in-pool positive history -> all-PAD, zero-weight
+            # Most recent first; parent_asin ascending breaks timestamp ties
+            # deterministically (mergesort = stable).
+            pos_g = pos_g.sort_values(
+                ["timestamp", "parent_asin"], ascending=[False, True],
+                kind="mergesort",
+            ).head(hist_pool_len)
+            idxs = pos_g["parent_asin"].map(item_id_to_idx).to_numpy(dtype=np.int64)
+            if hist_pool_recency_days is not None:
+                age_ms = int(boundary_ms) - pos_g["timestamp"].to_numpy(dtype=np.int64)
+                assert (age_ms > 0).all(), (
+                    "history event at/after the snapshot boundary"
+                )
+                w = np.exp(
+                    -age_ms / (hist_pool_recency_days * MS_PER_DAY)
+                ).astype(np.float32)
+            else:
+                w = np.ones(len(idxs), dtype=np.float32)
+            user_hist_idx[u_idx, :len(idxs)] = idxs
+            user_hist_w[u_idx, :len(idxs)] = w
 
     return FeatureSpec(
         n_users=n_users,
@@ -226,6 +304,8 @@ def build_temporal_feature_spec(
         item_dense_cols=ITEM_DENSE_COLS_HIST,
         user_dense_norm_stats=user_stats,
         item_dense_norm_stats=item_stats,
+        user_hist_idx=user_hist_idx,
+        user_hist_w=user_hist_w,
     )
 
 
@@ -242,6 +322,7 @@ def _config_hash(cfg: TwoTowerConfig, pair_cfg: PairSamplingConfig,
             "lr": train_cfg.lr,
             "weight_decay": train_cfg.weight_decay,
             "grad_clip": train_cfg.grad_clip,
+            "optimizer": train_cfg.optimizer,
         },
         "frozen_epochs": frozen_epochs,
         "seed": seed,
@@ -249,6 +330,27 @@ def _config_hash(cfg: TwoTowerConfig, pair_cfg: PairSamplingConfig,
     return hashlib.sha256(
         json.dumps(payload, sort_keys=True).encode()
     ).hexdigest()[:16]
+
+
+def validate_frozen_config(frozen: Dict) -> None:
+    """Refuse to load a pre-v2 frozen config. v1-era files lack
+    `pair_sampling.loss_mode` (and `train.optimizer`); silently defaulting
+    them would retrain the B/C snapshots under a different objective than the
+    one selected on A. v1 CHECKPOINTS remain loadable -- via
+    `infer_snapshot_checkpoint`, which reads the per-snapshot meta, not this
+    file -- only frozen-schedule RETRAINING is refused."""
+    cfg = frozen.get("config", {})
+    missing = []
+    if "loss_mode" not in cfg.get("pair_sampling", {}):
+        missing.append("pair_sampling.loss_mode")
+    if "optimizer" not in cfg.get("train", {}):
+        missing.append("train.optimizer")
+    if missing:
+        raise ValueError(
+            f"two_tower_frozen_config.json predates the v2 fields {missing}; "
+            "refusing to load. Re-run the ranker_train development snapshot "
+            "to regenerate the frozen config under the v2 code."
+        )
 
 
 def _cohort(n_hist: int) -> str:
@@ -285,7 +387,20 @@ def train_snapshot_checkpoint(
 
     tdir = Path(processed_dir) / category / "temporal_ranker"
     history = pd.read_parquet(tdir / f"history_{snapshot}.parquet")
-    labels = pd.read_parquet(tdir / f"groundtruth_{snapshot}.parquet")
+    # v2: selection and reporting run on the all-positive label set. Fall back
+    # (loudly) to the single-positive file where groundtruth_all is not on
+    # disk -- e.g. synthetic test universes.
+    gt_all_path = tdir / f"groundtruth_all_{snapshot}.parquet"
+    if gt_all_path.exists():
+        labels = pd.read_parquet(gt_all_path)
+        label_mode = "all_positive"
+    else:
+        print(f"[tt-{snapshot}] HARD WARNING: {gt_all_path.name} not found -- "
+              f"falling back to single-positive groundtruth_{snapshot}.parquet. "
+              f"v2 selection is specified on the all-positive label set.",
+              flush=True)
+        labels = pd.read_parquet(tdir / f"groundtruth_{snapshot}.parquet")
+        label_mode = "single_positive"
     user_features = pd.read_parquet(tdir / f"user_features_{snapshot}.parquet")
     item_features = pd.read_parquet(tdir / f"item_features_{snapshot}.parquet")
     manifest = json.loads((tdir / "snapshot_manifest.json").read_text())
@@ -294,13 +409,17 @@ def train_snapshot_checkpoint(
         "history file violates its own snapshot boundary"
     )
 
-    raw_meta_path = Path(raw_dir) / category / "metadata.parquet"
+    # v2: the deeper_category raw-metadata read is GATED, not deleted -- v1
+    # checkpoints (use_deeper_cat_emb=True in their meta) still re-export
+    # through infer_snapshot_checkpoint unchanged.
     raw_meta = None
-    if raw_meta_path.exists():
-        try:
-            raw_meta = pd.read_parquet(raw_meta_path, columns=["parent_asin", "categories"])
-        except Exception:
-            raw_meta = None
+    if cfg.use_deeper_cat_emb:
+        raw_meta_path = Path(raw_dir) / category / "metadata.parquet"
+        if raw_meta_path.exists():
+            try:
+                raw_meta = pd.read_parquet(raw_meta_path, columns=["parent_asin", "categories"])
+            except Exception:
+                raw_meta = None
 
     if smoke:
         cfg.embedding_dim = min(cfg.embedding_dim, 16)
@@ -315,14 +434,19 @@ def train_snapshot_checkpoint(
 
     spec = build_temporal_feature_spec(
         history, user_features, item_features, raw_meta, cfg.use_deeper_cat_emb,
+        build_hist_pool=cfg.use_hist_pool,
+        hist_pool_len=cfg.hist_pool_len,
+        hist_pool_recency_days=cfg.hist_pool_recency_days,
+        boundary_ms=boundary_ms,
     )
     print(f"[tt-{snapshot}] vocab users={spec.n_users} items={spec.n_items} "
           f"stores={spec.n_stores} cats={spec.n_main_cats} "
-          f"deeper={spec.n_deeper_cats}", flush=True)
+          f"deeper={spec.n_deeper_cats} hist_pool={cfg.use_hist_pool}", flush=True)
 
-    dataset = TwoTowerPairDataset(history, spec, pair_cfg)
+    dataset = TwoTowerPairDataset(history, spec, pair_cfg, as_of_ms=boundary_ms)
     composition = dataset.composition()
-    print(f"[tt-{snapshot}] pairs = {composition}", flush=True)
+    print(f"[tt-{snapshot}] pairs = {composition} "
+          f"(hard pool = {dataset.n_hard_pool})", flush=True)
     if train_cfg.max_train_pairs and len(dataset) > train_cfg.max_train_pairs:
         # Smoke cap: subsample the INTERNAL pos/hard/soft arrays (not just the
         # flat tensors) so per-epoch soft-negative resampling stays capped.
@@ -338,36 +462,51 @@ def train_snapshot_checkpoint(
             setattr(dataset, f"_{kind}_uidx", u[keep])
             setattr(dataset, f"_{kind}_iidx",
                     getattr(dataset, f"_{kind}_iidx")[keep])
+            if kind == "pos":
+                dataset._pos_recency_w = dataset._pos_recency_w[keep]
         dataset._rebuild_flat()
         print(f"[tt-{snapshot}] smoke-capped pairs to {len(dataset):,}", flush=True)
 
-    user_tower = UserTower(spec.n_users, spec.n_user_dense, cfg)
+    # Item tower first: the v2 taste channel shares its item_id_emb table.
     item_tower = ItemTower(
         n_items=spec.n_items, n_stores=spec.n_stores,
         n_main_cats=spec.n_main_cats, n_deeper_cats=spec.n_deeper_cats,
         n_dense=spec.n_item_dense, cfg=cfg, has_deeper_cat=spec.has_deeper_cat,
     )
+    user_tower = UserTower(
+        spec.n_users, spec.n_user_dense, cfg,
+        shared_item_emb=item_tower.item_id_emb if cfg.use_hist_pool else None,
+    )
     model = TwoTower(user_tower, item_tower).to(train_cfg.device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=train_cfg.lr,
-                                 weight_decay=train_cfg.weight_decay)
+    optimizer = build_optimizer(model, train_cfg.optimizer, train_cfg.lr,
+                                train_cfg.weight_decay)
     bce = nn.BCEWithLogitsLoss(reduction="none")
     train_rng = torch.Generator(device="cpu")
     train_rng.manual_seed(seed)
     spec_t = _move_spec_to_tensors(spec, train_cfg.device)
 
     # Ground truth + eval users (>=1 history event only; zero-history users'
-    # fallback is the popularity source of the candidate union).
+    # fallback is the popularity source of the candidate union). gt[u] is a
+    # SET -- one item in single-positive mode, all window positives in
+    # all-positive mode.
     labels["user_id"] = labels["user_id"].astype(str)
     labels["parent_asin"] = labels["parent_asin"].astype(str)
     # Set-valued per user. The old `{u: {pa} for u, pa in zip(...)}` reads like
     # it builds sets but is a per-ROW comprehension: with several groundtruth
     # rows per user, later keys overwrite earlier ones and each user silently
-    # keeps one item. (n_history_events is a per-user constant, so building
-    # hist_events by zip stays correct either way.)
+    # keeps one item.
     gt = {u: set(g) for u, g in
           labels.groupby("user_id")["parent_asin"].agg(set).items()}
     assert sum(len(v) for v in gt.values()) == len(labels), "groundtruth rows dropped"
-    hist_events = dict(zip(labels["user_id"], labels["n_history_events"]))
+    # n_history_events must be a per-user constant; a zip would silently keep
+    # the last row's value if an artifact ever violated that, so assert it.
+    he = labels.groupby("user_id")["n_history_events"]
+    he_min, he_max = he.min(), he.max()
+    assert (he_min == he_max).all(), (
+        "n_history_events differs across a user's label rows -- corrupt "
+        "groundtruth artifact"
+    )
+    hist_events = he_max.astype(int).to_dict()
     eval_users = sorted(u for u in gt if hist_events.get(u, 0) >= 1)
     n_zero_history = len(gt) - len(eval_users)
     eval_users_capped = bool(
@@ -414,10 +553,18 @@ def train_snapshot_checkpoint(
 
     for epoch in range(1, max_epochs + 1):
         ep_t0 = time.time()
-        train_metrics = train_one_epoch(
-            model, dataset, spec_t, optimizer, bce, train_cfg.device,
-            train_cfg.grad_clip, train_cfg.batch_size, train_rng,
-        )
+        if pair_cfg.loss_mode == "softmax":
+            train_metrics = train_one_epoch_softmax(
+                model, dataset, spec_t, optimizer, train_cfg.device,
+                train_cfg.grad_clip, train_cfg.batch_size, train_rng,
+                tail_size=pair_cfg.softmax_tail_size,
+                hard_negative_lambda=pair_cfg.hard_negative_lambda,
+            )
+        else:
+            train_metrics = train_one_epoch(
+                model, dataset, spec_t, optimizer, bce, train_cfg.device,
+                train_cfg.grad_clip, train_cfg.batch_size, train_rng,
+            )
         entry = {"epoch": epoch, "epoch_seconds": round(time.time() - ep_t0, 2),
                  "train": train_metrics}
         if development_mode:
@@ -456,6 +603,26 @@ def train_snapshot_checkpoint(
     topk_items, topk_scores = _current_topk(return_scores=True)
     rep = build_split_report(snapshot, topk_items, gt_for_metrics, pool_set,
                              "eligible_pool", DEFAULT_KS)
+
+    # Dual-gt reporting (Track A correction 8 / P3.2): alongside the
+    # all-positive metrics, score the SAME top-K against the single-positive
+    # groundtruth so numbers stay comparable across the migration. Selection
+    # above used the all-positive set only.
+    metrics_single_gt = None
+    if label_mode == "all_positive":
+        single_path = tdir / f"groundtruth_{snapshot}.parquet"
+        if single_path.exists():
+            sl = pd.read_parquet(single_path)
+            sl["user_id"] = sl["user_id"].astype(str)
+            sl["parent_asin"] = sl["parent_asin"].astype(str)
+            gt_single = {u: set(g) for u, g in sl.groupby("user_id")["parent_asin"]}
+            if eval_users_capped:
+                gt_single = {u: gt_single[u] for u in eval_users if u in gt_single}
+            rep_single = build_split_report(
+                f"{snapshot}_single_gt", topk_items, gt_single, pool_set,
+                "eligible_pool", DEFAULT_KS,
+            )
+            metrics_single_gt = dict(rep_single.metrics)
 
     # Cohort breakdown (0 cohort has no predictions by design -> recall 0).
     cohort_metrics: Dict[str, Dict] = {}
@@ -505,16 +672,22 @@ def train_snapshot_checkpoint(
             "pair_sampling": asdict(pair_cfg),
             "train": {"batch_size": train_cfg.batch_size, "lr": train_cfg.lr,
                       "weight_decay": train_cfg.weight_decay,
-                      "grad_clip": train_cfg.grad_clip},
+                      "grad_clip": train_cfg.grad_clip,
+                      "optimizer": train_cfg.optimizer},
         },
         "config_hash": _config_hash(cfg, pair_cfg, train_cfg,
                                     frozen_epochs=chosen_epochs, seed=seed),
         "vocab_sizes": {"users": spec.n_users, "items": spec.n_items},
+        "label_mode": label_mode,
         "n_label_users": int(len(gt)),
+        "n_label_rows": int(len(labels)),
         "n_zero_history_label_users": int(n_zero_history),
+        "empty_pool_user_share": round(n_zero_history / max(1, len(gt)), 6),
+        "n_hard_neg_pool": dataset.n_hard_pool,
         "metrics_over_sampled_users_only": eval_users_capped,
         "n_users_in_metrics": int(len(gt_for_metrics)),
         "metrics": dict(rep.metrics),
+        "metrics_single_gt": metrics_single_gt,
         "coverage_eligible_pool": rep.heldout_positive_coverage_by_candidate_pool,
         "cohorts": cohort_metrics,
         "history_log": history_log,
@@ -554,23 +727,33 @@ def infer_snapshot_checkpoint(
     labels = pd.read_parquet(tdir / f"groundtruth_{snapshot}.parquet")
     user_features = pd.read_parquet(tdir / f"user_features_{snapshot}.parquet")
     item_features = pd.read_parquet(tdir / f"item_features_{snapshot}.parquet")
-    raw_meta_path = Path(raw_dir) / category / "metadata.parquet"
+    # v2: gated raw-metadata read (kept, not deleted) -- a v1 checkpoint's meta
+    # has use_deeper_cat_emb=True and takes this path exactly as before.
     raw_meta = None
-    if raw_meta_path.exists():
-        try:
-            raw_meta = pd.read_parquet(raw_meta_path,
-                                       columns=["parent_asin", "categories"])
-        except Exception:
-            raw_meta = None
+    if cfg.use_deeper_cat_emb:
+        raw_meta_path = Path(raw_dir) / category / "metadata.parquet"
+        if raw_meta_path.exists():
+            try:
+                raw_meta = pd.read_parquet(raw_meta_path,
+                                           columns=["parent_asin", "categories"])
+            except Exception:
+                raw_meta = None
 
     spec = build_temporal_feature_spec(
         history, user_features, item_features, raw_meta, cfg.use_deeper_cat_emb,
+        build_hist_pool=cfg.use_hist_pool,
+        hist_pool_len=cfg.hist_pool_len,
+        hist_pool_recency_days=cfg.hist_pool_recency_days,
+        boundary_ms=int(meta["training_boundary_ms"]),
     )
-    user_tower = UserTower(spec.n_users, spec.n_user_dense, cfg)
     item_tower = ItemTower(
         n_items=spec.n_items, n_stores=spec.n_stores,
         n_main_cats=spec.n_main_cats, n_deeper_cats=spec.n_deeper_cats,
         n_dense=spec.n_item_dense, cfg=cfg, has_deeper_cat=spec.has_deeper_cat,
+    )
+    user_tower = UserTower(
+        spec.n_users, spec.n_user_dense, cfg,
+        shared_item_emb=item_tower.item_id_emb if cfg.use_hist_pool else None,
     )
     model = TwoTower(user_tower, item_tower)
     state = torch.load(tdir / f"two_tower_{snapshot}.pt", map_location="cpu",
@@ -695,6 +878,28 @@ def _parse_args(argv=None):
     p.add_argument("--num-soft-negatives", type=int, default=4)
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--smoke", action="store_true")
+    # ---- v2 knobs (defaults reproduce v1 exactly) ----------------------------
+    p.add_argument("--loss-mode", default="bce", choices=["bce", "softmax"],
+                   help="bce = v1 explicit-pair objective; softmax = in-batch "
+                        "sampled softmax with exact-unigram logQ + MNS tail.")
+    p.add_argument("--hard-negative-lambda", type=float, default=0.0,
+                   help="softmax mode: weight of the auxiliary BCE term over "
+                        "explicit label==0 pairs.")
+    p.add_argument("--softmax-tail-size", type=int, default=4096,
+                   help="B' uniform MNS tail items per batch (0 disables).")
+    p.add_argument("--pair-recency-decay-days", type=float, default=None,
+                   help="exp(-age/days) weight on positive pairs; None = off.")
+    p.add_argument("--use-hist-pool", action="store_true", default=False,
+                   help="v2 taste channel: pooled positive-history item "
+                        "embeddings (shares the item tower's id table).")
+    p.add_argument("--hist-pool-len", type=int, default=20)
+    p.add_argument("--hist-pool-recency-days", type=float, default=None)
+    p.add_argument("--no-deeper-cat-emb", action="store_true", default=False,
+                   help="Disable the deeper_category embedding AND skip the "
+                        "raw-metadata read that feeds it.")
+    p.add_argument("--optimizer", default="adam", choices=["adam", "adamw"],
+                   help="adam = v1; adamw = decoupled decay, wd=0 on all "
+                        "embedding groups + logit_scale.")
     return p.parse_args(argv)
 
 
@@ -705,12 +910,21 @@ def main(argv=None):
         embedding_dim=args.embedding_dim, hidden_dim=args.hidden_dim,
         id_emb_dim=args.id_emb_dim, cat_emb_dim=args.cat_emb_dim,
         dropout=args.dropout, use_user_id_emb=use_ids, use_item_id_emb=use_ids,
+        use_deeper_cat_emb=not args.no_deeper_cat_emb,
+        use_hist_pool=args.use_hist_pool,
+        hist_pool_len=args.hist_pool_len,
+        hist_pool_recency_days=args.hist_pool_recency_days,
     )
     train_cfg = TrainConfig(epochs=args.epochs, batch_size=args.batch_size,
                             lr=args.lr, weight_decay=args.weight_decay,
-                            early_stopping_patience=2)
+                            early_stopping_patience=2,
+                            optimizer=args.optimizer)
     pair_cfg = PairSamplingConfig(n_soft_neg=args.num_soft_negatives,
-                                  seed=args.seed)
+                                  seed=args.seed,
+                                  loss_mode=args.loss_mode,
+                                  hard_negative_lambda=args.hard_negative_lambda,
+                                  softmax_tail_size=args.softmax_tail_size,
+                                  pair_recency_decay_days=args.pair_recency_decay_days)
     if args.snapshot == "all":
         run_all_snapshots(args.category, cfg, train_cfg, pair_cfg,
                           seed=args.seed, smoke=args.smoke)
@@ -740,6 +954,7 @@ def main(argv=None):
     # file -- CLI model/training flags are ignored so hyperparameters cannot
     # drift from checkpoint A (the freezing loophole found in review).
     frozen = json.loads(frozen_path.read_text())
+    validate_frozen_config(frozen)   # v1-era files (no loss_mode): refuse.
     print("[tt] single-snapshot mode: rebuilding config from "
           "two_tower_frozen_config.json (CLI model flags ignored)", flush=True)
     cfg = TwoTowerConfig(**frozen["config"]["two_tower"])
@@ -747,7 +962,8 @@ def main(argv=None):
     tr = frozen["config"]["train"]
     train_cfg = TrainConfig(batch_size=tr["batch_size"], lr=tr["lr"],
                             weight_decay=tr["weight_decay"],
-                            grad_clip=tr["grad_clip"])
+                            grad_clip=tr["grad_clip"],
+                            optimizer=tr["optimizer"])
     meta = train_snapshot_checkpoint(
         args.category, args.snapshot, cfg, train_cfg, pair_cfg,
         seed=frozen["seed"], frozen_epochs=frozen["frozen_epochs"],

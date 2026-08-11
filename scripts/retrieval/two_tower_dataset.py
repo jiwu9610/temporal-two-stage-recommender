@@ -3,13 +3,18 @@
 Spec-locked design choices, in service of a clean v1 (see the Phase 1 plan in
 project memory and the user's two-tower spec):
 
-* No in-batch sampled softmax. Negatives are explicit:
+* v1 default (loss_mode="bce"): no in-batch sampled softmax. Negatives are
+  explicit:
     - **Positives**:        train rows with label==1.
     - **Hard negatives**    train rows with label==0 (rating<3 interactions).
-                            Optional via use_hard_negatives flag.
+                            The pool is ALWAYS built (v2); use_hard_negatives
+                            only gates their inclusion in the BCE flat tensors.
     - **Soft negatives**    items sampled from the in_train_catalog pool MINUS
                             anything the user has seen in train (positives or
                             hard negs). num_soft_negatives per positive.
+* v2 (loss_mode="softmax"): the trainer draws negatives in-batch + uniform
+  MNS tail (see train_two_tower.train_one_epoch_softmax); the soft-negative
+  sampler is skipped and only the positive/hard arrays are consumed.
 * No shared id_emb table between user-history encoder and item tower
   (we don't even build a history encoder in v1; user-tower input is dense + an
   optional standalone user_id embedding).
@@ -39,6 +44,10 @@ from torch.utils.data import Dataset
 # Indexing convention: 0 is reserved as the "unknown / padding" slot for every
 # categorical embedding, so out-of-vocabulary keys at inference time map there.
 PAD_IDX = 0
+
+# Keep in sync with scripts.data.temporal_split.MS_PER_DAY (this module stays
+# stdlib+np+pd+torch-only on purpose; the anchor scripts monkeypatch around it).
+MS_PER_DAY = 86_400_000
 
 
 # ---- Dense feature normalization helpers -------------------------------------
@@ -145,6 +154,13 @@ class FeatureSpec:
     # Normalization stats (saved in the JSON report so behavior is auditable).
     user_dense_norm_stats: Dict[str, Dict[str, float]] = field(default_factory=dict)
     item_dense_norm_stats: Dict[str, Dict[str, float]] = field(default_factory=dict)
+
+    # ---- v2 taste channel (Track A). Tail-appended with None defaults so the
+    # phase1 path (`build_feature_spec`), which never builds history arrays,
+    # keeps its field order and construction untouched. Populated only by
+    # build_temporal_feature_spec(build_hist_pool=True).
+    user_hist_idx: Optional[np.ndarray] = None   # [n_users, L] int64, PAD-padded
+    user_hist_w: Optional[np.ndarray] = None     # [n_users, L] float32, 0 on pad
 
     @property
     def n_user_dense(self) -> int:
@@ -316,6 +332,15 @@ class PairSamplingConfig:
     hard_negative_weight: float = 1.0
     soft_negative_weight: float = 1.0
     seed: int = 42
+    # ---- v2 (rebuild wave, Track A). Tail-appended; defaults preserve v1.
+    # These are hashed via asdict() in _config_hash and land in the frozen
+    # config, so they cannot drift between the A/B/C snapshot checkpoints.
+    loss_mode: str = "bce"                  # "bce" (v1) | "softmax" (in-batch + logQ)
+    hard_negative_lambda: float = 0.0       # softmax mode: weight of the auxiliary
+                                            # BCE term over explicit label==0 pairs
+    softmax_tail_size: int = 4096           # B' uniform MNS tail per batch (0 = off)
+    pair_recency_decay_days: Optional[float] = None  # positive-pair recency weight
+                                            # exp(-age/days); None = v1 uniform
 
 
 class TwoTowerPairDataset(Dataset):
@@ -331,7 +356,11 @@ class TwoTowerPairDataset(Dataset):
         train_df: pd.DataFrame,
         spec: FeatureSpec,
         config: PairSamplingConfig,
+        as_of_ms: Optional[int] = None,
     ):
+        assert config.loss_mode in ("bce", "softmax"), (
+            f"unknown loss_mode {config.loss_mode!r}; expected 'bce' or 'softmax'"
+        )
         self.spec = spec
         self.config = config
 
@@ -348,12 +377,40 @@ class TwoTowerPairDataset(Dataset):
         train_df = train_df[(train_df["_uidx"] != PAD_IDX) & (train_df["_iidx"] != PAD_IDX)]
 
         pos = train_df[train_df["label"] == 1]
-        hardneg = train_df[train_df["label"] == 0] if config.use_hard_negatives else train_df.iloc[0:0]
+        # v2: the hard-negative pool is ALWAYS built from label==0 rows,
+        # decoupled from use_hard_negatives (which now only gates their
+        # inclusion in the BCE flat tensors). The softmax auxiliary term
+        # (hard_negative_lambda) draws from this pool regardless of the flag.
+        hardneg = train_df[train_df["label"] == 0]
 
         self._pos_uidx = pos["_uidx"].to_numpy()
         self._pos_iidx = pos["_iidx"].to_numpy()
         self._hard_uidx = hardneg["_uidx"].to_numpy()
         self._hard_iidx = hardneg["_iidx"].to_numpy()
+
+        # v2 recency weight on positive pairs: exp(-age / decay_days). All-ones
+        # when disabled, so the flat weight tensor is byte-identical to v1.
+        if config.pair_recency_decay_days is not None:
+            assert config.pair_recency_decay_days > 0, (
+                "pair_recency_decay_days must be positive"
+            )
+            assert as_of_ms is not None, (
+                "pair_recency_decay_days is set but no as_of_ms was passed -- "
+                "the temporal driver must supply the snapshot boundary"
+            )
+            assert "timestamp" in train_df.columns, (
+                "pair_recency_decay_days needs a 'timestamp' column on the "
+                "training frame"
+            )
+            age_ms = int(as_of_ms) - pos["timestamp"].to_numpy(dtype=np.int64)
+            assert (age_ms > 0).all(), (
+                "positive pair at/after as_of_ms -- history violates its boundary"
+            )
+            self._pos_recency_w = np.exp(
+                -age_ms / (config.pair_recency_decay_days * MS_PER_DAY)
+            ).astype(np.float32)
+        else:
+            self._pos_recency_w = np.ones(len(self._pos_uidx), dtype=np.float32)
 
         # Soft negatives are resampled each epoch.
         self._soft_uidx: np.ndarray = np.empty(0, dtype=np.int64)
@@ -370,6 +427,14 @@ class TwoTowerPairDataset(Dataset):
     def resample_soft_negatives(self, epoch: int) -> None:
         """Draw num_soft_neg soft negatives per positive, excluding train-seen
         items per user. Deterministic in (config.seed, epoch)."""
+        if self.config.loss_mode == "softmax":
+            # Softmax mode draws its negatives in-batch + uniform tail inside
+            # train_one_epoch_softmax; the explicit soft-negative pool is
+            # unused, so skip the O(n_pos) per-user sampling loop entirely.
+            self._soft_uidx = np.empty(0, dtype=np.int64)
+            self._soft_iidx = np.empty(0, dtype=np.int64)
+            self._rebuild_flat()
+            return
         rng = np.random.default_rng(self.config.seed + epoch * 7919)
         cand = self.spec.candidate_item_idx
         n_cand = len(cand)
@@ -415,16 +480,22 @@ class TwoTowerPairDataset(Dataset):
 
     def _rebuild_flat(self) -> None:
         cfg = self.config
-        u = np.concatenate([self._pos_uidx, self._hard_uidx, self._soft_uidx])
-        i = np.concatenate([self._pos_iidx, self._hard_iidx, self._soft_iidx])
+        # The pool is always built (v2); the old flag now only gates whether
+        # hard negatives enter the BCE flat tensors -- v1 semantics preserved.
+        hard_u = self._hard_uidx if cfg.use_hard_negatives else self._hard_uidx[:0]
+        hard_i = self._hard_iidx if cfg.use_hard_negatives else self._hard_iidx[:0]
+        u = np.concatenate([self._pos_uidx, hard_u, self._soft_uidx])
+        i = np.concatenate([self._pos_iidx, hard_i, self._soft_iidx])
         label = np.concatenate([
             np.ones(len(self._pos_uidx), dtype=np.float32),
-            np.zeros(len(self._hard_uidx), dtype=np.float32),
+            np.zeros(len(hard_u), dtype=np.float32),
             np.zeros(len(self._soft_uidx), dtype=np.float32),
         ])
         weight = np.concatenate([
-            np.full(len(self._pos_uidx), cfg.positive_weight, dtype=np.float32),
-            np.full(len(self._hard_uidx), cfg.hard_negative_weight, dtype=np.float32),
+            # positive_weight * all-ones recency == np.full(..) bit-for-bit
+            # when pair_recency_decay_days is None.
+            (cfg.positive_weight * self._pos_recency_w).astype(np.float32),
+            np.full(len(hard_u), cfg.hard_negative_weight, dtype=np.float32),
             np.full(len(self._soft_uidx), cfg.soft_negative_weight, dtype=np.float32),
         ])
         self._user_t = torch.from_numpy(u.astype(np.int64))
@@ -443,10 +514,25 @@ class TwoTowerPairDataset(Dataset):
             self._weight_t[idx],
         )
 
+    @property
+    def n_hard_pool(self) -> int:
+        """Size of the always-built label==0 pool (independent of the
+        use_hard_negatives flag; the softmax auxiliary term draws from it)."""
+        return int(len(self._hard_uidx))
+
+    @property
+    def positive_pair_weights(self) -> np.ndarray:
+        """positive_weight * recency weight per positive pair (float32).
+        All equal to positive_weight when pair_recency_decay_days is None."""
+        return (self.config.positive_weight * self._pos_recency_w).astype(np.float32)
+
     # Diagnostics for the JSON report.
     def composition(self) -> Dict[str, int]:
+        # n_hard_neg counts hard rows IN THE BCE FLAT TENSORS (0 when the flag
+        # is off) -- v1 report semantics. The decoupled pool is n_hard_pool.
+        n_hard_flat = int(len(self._hard_uidx)) if self.config.use_hard_negatives else 0
         return {
             "n_positive": int(len(self._pos_uidx)),
-            "n_hard_neg": int(len(self._hard_uidx)),
+            "n_hard_neg": n_hard_flat,
             "n_soft_neg": int(len(self._soft_uidx)),
         }
