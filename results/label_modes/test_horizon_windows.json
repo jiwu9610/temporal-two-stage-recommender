@@ -1,0 +1,123 @@
+{
+ "variant": "C2_k500_recent_allpos",
+ "note": "Evaluation-time window restrictions of groundtruth_all_test against the frozen all-positive refit dumps. 'native' must reproduce the published locked values (self-check). 'truncfix' is the M1 All_Beauty censoring fix; 'aligned365' is the horizon-aligned secondary reading for cross-category tables.",
+ "ab_ramp_start_utc": "2023-03-28T00:00:00Z",
+ "categories": {
+  "All_Beauty": {
+   "native": {
+    "window_days": 590.9,
+    "n_gt_users": 48891,
+    "n_positives": 51961,
+    "ceiling_macro": 0.24430226455982734,
+    "recall@10": 0.028193620210555846,
+    "hit_rate@10": 0.028512405146141416,
+    "precision@10": 0.0028532858808368896,
+    "recall@100": 0.11188994259191229,
+    "hit_rate@100": 0.11308829845983924,
+    "precision@100": 0.0011374281565113737
+   },
+   "aligned365": {
+    "window_days": 365.0,
+    "n_gt_users": 40962,
+    "n_positives": 43567,
+    "ceiling_macro": 0.24598726520049943,
+    "recall@10": 0.0281093278090495,
+    "hit_rate@10": 0.028416581221620038,
+    "precision@10": 0.0028440994092084775,
+    "recall@100": 0.11411982301831432,
+    "hit_rate@100": 0.11527757433719056,
+    "precision@100": 0.0011598554758068247
+   },
+   "truncfix": {
+    "window_days": 425.9,
+    "n_gt_users": 45642,
+    "n_positives": 48603,
+    "ceiling_macro": 0.2434694364093274,
+    "recall@10": 0.027615229080984308,
+    "hit_rate@10": 0.027956706542219885,
+    "precision@10": 0.0027978616186844795,
+    "recall@100": 0.11181392540338249,
+    "hit_rate@100": 0.11303185662328558,
+    "precision@100": 0.0011371105560667434
+   }
+  },
+  "Video_Games": {
+   "native": {
+    "window_days": 426.5,
+    "n_gt_users": 53434,
+    "n_positives": 82055,
+    "ceiling_macro": 0.30515475909239304,
+    "recall@10": 0.05219233316228853,
+    "hit_rate@10": 0.06377961597484748,
+    "precision@10": 0.006486506718568882,
+    "recall@100": 0.14338149130284583,
+    "hit_rate@100": 0.1770969794512857,
+    "precision@100": 0.0019088969569939123
+   },
+   "aligned365": {
+    "window_days": 365.0,
+    "n_gt_users": 47122,
+    "n_positives": 70872,
+    "ceiling_macro": 0.31311286201222294,
+    "recall@10": 0.05249186221858852,
+    "hit_rate@10": 0.06404651755018888,
+    "precision@10": 0.006521370060693541,
+    "recall@100": 0.14637102406195449,
+    "hit_rate@100": 0.1793642035567251,
+    "precision@100": 0.0019322184966683973
+   }
+  },
+  "Books": {
+   "native": {
+    "window_days": 652.4,
+    "n_gt_users": 35258,
+    "n_positives": 91007,
+    "ceiling_macro": 0.09028070658211117,
+    "recall@10": 0.026688166596768485,
+    "hit_rate@10": 0.0409552441998979,
+    "precision@10": 0.004319587044074994,
+    "recall@100": 0.04492630936052491,
+    "hit_rate@100": 0.074564637812695,
+    "precision@100": 0.0008902944012706759
+   },
+   "aligned365": {
+    "window_days": 365.0,
+    "n_gt_users": 23599,
+    "n_positives": 52489,
+    "ceiling_macro": 0.09809925835429599,
+    "recall@10": 0.025992357253618256,
+    "hit_rate@10": 0.03733209034281114,
+    "precision@10": 0.003889995338785506,
+    "recall@100": 0.04706190295671862,
+    "hit_rate@100": 0.07360481376329506,
+    "precision@100": 0.0008644434086190204
+   }
+  },
+  "Electronics": {
+   "native": {
+    "window_days": 380.9,
+    "n_gt_users": 37721,
+    "n_positives": 83071,
+    "ceiling_macro": 0.197248381507042,
+    "recall@10": 0.04021432225443223,
+    "hit_rate@10": 0.05970149253731343,
+    "precision@10": 0.0061159566289332576,
+    "recall@100": 0.09908462488057353,
+    "hit_rate@100": 0.15174571193764747,
+    "precision@100": 0.0016942816998488158
+   },
+   "aligned365": {
+    "window_days": 365.0,
+    "n_gt_users": 36730,
+    "n_positives": 80111,
+    "ceiling_macro": 0.19916846979183603,
+    "recall@10": 0.04095592702564905,
+    "hit_rate@10": 0.06014157364552137,
+    "precision@10": 0.006155731010073282,
+    "recall@100": 0.10046177748847394,
+    "hit_rate@100": 0.15254560304927853,
+    "precision@100": 0.0016969779471820684
+   }
+  }
+ }
+}

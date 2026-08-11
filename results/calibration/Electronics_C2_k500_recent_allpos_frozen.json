@@ -1,0 +1,52 @@
+{
+  "category": "Electronics",
+  "variant": "C2_k500_recent_allpos",
+  "fitted_on": "selection_model_model_selection.parquet (out-of-sample, pre-test)",
+  "pred_subdir": "predictions",
+  "capped_run": false,
+  "dump_fingerprint": {
+    "created_utc": "2026-08-08T17:13:05.658182+00:00",
+    "n_rows": {
+      "ranker_train": 51737272,
+      "model_selection": 52213774,
+      "test": 48038097
+    },
+    "max_users_per_snapshot": 0,
+    "smoke": false,
+    "seed": 42
+  },
+  "pos_weight_selection": 3104.4785114045617,
+  "pos_weight_refit": 3188.7586915830493,
+  "prior_shift_rule": "logit - log(pos_weight of the scored model)",
+  "platt": {
+    "a": 0.8624172726024519,
+    "b": -7.96174589667043,
+    "init_shift": -8.040601029023724,
+    "init_nll": 0.002527372748016316,
+    "final_nll": 0.0025191376293071297,
+    "monotone": true
+  },
+  "chosen_calibrator": "platt",
+  "cohort_thresholds": {
+    "0": 0.0,
+    "1": 0.0,
+    "2": 0.0,
+    "3+": 0.0
+  },
+  "threshold_quantile_grid": [
+    0.5,
+    0.75,
+    0.9,
+    0.95,
+    0.99
+  ],
+  "prob_bins": 15,
+  "item_bucket_edges": [
+    10.0,
+    30.0,
+    100.0,
+    300.0
+  ],
+  "created_utc": "2026-08-08T17:18:57.723490+00:00",
+  "test_dump_untouched": true
+}
