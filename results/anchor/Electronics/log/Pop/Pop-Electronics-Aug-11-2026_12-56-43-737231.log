@@ -1,0 +1,175 @@
+Tue 11 Aug 2026 12:56:46 INFO  [Training]: train_batch_size = [2048] train_neg_sample_args: [{'distribution': 'uniform', 'sample_num': 1, 'alpha': 1.0, 'dynamic': False, 'candidate_num': 0}]
+Tue 11 Aug 2026 12:56:46 INFO  [Evaluation]: eval_batch_size = [4096] eval_args: [{'split': {'LS': 'valid_and_test'}, 'order': 'TO', 'group_by': 'user', 'mode': {'valid': 'full', 'test': 'full'}}]
+Tue 11 Aug 2026 12:56:56 INFO  epoch 0 training [time: 0.96s, train loss: 0.0000]
+Tue 11 Aug 2026 12:57:17 INFO  epoch 0 evaluating [time: 21.41s, valid_score: 0.014000]
+Tue 11 Aug 2026 12:57:17 INFO  valid result: 
+recall@10 : 0.0273    recall@50 : 0.0697    recall@100 : 0.1058    ndcg@10 : 0.014    ndcg@50 : 0.0234    ndcg@100 : 0.0292
+Tue 11 Aug 2026 12:57:17 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Electronics/_ckpt/Pop-Aug-11-2026_12-56-46.pth
+Tue 11 Aug 2026 12:57:17 INFO  Loading model structure and parameters from /projects/PROJECT_ALLOC/R-project/results/anchor/Electronics/_ckpt/Pop-Aug-11-2026_12-56-46.pth
+Tue 11 Aug 2026 12:58:12 WARNING  command line args [--category Electronics --legs pop,itemknn,sasrec,sasrec_len20] will not be used in RecBole
+Tue 11 Aug 2026 12:58:15 INFO  [Training]: train_batch_size = [2048] train_neg_sample_args: [{'distribution': 'uniform', 'sample_num': 1, 'alpha': 1.0, 'dynamic': False, 'candidate_num': 0}]
+Tue 11 Aug 2026 12:58:15 INFO  [Evaluation]: eval_batch_size = [4096] eval_args: [{'split': {'LS': 'valid_and_test'}, 'order': 'TO', 'group_by': 'user', 'mode': {'valid': 'full', 'test': 'full'}}]
+Tue 11 Aug 2026 12:58:28 INFO  epoch 0 training [time: 1.27s, train loss: 0.0000]
+Tue 11 Aug 2026 12:59:04 INFO  epoch 0 evaluating [time: 35.72s, valid_score: 0.004600]
+Tue 11 Aug 2026 12:59:04 INFO  valid result: 
+recall@10 : 0.0083    recall@50 : 0.0187    recall@100 : 0.0279    ndcg@10 : 0.0046    ndcg@50 : 0.0068    ndcg@100 : 0.0083
+Tue 11 Aug 2026 12:59:35 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Electronics/_ckpt/ItemKNN-Aug-11-2026_12-58-27.pth
+Tue 11 Aug 2026 12:59:40 INFO  Loading model structure and parameters from /projects/PROJECT_ALLOC/R-project/results/anchor/Electronics/_ckpt/ItemKNN-Aug-11-2026_12-58-27.pth
+Tue 11 Aug 2026 13:01:03 WARNING  command line args [--category Electronics --legs pop,itemknn,sasrec,sasrec_len20] will not be used in RecBole
+Tue 11 Aug 2026 13:01:12 INFO  [Training]: train_batch_size = [2048] train_neg_sample_args: [{'distribution': 'none', 'sample_num': 'none', 'alpha': 'none', 'dynamic': False, 'candidate_num': 0}]
+Tue 11 Aug 2026 13:01:12 INFO  [Evaluation]: eval_batch_size = [4096] eval_args: [{'split': {'LS': 'valid_and_test'}, 'order': 'TO', 'group_by': 'user', 'mode': {'valid': 'full', 'test': 'full'}}]
+Tue 11 Aug 2026 13:01:20 INFO  epoch 0 training [time: 7.35s, train loss: 1196.0224]
+Tue 11 Aug 2026 13:01:20 INFO  epoch 0 evaluating [time: 0.38s, valid_score: 0.014300]
+Tue 11 Aug 2026 13:01:20 INFO  valid result: 
+recall@10 : 0.0283    recall@50 : 0.0722    recall@100 : 0.1082    ndcg@10 : 0.0143    ndcg@50 : 0.024    ndcg@100 : 0.0298
+Tue 11 Aug 2026 13:01:20 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Electronics/_ckpt/SASRec-Aug-11-2026_13-01-12.pth
+Tue 11 Aug 2026 13:01:27 INFO  epoch 1 training [time: 7.07s, train loss: 1163.9440]
+Tue 11 Aug 2026 13:01:28 INFO  epoch 1 evaluating [time: 0.36s, valid_score: 0.018200]
+Tue 11 Aug 2026 13:01:28 INFO  valid result: 
+recall@10 : 0.0358    recall@50 : 0.0884    recall@100 : 0.1258    ndcg@10 : 0.0182    ndcg@50 : 0.0298    ndcg@100 : 0.0358
+Tue 11 Aug 2026 13:01:28 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Electronics/_ckpt/SASRec-Aug-11-2026_13-01-12.pth
+Tue 11 Aug 2026 13:01:35 INFO  epoch 2 training [time: 7.06s, train loss: 1139.9287]
+Tue 11 Aug 2026 13:01:35 INFO  epoch 2 evaluating [time: 0.36s, valid_score: 0.020400]
+Tue 11 Aug 2026 13:01:35 INFO  valid result: 
+recall@10 : 0.0401    recall@50 : 0.1003    recall@100 : 0.1376    ndcg@10 : 0.0204    ndcg@50 : 0.0334    ndcg@100 : 0.0394
+Tue 11 Aug 2026 13:01:35 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Electronics/_ckpt/SASRec-Aug-11-2026_13-01-12.pth
+Tue 11 Aug 2026 13:01:42 INFO  epoch 3 training [time: 7.05s, train loss: 1120.2935]
+Tue 11 Aug 2026 13:01:42 INFO  epoch 3 evaluating [time: 0.37s, valid_score: 0.020900]
+Tue 11 Aug 2026 13:01:42 INFO  valid result: 
+recall@10 : 0.0411    recall@50 : 0.1026    recall@100 : 0.1433    ndcg@10 : 0.0209    ndcg@50 : 0.0342    ndcg@100 : 0.0408
+Tue 11 Aug 2026 13:01:43 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Electronics/_ckpt/SASRec-Aug-11-2026_13-01-12.pth
+Tue 11 Aug 2026 13:01:50 INFO  epoch 4 training [time: 7.03s, train loss: 1104.8512]
+Tue 11 Aug 2026 13:01:50 INFO  epoch 4 evaluating [time: 0.36s, valid_score: 0.021400]
+Tue 11 Aug 2026 13:01:50 INFO  valid result: 
+recall@10 : 0.0422    recall@50 : 0.105    recall@100 : 0.1431    ndcg@10 : 0.0214    ndcg@50 : 0.035    ndcg@100 : 0.0412
+Tue 11 Aug 2026 13:01:50 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Electronics/_ckpt/SASRec-Aug-11-2026_13-01-12.pth
+Tue 11 Aug 2026 13:01:57 INFO  epoch 5 training [time: 7.05s, train loss: 1090.3982]
+Tue 11 Aug 2026 13:01:57 INFO  epoch 5 evaluating [time: 0.37s, valid_score: 0.021900]
+Tue 11 Aug 2026 13:01:57 INFO  valid result: 
+recall@10 : 0.0424    recall@50 : 0.1047    recall@100 : 0.1429    ndcg@10 : 0.0219    ndcg@50 : 0.0355    ndcg@100 : 0.0416
+Tue 11 Aug 2026 13:01:57 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Electronics/_ckpt/SASRec-Aug-11-2026_13-01-12.pth
+Tue 11 Aug 2026 13:02:04 INFO  epoch 6 training [time: 7.05s, train loss: 1075.5784]
+Tue 11 Aug 2026 13:02:05 INFO  epoch 6 evaluating [time: 0.36s, valid_score: 0.021600]
+Tue 11 Aug 2026 13:02:05 INFO  valid result: 
+recall@10 : 0.0429    recall@50 : 0.1043    recall@100 : 0.1418    ndcg@10 : 0.0216    ndcg@50 : 0.0349    ndcg@100 : 0.041
+Tue 11 Aug 2026 13:02:12 INFO  epoch 7 training [time: 7.17s, train loss: 1061.3548]
+Tue 11 Aug 2026 13:02:12 INFO  epoch 7 evaluating [time: 0.36s, valid_score: 0.021500]
+Tue 11 Aug 2026 13:02:12 INFO  valid result: 
+recall@10 : 0.0428    recall@50 : 0.1034    recall@100 : 0.1408    ndcg@10 : 0.0215    ndcg@50 : 0.0346    ndcg@100 : 0.0406
+Tue 11 Aug 2026 13:02:20 INFO  epoch 8 training [time: 7.16s, train loss: 1047.6489]
+Tue 11 Aug 2026 13:02:20 INFO  epoch 8 evaluating [time: 0.36s, valid_score: 0.020600]
+Tue 11 Aug 2026 13:02:20 INFO  valid result: 
+recall@10 : 0.042    recall@50 : 0.1026    recall@100 : 0.1417    ndcg@10 : 0.0206    ndcg@50 : 0.0337    ndcg@100 : 0.0401
+Tue 11 Aug 2026 13:02:27 INFO  epoch 9 training [time: 7.17s, train loss: 1035.2290]
+Tue 11 Aug 2026 13:02:27 INFO  epoch 9 evaluating [time: 0.37s, valid_score: 0.019500]
+Tue 11 Aug 2026 13:02:27 INFO  valid result: 
+recall@10 : 0.0409    recall@50 : 0.1013    recall@100 : 0.1382    ndcg@10 : 0.0195    ndcg@50 : 0.0327    ndcg@100 : 0.0386
+Tue 11 Aug 2026 13:02:35 INFO  epoch 10 training [time: 7.08s, train loss: 1024.0218]
+Tue 11 Aug 2026 13:02:35 INFO  epoch 10 evaluating [time: 0.36s, valid_score: 0.019200]
+Tue 11 Aug 2026 13:02:35 INFO  valid result: 
+recall@10 : 0.0415    recall@50 : 0.0984    recall@100 : 0.1361    ndcg@10 : 0.0192    ndcg@50 : 0.0316    ndcg@100 : 0.0378
+Tue 11 Aug 2026 13:02:42 INFO  epoch 11 training [time: 7.06s, train loss: 1013.3190]
+Tue 11 Aug 2026 13:02:42 INFO  epoch 11 evaluating [time: 0.36s, valid_score: 0.018800]
+Tue 11 Aug 2026 13:02:42 INFO  valid result: 
+recall@10 : 0.0406    recall@50 : 0.0986    recall@100 : 0.1353    ndcg@10 : 0.0188    ndcg@50 : 0.0314    ndcg@100 : 0.0373
+Tue 11 Aug 2026 13:02:49 INFO  epoch 12 training [time: 7.05s, train loss: 1004.6519]
+Tue 11 Aug 2026 13:02:50 INFO  epoch 12 evaluating [time: 0.36s, valid_score: 0.018200]
+Tue 11 Aug 2026 13:02:50 INFO  valid result: 
+recall@10 : 0.0395    recall@50 : 0.0936    recall@100 : 0.1299    ndcg@10 : 0.0182    ndcg@50 : 0.0299    ndcg@100 : 0.0358
+Tue 11 Aug 2026 13:02:57 INFO  epoch 13 training [time: 7.05s, train loss: 996.6111]
+Tue 11 Aug 2026 13:02:57 INFO  epoch 13 evaluating [time: 0.36s, valid_score: 0.018400]
+Tue 11 Aug 2026 13:02:57 INFO  valid result: 
+recall@10 : 0.0404    recall@50 : 0.0938    recall@100 : 0.1295    ndcg@10 : 0.0184    ndcg@50 : 0.0299    ndcg@100 : 0.0357
+Tue 11 Aug 2026 13:03:04 INFO  epoch 14 training [time: 7.09s, train loss: 989.6221]
+Tue 11 Aug 2026 13:03:05 INFO  epoch 14 evaluating [time: 0.36s, valid_score: 0.018300]
+Tue 11 Aug 2026 13:03:05 INFO  valid result: 
+recall@10 : 0.0405    recall@50 : 0.0931    recall@100 : 0.1296    ndcg@10 : 0.0183    ndcg@50 : 0.0298    ndcg@100 : 0.0357
+Tue 11 Aug 2026 13:03:12 INFO  epoch 15 training [time: 7.07s, train loss: 984.0510]
+Tue 11 Aug 2026 13:03:12 INFO  epoch 15 evaluating [time: 0.37s, valid_score: 0.018300]
+Tue 11 Aug 2026 13:03:12 INFO  valid result: 
+recall@10 : 0.0401    recall@50 : 0.0947    recall@100 : 0.1307    ndcg@10 : 0.0183    ndcg@50 : 0.0302    ndcg@100 : 0.036
+Tue 11 Aug 2026 13:03:19 INFO  epoch 16 training [time: 6.96s, train loss: 978.2436]
+Tue 11 Aug 2026 13:03:19 INFO  epoch 16 evaluating [time: 0.35s, valid_score: 0.018200]
+Tue 11 Aug 2026 13:03:19 INFO  valid result: 
+recall@10 : 0.0403    recall@50 : 0.0936    recall@100 : 0.1293    ndcg@10 : 0.0182    ndcg@50 : 0.0298    ndcg@100 : 0.0356
+Tue 11 Aug 2026 13:03:19 INFO  Finished training, best eval result in epoch 5
+Tue 11 Aug 2026 13:03:19 INFO  Loading model structure and parameters from /projects/PROJECT_ALLOC/R-project/results/anchor/Electronics/_ckpt/SASRec-Aug-11-2026_13-01-12.pth
+Tue 11 Aug 2026 13:03:33 WARNING  command line args [--category Electronics --legs pop,itemknn,sasrec,sasrec_len20] will not be used in RecBole
+Tue 11 Aug 2026 13:03:42 INFO  [Training]: train_batch_size = [2048] train_neg_sample_args: [{'distribution': 'none', 'sample_num': 'none', 'alpha': 'none', 'dynamic': False, 'candidate_num': 0}]
+Tue 11 Aug 2026 13:03:42 INFO  [Evaluation]: eval_batch_size = [4096] eval_args: [{'split': {'LS': 'valid_and_test'}, 'order': 'TO', 'group_by': 'user', 'mode': {'valid': 'full', 'test': 'full'}}]
+Tue 11 Aug 2026 13:03:47 INFO  epoch 0 training [time: 5.53s, train loss: 1196.4237]
+Tue 11 Aug 2026 13:03:47 INFO  epoch 0 evaluating [time: 0.27s, valid_score: 0.014200]
+Tue 11 Aug 2026 13:03:47 INFO  valid result: 
+recall@10 : 0.0282    recall@50 : 0.0709    recall@100 : 0.1073    ndcg@10 : 0.0142    ndcg@50 : 0.0237    ndcg@100 : 0.0295
+Tue 11 Aug 2026 13:03:47 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Electronics/_ckpt/SASRec-Aug-11-2026_13-03-42.pth
+Tue 11 Aug 2026 13:03:53 INFO  epoch 1 training [time: 5.47s, train loss: 1159.2745]
+Tue 11 Aug 2026 13:03:53 INFO  epoch 1 evaluating [time: 0.26s, valid_score: 0.019200]
+Tue 11 Aug 2026 13:03:53 INFO  valid result: 
+recall@10 : 0.0377    recall@50 : 0.0937    recall@100 : 0.1307    ndcg@10 : 0.0192    ndcg@50 : 0.0315    ndcg@100 : 0.0375
+Tue 11 Aug 2026 13:03:53 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Electronics/_ckpt/SASRec-Aug-11-2026_13-03-42.pth
+Tue 11 Aug 2026 13:03:59 INFO  epoch 2 training [time: 5.47s, train loss: 1134.5843]
+Tue 11 Aug 2026 13:03:59 INFO  epoch 2 evaluating [time: 0.26s, valid_score: 0.020400]
+Tue 11 Aug 2026 13:03:59 INFO  valid result: 
+recall@10 : 0.0406    recall@50 : 0.1008    recall@100 : 0.1378    ndcg@10 : 0.0204    ndcg@50 : 0.0334    ndcg@100 : 0.0394
+Tue 11 Aug 2026 13:03:59 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Electronics/_ckpt/SASRec-Aug-11-2026_13-03-42.pth
+Tue 11 Aug 2026 13:04:04 INFO  epoch 3 training [time: 5.47s, train loss: 1117.7305]
+Tue 11 Aug 2026 13:04:05 INFO  epoch 3 evaluating [time: 0.27s, valid_score: 0.020900]
+Tue 11 Aug 2026 13:04:05 INFO  valid result: 
+recall@10 : 0.0412    recall@50 : 0.104    recall@100 : 0.1435    ndcg@10 : 0.0209    ndcg@50 : 0.0346    ndcg@100 : 0.041
+Tue 11 Aug 2026 13:04:05 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Electronics/_ckpt/SASRec-Aug-11-2026_13-03-42.pth
+Tue 11 Aug 2026 13:04:10 INFO  epoch 4 training [time: 5.46s, train loss: 1103.1471]
+Tue 11 Aug 2026 13:04:10 INFO  epoch 4 evaluating [time: 0.26s, valid_score: 0.021200]
+Tue 11 Aug 2026 13:04:10 INFO  valid result: 
+recall@10 : 0.0417    recall@50 : 0.1051    recall@100 : 0.1451    ndcg@10 : 0.0212    ndcg@50 : 0.035    ndcg@100 : 0.0414
+Tue 11 Aug 2026 13:04:10 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Electronics/_ckpt/SASRec-Aug-11-2026_13-03-42.pth
+Tue 11 Aug 2026 13:04:16 INFO  epoch 5 training [time: 5.45s, train loss: 1089.3521]
+Tue 11 Aug 2026 13:04:16 INFO  epoch 5 evaluating [time: 0.26s, valid_score: 0.021300]
+Tue 11 Aug 2026 13:04:16 INFO  valid result: 
+recall@10 : 0.0419    recall@50 : 0.1065    recall@100 : 0.1449    ndcg@10 : 0.0213    ndcg@50 : 0.0353    ndcg@100 : 0.0415
+Tue 11 Aug 2026 13:04:16 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Electronics/_ckpt/SASRec-Aug-11-2026_13-03-42.pth
+Tue 11 Aug 2026 13:04:22 INFO  epoch 6 training [time: 5.48s, train loss: 1075.3857]
+Tue 11 Aug 2026 13:04:22 INFO  epoch 6 evaluating [time: 0.26s, valid_score: 0.021000]
+Tue 11 Aug 2026 13:04:22 INFO  valid result: 
+recall@10 : 0.0422    recall@50 : 0.1043    recall@100 : 0.1429    ndcg@10 : 0.021    ndcg@50 : 0.0344    ndcg@100 : 0.0407
+Tue 11 Aug 2026 13:04:27 INFO  epoch 7 training [time: 5.46s, train loss: 1062.0052]
+Tue 11 Aug 2026 13:04:28 INFO  epoch 7 evaluating [time: 0.26s, valid_score: 0.021100]
+Tue 11 Aug 2026 13:04:28 INFO  valid result: 
+recall@10 : 0.0426    recall@50 : 0.1034    recall@100 : 0.1425    ndcg@10 : 0.0211    ndcg@50 : 0.0343    ndcg@100 : 0.0406
+Tue 11 Aug 2026 13:04:33 INFO  epoch 8 training [time: 5.43s, train loss: 1048.7341]
+Tue 11 Aug 2026 13:04:33 INFO  epoch 8 evaluating [time: 0.25s, valid_score: 0.020900]
+Tue 11 Aug 2026 13:04:33 INFO  valid result: 
+recall@10 : 0.0427    recall@50 : 0.1029    recall@100 : 0.1428    ndcg@10 : 0.0209    ndcg@50 : 0.0339    ndcg@100 : 0.0404
+Tue 11 Aug 2026 13:04:39 INFO  epoch 9 training [time: 5.46s, train loss: 1036.1043]
+Tue 11 Aug 2026 13:04:39 INFO  epoch 9 evaluating [time: 0.26s, valid_score: 0.020000]
+Tue 11 Aug 2026 13:04:39 INFO  valid result: 
+recall@10 : 0.0423    recall@50 : 0.1013    recall@100 : 0.14    ndcg@10 : 0.02    ndcg@50 : 0.0328    ndcg@100 : 0.0391
+Tue 11 Aug 2026 13:04:45 INFO  epoch 10 training [time: 5.45s, train loss: 1025.1139]
+Tue 11 Aug 2026 13:04:45 INFO  epoch 10 evaluating [time: 0.26s, valid_score: 0.019400]
+Tue 11 Aug 2026 13:04:45 INFO  valid result: 
+recall@10 : 0.0417    recall@50 : 0.0998    recall@100 : 0.1376    ndcg@10 : 0.0194    ndcg@50 : 0.032    ndcg@100 : 0.0381
+Tue 11 Aug 2026 13:04:50 INFO  epoch 11 training [time: 5.50s, train loss: 1015.0924]
+Tue 11 Aug 2026 13:04:51 INFO  epoch 11 evaluating [time: 0.27s, valid_score: 0.019100]
+Tue 11 Aug 2026 13:04:51 INFO  valid result: 
+recall@10 : 0.0416    recall@50 : 0.0983    recall@100 : 0.1348    ndcg@10 : 0.0191    ndcg@50 : 0.0315    ndcg@100 : 0.0373
+Tue 11 Aug 2026 13:04:56 INFO  epoch 12 training [time: 5.45s, train loss: 1005.9377]
+Tue 11 Aug 2026 13:04:56 INFO  epoch 12 evaluating [time: 0.26s, valid_score: 0.018400]
+Tue 11 Aug 2026 13:04:56 INFO  valid result: 
+recall@10 : 0.0407    recall@50 : 0.0954    recall@100 : 0.1322    ndcg@10 : 0.0184    ndcg@50 : 0.0302    ndcg@100 : 0.0362
+Tue 11 Aug 2026 13:05:02 INFO  epoch 13 training [time: 5.46s, train loss: 998.5844]
+Tue 11 Aug 2026 13:05:02 INFO  epoch 13 evaluating [time: 0.25s, valid_score: 0.018600]
+Tue 11 Aug 2026 13:05:02 INFO  valid result: 
+recall@10 : 0.0409    recall@50 : 0.0952    recall@100 : 0.1317    ndcg@10 : 0.0186    ndcg@50 : 0.0304    ndcg@100 : 0.0363
+Tue 11 Aug 2026 13:05:07 INFO  epoch 14 training [time: 5.42s, train loss: 991.4450]
+Tue 11 Aug 2026 13:05:08 INFO  epoch 14 evaluating [time: 0.26s, valid_score: 0.018100]
+Tue 11 Aug 2026 13:05:08 INFO  valid result: 
+recall@10 : 0.0402    recall@50 : 0.0949    recall@100 : 0.13    ndcg@10 : 0.0181    ndcg@50 : 0.03    ndcg@100 : 0.0357
+Tue 11 Aug 2026 13:05:13 INFO  epoch 15 training [time: 5.46s, train loss: 985.2937]
+Tue 11 Aug 2026 13:05:13 INFO  epoch 15 evaluating [time: 0.27s, valid_score: 0.018400]
+Tue 11 Aug 2026 13:05:13 INFO  valid result: 
+recall@10 : 0.0408    recall@50 : 0.0953    recall@100 : 0.1306    ndcg@10 : 0.0184    ndcg@50 : 0.0302    ndcg@100 : 0.0359
+Tue 11 Aug 2026 13:05:19 INFO  epoch 16 training [time: 5.44s, train loss: 980.7720]
+Tue 11 Aug 2026 13:05:19 INFO  epoch 16 evaluating [time: 0.25s, valid_score: 0.018300]
+Tue 11 Aug 2026 13:05:19 INFO  valid result: 
+recall@10 : 0.0407    recall@50 : 0.0946    recall@100 : 0.131    ndcg@10 : 0.0183    ndcg@50 : 0.03    ndcg@100 : 0.0359
+Tue 11 Aug 2026 13:05:19 INFO  Finished training, best eval result in epoch 5
+Tue 11 Aug 2026 13:05:19 INFO  Loading model structure and parameters from /projects/PROJECT_ALLOC/R-project/results/anchor/Electronics/_ckpt/SASRec-Aug-11-2026_13-03-42.pth

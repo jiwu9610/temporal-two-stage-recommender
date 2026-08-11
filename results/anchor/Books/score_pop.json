@@ -1,0 +1,106 @@
+{
+  "category": "Books",
+  "leg": "pop",
+  "dump": {
+    "path": "/projects/PROJECT_ALLOC/R-project/results/anchor/Books/pop_top101.csv.gz",
+    "rows": 1251390,
+    "n_users": 12390,
+    "max_list_length": 101,
+    "distinct_items_in_dump": 117
+  },
+  "created_utc": "2026-08-11T18:20:32.618581+00:00",
+  "elapsed_seconds": 1.76,
+  "self_test_valid_removal_changes_metric": {
+    "passed": true,
+    "construction": "Constructed example proving the valid-item removal changes the metric.",
+    "without_removal": {
+      "Recall@1": 0.5,
+      "NDCG@2": 0.8154648767857288
+    },
+    "with_removal": {
+      "Recall@1": 1.0,
+      "NDCG@2": 1.0
+    }
+  },
+  "protocol": {
+    "primary": "with_valid_removed / official_rating_blind (RecBole-comparable after removal \u2014 '\u5254\u9664\u540e\u6052\u7b49')",
+    "tie_break": "explicit rank asc if present, else score desc, parent_asin asc; stable mergesort",
+    "tie_caveat": "dump ranks resolve tied model scores by torch.topk order at k=101; RecBole's internal evaluator resolves the same ties independently at k=100. Under heavy score ties (Pop counts especially) the per-K hit set can differ inside a tie group even though both are deterministic \u2014 measured on All_Beauty: pop matches RecBole exactly at @100 but not @10, itemknn matches exactly at every K. Cross-check on tie-robust points.",
+    "ndcg": "single held-out item: NDCG@K = 1/log2(1+rank)",
+    "gt_families": {
+      "official_rating_blind": "held-out test item for every user (official protocol ignores rating)",
+      "positives_only": "test rows with label==1 only (phase1 evaluator convention)"
+    },
+    "catalog_definition": "distinct parent_asin in anchor train.parquet",
+    "seen_mask_conventions": {
+      "recbole_general_full_sort": "RecBole general-model full-sort eval masks each user's history (train items at valid; train+valid items at test) before ranking.",
+      "recbole_sequential_full_sort": "RecBole sequential full-sort eval applies NO history masking; the model ranks the full catalogue including seen items.",
+      "two_tower_dump": "The two-tower predictions dump masks train-seen items only \u2014 the valid item is still rankable at test time. score_predictions.py removes each user's valid item from the dump before test scoring; only after that removal is the definition identical to the RecBole general-model convention (spec: '\u5254\u9664\u540e\u6052\u7b49')."
+    },
+    "selection_asymmetry_memo": "SELECTION ASYMMETRY (memo, Track C item 4): the two-tower leg D early-stops / selects its checkpoint on val Recall@100 (scripts/retrieval/train_two_tower.py), while every RecBole leg selects on val NDCG@10 (valid_metric). The two legs therefore optimize different selection criteria; small cross-leg deltas can be an artifact of this asymmetry, not of model class.",
+    "item_feature_leakage_memo": "LIFETIME-CATALOG AGGREGATES (memo, Track C item 4): leg D's item_features carry lifetime catalog aggregates (average_rating, rating_number from the metadata dump). Under per-user leave-one-out these are a future-information channel \u2014 the aggregates summarize ratings that include each user's held-out interactions. Inherited from phase1 on purpose (leg D reproduces the phase1 recipe); RecBole legs use no item features, so this advantage is leg-D-only. Flag sits next to every anchor-mode leg D row.",
+    "isolation_declaration": "ANCHOR ISOLATION: this split follows the official per-user leave-one-out protocol, which ignores the global temporal cutoffs of the production pipeline. Anchor training interactions fall inside the production locked test window [t2, t3). Every artifact under data/anchor/ and results/anchor/ (including any anchor two-tower checkpoint) is for protocol/pipeline health-checking only and MUST NOT enter a production candidate, ranker, or calibration pipeline. This is isolation, not an exemption: anchor produces no production metric."
+  },
+  "n_test_users": 12390,
+  "out_of_catalog_test_item": {
+    "n": 99,
+    "rate": 0.007990314769975786,
+    "catalog_size": 14038
+  },
+  "metrics": {
+    "with_valid_removed": {
+      "valid_item_removed_before_scoring": true,
+      "n_users_missing_from_dump": 0,
+      "n_users_valid_item_removed": 0,
+      "official_rating_blind": {
+        "n_eval_users": 12390,
+        "Recall@10": 0.03502824858757062,
+        "NDCG@10": 0.018712890827288508,
+        "Recall@50": 0.06674737691686844,
+        "NDCG@50": 0.02545578593344309,
+        "Recall@100": 0.09031476997578693,
+        "NDCG@100": 0.029250624511437527
+      },
+      "positives_only": {
+        "n_eval_users": 11555,
+        "Recall@10": 0.03678061445261791,
+        "NDCG@10": 0.019620045557578118,
+        "Recall@50": 0.06958026828212895,
+        "NDCG@50": 0.026604288824118923,
+        "Recall@100": 0.09355257464301169,
+        "NDCG@100": 0.03046677575031928
+      }
+    },
+    "without_removal": {
+      "valid_item_removed_before_scoring": false,
+      "n_users_missing_from_dump": 0,
+      "n_users_valid_item_removed": 0,
+      "official_rating_blind": {
+        "n_eval_users": 12390,
+        "Recall@10": 0.03502824858757062,
+        "NDCG@10": 0.018712890827288508,
+        "Recall@50": 0.06674737691686844,
+        "NDCG@50": 0.02545578593344309,
+        "Recall@100": 0.09031476997578693,
+        "NDCG@100": 0.029250624511437527
+      },
+      "positives_only": {
+        "n_eval_users": 11555,
+        "Recall@10": 0.03678061445261791,
+        "NDCG@10": 0.019620045557578118,
+        "Recall@50": 0.06958026828212895,
+        "NDCG@50": 0.026604288824118923,
+        "Recall@100": 0.09355257464301169,
+        "NDCG@100": 0.03046677575031928
+      }
+    },
+    "removal_delta_official_rating_blind": {
+      "Recall@10": 0.0,
+      "NDCG@10": 0.0,
+      "Recall@50": 0.0,
+      "NDCG@50": 0.0,
+      "Recall@100": 0.0,
+      "NDCG@100": 0.0
+    }
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "category": "Video_Games",
+  "leg": "official_sasrec_len20",
+  "leg_letter": "E-20",
+  "model": "SASRec",
+  "started_utc": "2026-08-11T18:17:13.683250+00:00",
+  "elapsed_seconds": 349.02,
+  "environment": {
+    "python": "3.10.18",
+    "recbole": "1.2.1",
+    "torch": "2.13.0+cu130",
+    "device": "cuda",
+    "venv_hint": "/projects/PROJECT_ALLOC/envs/recbole-anchor"
+  },
+  "protocol": {
+    "identity": "raw parent_asin (canonicalize.py bypassed \u2014 anchor identity)",
+    "dataset_kind": "official_seq",
+    "split": "official last_out benchmark files (RecBole benchmark_filename mode; no re-splitting)",
+    "ranking": "full catalogue (eval mode 'full')",
+    "seen_mask": "RecBole sequential full-sort eval applies NO history masking; the model ranks the full catalogue including seen items.",
+    "selection_metric": "val NDCG@10 (RecBole valid_metric)",
+    "selection_asymmetry_memo": "SELECTION ASYMMETRY (memo, Track C item 4): the two-tower leg D early-stops / selects its checkpoint on val Recall@100 (scripts/retrieval/train_two_tower.py), while every RecBole leg selects on val NDCG@10 (valid_metric). The two legs therefore optimize different selection criteria; small cross-leg deltas can be an artifact of this asymmetry, not of model class.",
+    "slice_caveat": null,
+    "max_item_list_length": 20,
+    "seed": 42,
+    "isolation_declaration": "ANCHOR ISOLATION: this split follows the official per-user leave-one-out protocol, which ignores the global temporal cutoffs of the production pipeline. Anchor training interactions fall inside the production locked test window [t2, t3). Every artifact under data/anchor/ and results/anchor/ (including any anchor two-tower checkpoint) is for protocol/pipeline health-checking only and MUST NOT enter a production candidate, ranker, or calibration pipeline. This is isolation, not an exemption: anchor produces no production metric."
+  },
+  "config_snapshot": {
+    "epochs": 200,
+    "stopping_step": 10,
+    "learning_rate": 0.001,
+    "train_batch_size": 2048,
+    "eval_batch_size": 4096,
+    "train_neg_sample_args": {
+      "distribution": "none",
+      "sample_num": "none",
+      "alpha": "none",
+      "dynamic": false,
+      "candidate_num": 0
+    },
+    "MAX_ITEM_LIST_LENGTH": 20,
+    "n_layers": 2,
+    "n_heads": 2,
+    "hidden_size": 64,
+    "inner_size": 256,
+    "loss_type": "CE",
+    "k": null,
+    "shrink": null,
+    "data_path": "/projects/PROJECT_ALLOC/R-project/data/anchor/_official/recbole_seq/len20/Video_Games",
+    "benchmark_filename": [
+      "train",
+      "valid",
+      "test"
+    ]
+  },
+  "data_stats": {
+    "n_users_incl_pad": 94763,
+    "n_items_incl_pad": 25613,
+    "n_interactions": 719824
+  },
+  "best_valid_score": 0.0499,
+  "valid_metrics": {
+    "recall@10": 0.1043,
+    "recall@50": 0.2432,
+    "recall@100": 0.3265,
+    "ndcg@10": 0.0499,
+    "ndcg@50": 0.0802,
+    "ndcg@100": 0.0937
+  },
+  "test_metrics": {
+    "recall@10": 0.0911,
+    "recall@50": 0.2132,
+    "recall@100": 0.2859,
+    "ndcg@10": 0.0438,
+    "ndcg@50": 0.0703,
+    "ndcg@100": 0.0821
+  },
+  "topk_dump": {
+    "path": "/projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/official_sasrec_len20_top101.csv.gz",
+    "k": 101,
+    "rows": 9570962,
+    "n_users": 94762
+  },
+  "gate": {
+    "gate": "leg_E_official_sasrec_recall@10_band",
+    "band": [
+      0.07,
+      0.097
+    ],
+    "measured_recall@10": 0.0911,
+    "passed": true,
+    "anchor_comparable": true,
+    "note": "band anchors (Pctx / LLaDA-Rec) use max_len 20; the len20 leg carries the verdict, len50 is informative."
+  },
+  "saved_model_file": "/projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-11-39.pth"
+}

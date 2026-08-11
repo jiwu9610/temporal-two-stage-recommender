@@ -1,0 +1,398 @@
+{
+  "category": "All_Beauty",
+  "variant": "anchor_v1",
+  "started_utc": "2026-08-11T18:18:32.737745+00:00",
+  "elapsed_seconds": 16.81,
+  "preflight": {
+    "n_features_nonzero": true,
+    "n_description_nonzero": true,
+    "n_categories_nonzero": false
+  },
+  "config": {
+    "two_tower": {
+      "embedding_dim": 64,
+      "hidden_dim": 128,
+      "id_emb_dim": 32,
+      "cat_emb_dim": 16,
+      "dropout": 0.1,
+      "use_user_id_emb": true,
+      "use_item_id_emb": true,
+      "use_deeper_cat_emb": true
+    },
+    "training": {
+      "epochs": 100,
+      "batch_size": 4096,
+      "lr": 0.001,
+      "weight_decay": 1e-05,
+      "grad_clip": 5.0,
+      "early_stopping_patience": 8,
+      "eval_every_epoch": true,
+      "device": "cuda",
+      "log_every_n_batches": 100,
+      "max_train_pairs": 0,
+      "max_eval_users": 0
+    },
+    "pair_sampling": {
+      "n_soft_neg": 4,
+      "use_hard_negatives": false,
+      "positive_weight": 1.0,
+      "hard_negative_weight": 1.0,
+      "soft_negative_weight": 1.0,
+      "seed": 42
+    },
+    "seed": 42
+  },
+  "feature_spec_summary": {
+    "n_users": 254,
+    "n_items": 342,
+    "n_stores": 276,
+    "n_main_cats": 3,
+    "n_deeper_cats": 1,
+    "has_deeper_cat": false,
+    "user_dense_cols": [
+      "n_reviews_train",
+      "avg_rating_train",
+      "std_rating_train",
+      "n_unique_items_train",
+      "active_days_train",
+      "verified_rate_train"
+    ],
+    "item_dense_cols": [
+      "price",
+      "average_rating",
+      "rating_number",
+      "n_reviews_train",
+      "avg_rating_train",
+      "n_features",
+      "n_description",
+      "n_categories"
+    ],
+    "user_dense_norm_stats": {
+      "n_reviews_train": {
+        "mean": 2.0007565704247208,
+        "std": 0.5735580581686167,
+        "log1p": true
+      },
+      "avg_rating_train": {
+        "mean": 4.313754445981893,
+        "std": 0.5260050662143475,
+        "log1p": false
+      },
+      "std_rating_train": {
+        "mean": 0.7475268176694809,
+        "std": 0.48129106331333715,
+        "log1p": false
+      },
+      "n_unique_items_train": {
+        "mean": 2.0007565704247208,
+        "std": 0.5735580581686167,
+        "log1p": true
+      },
+      "active_days_train": {
+        "mean": 5.284300069375293,
+        "std": 1.005096606381807,
+        "log1p": true
+      },
+      "verified_rate_train": {
+        "mean": 0.0007905138339920949,
+        "std": 0.01254901807619568,
+        "log1p": false
+      }
+    },
+    "item_dense_norm_stats": {
+      "price": {
+        "mean": 3.065234879767364,
+        "std": 0.24058171941729392,
+        "log1p": true
+      },
+      "average_rating": {
+        "mean": 4.052785923753666,
+        "std": 0.45317340932814437,
+        "log1p": false
+      },
+      "rating_number": {
+        "mean": 4.233820023042671,
+        "std": 1.0696652585986042,
+        "log1p": true
+      },
+      "n_reviews_train": {
+        "mean": 1.8750218213550178,
+        "std": 0.36945012462314886,
+        "log1p": true
+      },
+      "avg_rating_train": {
+        "mean": 4.355838329152112,
+        "std": 0.49197684438290257,
+        "log1p": false
+      },
+      "n_features": {
+        "mean": 0.27676089502693485,
+        "std": 0.6434015633964315,
+        "log1p": true
+      },
+      "n_description": {
+        "mean": 0.04437949019587588,
+        "std": 0.24081376773319985,
+        "log1p": true
+      },
+      "n_categories": {
+        "mean": 0.0,
+        "std": 0.0,
+        "log1p": true
+      }
+    }
+  },
+  "dataset_composition": {
+    "n_positive": 1910,
+    "n_hard_neg": 0,
+    "n_soft_neg": 7640
+  },
+  "candidate_pool": {
+    "type": "in_train_catalog",
+    "size": 341
+  },
+  "history": [
+    {
+      "epoch": 1,
+      "epoch_seconds": 2.4,
+      "train": {
+        "loss": 0.607799401395608,
+        "mean_logit_pos": -1.8826982907599803,
+        "mean_logit_neg": -1.8596569121196007,
+        "n_examples": 9550,
+        "n_pos": 1910,
+        "n_neg": 7640
+      },
+      "val_metrics": {
+        "Recall@10": 0.020833333333333332,
+        "Precision@10": 0.0020833333333333333,
+        "Recall@50": 0.10833333333333334,
+        "Precision@50": 0.0021666666666666666,
+        "Recall@100": 0.2375,
+        "Precision@100": 0.0023750000000000004,
+        "heldout_positive_coverage_by_candidate_pool": 0.9291666666666667
+      }
+    },
+    {
+      "epoch": 2,
+      "epoch_seconds": 0.01,
+      "train": {
+        "loss": 0.5574737715221825,
+        "mean_logit_pos": -1.383542988562459,
+        "mean_logit_neg": -1.4170894283274706,
+        "n_examples": 9550,
+        "n_pos": 1910,
+        "n_neg": 7640
+      },
+      "val_metrics": {
+        "Recall@10": 0.020833333333333332,
+        "Precision@10": 0.0020833333333333333,
+        "Recall@50": 0.1,
+        "Precision@50": 0.002,
+        "Recall@100": 0.22083333333333333,
+        "Precision@100": 0.0022083333333333334,
+        "heldout_positive_coverage_by_candidate_pool": 0.9291666666666667
+      }
+    },
+    {
+      "epoch": 3,
+      "epoch_seconds": 0.01,
+      "train": {
+        "loss": 0.5355764802338565,
+        "mean_logit_pos": -1.5439848735070354,
+        "mean_logit_neg": -1.6259822505930956,
+        "n_examples": 9550,
+        "n_pos": 1910,
+        "n_neg": 7640
+      },
+      "val_metrics": {
+        "Recall@10": 0.020833333333333332,
+        "Precision@10": 0.0020833333333333333,
+        "Recall@50": 0.1,
+        "Precision@50": 0.002,
+        "Recall@100": 0.22916666666666666,
+        "Precision@100": 0.0022916666666666667,
+        "heldout_positive_coverage_by_candidate_pool": 0.9291666666666667
+      }
+    },
+    {
+      "epoch": 4,
+      "epoch_seconds": 0.01,
+      "train": {
+        "loss": 0.522472880248624,
+        "mean_logit_pos": -1.6927162849466213,
+        "mean_logit_neg": -1.828434266095386,
+        "n_examples": 9550,
+        "n_pos": 1910,
+        "n_neg": 7640
+      },
+      "val_metrics": {
+        "Recall@10": 0.025,
+        "Precision@10": 0.0025000000000000005,
+        "Recall@50": 0.1,
+        "Precision@50": 0.002,
+        "Recall@100": 0.20833333333333334,
+        "Precision@100": 0.0020833333333333333,
+        "heldout_positive_coverage_by_candidate_pool": 0.9291666666666667
+      }
+    },
+    {
+      "epoch": 5,
+      "epoch_seconds": 0.01,
+      "train": {
+        "loss": 0.5124665446056745,
+        "mean_logit_pos": -1.1163702839956233,
+        "mean_logit_neg": -1.2900661608311519,
+        "n_examples": 9550,
+        "n_pos": 1910,
+        "n_neg": 7640
+      },
+      "val_metrics": {
+        "Recall@10": 0.016666666666666666,
+        "Precision@10": 0.0016666666666666668,
+        "Recall@50": 0.1,
+        "Precision@50": 0.002,
+        "Recall@100": 0.20416666666666666,
+        "Precision@100": 0.0020416666666666665,
+        "heldout_positive_coverage_by_candidate_pool": 0.9291666666666667
+      }
+    },
+    {
+      "epoch": 6,
+      "epoch_seconds": 0.01,
+      "train": {
+        "loss": 0.5014174429159514,
+        "mean_logit_pos": -1.3261124376227094,
+        "mean_logit_neg": -1.5191700081550639,
+        "n_examples": 9550,
+        "n_pos": 1910,
+        "n_neg": 7640
+      },
+      "val_metrics": {
+        "Recall@10": 0.0125,
+        "Precision@10": 0.0012500000000000002,
+        "Recall@50": 0.1,
+        "Precision@50": 0.002,
+        "Recall@100": 0.20416666666666666,
+        "Precision@100": 0.0020416666666666665,
+        "heldout_positive_coverage_by_candidate_pool": 0.9291666666666667
+      }
+    },
+    {
+      "epoch": 7,
+      "epoch_seconds": 0.01,
+      "train": {
+        "loss": 0.49592561432204324,
+        "mean_logit_pos": -1.5121072020206152,
+        "mean_logit_neg": -1.7401214759387271,
+        "n_examples": 9550,
+        "n_pos": 1910,
+        "n_neg": 7640
+      },
+      "val_metrics": {
+        "Recall@10": 0.020833333333333332,
+        "Precision@10": 0.0020833333333333333,
+        "Recall@50": 0.0875,
+        "Precision@50": 0.0017500000000000003,
+        "Recall@100": 0.20833333333333334,
+        "Precision@100": 0.0020833333333333333,
+        "heldout_positive_coverage_by_candidate_pool": 0.9291666666666667
+      }
+    },
+    {
+      "epoch": 8,
+      "epoch_seconds": 0.01,
+      "train": {
+        "loss": 0.489489451303532,
+        "mean_logit_pos": -1.1777100887598169,
+        "mean_logit_neg": -1.4168681998527486,
+        "n_examples": 9550,
+        "n_pos": 1910,
+        "n_neg": 7640
+      },
+      "val_metrics": {
+        "Recall@10": 0.020833333333333332,
+        "Precision@10": 0.0020833333333333333,
+        "Recall@50": 0.09583333333333334,
+        "Precision@50": 0.0019166666666666668,
+        "Recall@100": 0.20833333333333334,
+        "Precision@100": 0.0020833333333333333,
+        "heldout_positive_coverage_by_candidate_pool": 0.9291666666666667
+      }
+    },
+    {
+      "epoch": 9,
+      "epoch_seconds": 0.01,
+      "train": {
+        "loss": 0.4848161005037617,
+        "mean_logit_pos": -1.1977456617105693,
+        "mean_logit_neg": -1.4585008711090888,
+        "n_examples": 9550,
+        "n_pos": 1910,
+        "n_neg": 7640
+      },
+      "val_metrics": {
+        "Recall@10": 0.016666666666666666,
+        "Precision@10": 0.0016666666666666668,
+        "Recall@50": 0.09166666666666666,
+        "Precision@50": 0.0018333333333333335,
+        "Recall@100": 0.20833333333333334,
+        "Precision@100": 0.0020833333333333333,
+        "heldout_positive_coverage_by_candidate_pool": 0.9291666666666667
+      }
+    }
+  ],
+  "best_val_recall@100": 0.2375,
+  "splits": {
+    "val": {
+      "split": "val",
+      "n_total_eval_users": 253,
+      "n_positive_eval_users": 240,
+      "positive_eval_user_rate": 0.9486166007905138,
+      "candidate_pool_type": "in_train_catalog",
+      "candidate_pool_size": 341,
+      "heldout_positive_coverage_by_candidate_pool": 0.9291666666666667,
+      "metrics": {
+        "Recall@10": 0.020833333333333332,
+        "Precision@10": 0.0020833333333333333,
+        "Recall@50": 0.10833333333333334,
+        "Precision@50": 0.0021666666666666666,
+        "Recall@100": 0.2375,
+        "Precision@100": 0.0023750000000000004
+      }
+    },
+    "test": {
+      "split": "test",
+      "n_total_eval_users": 253,
+      "n_positive_eval_users": 231,
+      "positive_eval_user_rate": 0.9130434782608695,
+      "candidate_pool_type": "in_train_catalog",
+      "candidate_pool_size": 341,
+      "heldout_positive_coverage_by_candidate_pool": 0.7445887445887446,
+      "metrics": {
+        "Recall@10": 0.012987012987012988,
+        "Precision@10": 0.001298701298701299,
+        "Recall@50": 0.08658008658008658,
+        "Precision@50": 0.0017316017316017316,
+        "Recall@100": 0.21212121212121213,
+        "Precision@100": 0.0021212121212121214
+      }
+    }
+  },
+  "anchor_protocol": {
+    "leg": "two_tower_anchor_v1",
+    "leg_letter": "D",
+    "identity": "raw parent_asin (data/anchor exports; canonicalize.py bypassed)",
+    "split": "per-user leave-last-two (data/anchor/{cat}/, P1.1 gated)",
+    "hyperparameters": "phase1-v1 (results/phase1/*_two_tower_metadata_and_ids.json config), hard negatives explicitly OFF",
+    "selection_metric": "val Recall@100 early stopping (phase1 behavior)",
+    "selection_asymmetry_memo": "SELECTION ASYMMETRY (memo, Track C item 4): the two-tower leg D early-stops / selects its checkpoint on val Recall@100 (scripts/retrieval/train_two_tower.py), while every RecBole leg selects on val NDCG@10 (valid_metric). The two legs therefore optimize different selection criteria; small cross-leg deltas can be an artifact of this asymmetry, not of model class.",
+    "item_feature_leakage_memo": "LIFETIME-CATALOG AGGREGATES (memo, Track C item 4): leg D's item_features carry lifetime catalog aggregates (average_rating, rating_number from the metadata dump). Under per-user leave-one-out these are a future-information channel \u2014 the aggregates summarize ratings that include each user's held-out interactions. Inherited from phase1 on purpose (leg D reproduces the phase1 recipe); RecBole legs use no item features, so this advantage is leg-D-only. Flag sits next to every anchor-mode leg D row.",
+    "slice_caveat": "SLICE CAVEAT: slice legs (our raw-slice 5/5-core) are never quoted next to published official-benchmark numbers. All_Beauty is footnote-only (253 users after dedup-first 5/5-core \u2014 degenerate scale).",
+    "seen_mask": "The two-tower predictions dump masks train-seen items only \u2014 the valid item is still rankable at test time. score_predictions.py removes each user's valid item from the dump before test scoring; only after that removal is the definition identical to the RecBole general-model convention (spec: '\u5254\u9664\u540e\u6052\u7b49').",
+    "groundtruth_note": "this JSON's val/test metrics use the phase1 evaluator gt (label==1 positives only) WITHOUT valid-item removal; the RecBole-comparable numbers (rating-blind gt, valid item removed from the dump) live in score_predictions' score_two_tower_anchor_v1.json",
+    "k_retrieve": 101,
+    "raw_metadata_note": "deeper_category joined from data/raw metadata on raw parent_asin (read-only; identical to anchor identity)",
+    "isolation_declaration": "ANCHOR ISOLATION: this split follows the official per-user leave-one-out protocol, which ignores the global temporal cutoffs of the production pipeline. Anchor training interactions fall inside the production locked test window [t2, t3). Every artifact under data/anchor/ and results/anchor/ (including any anchor two-tower checkpoint) is for protocol/pipeline health-checking only and MUST NOT enter a production candidate, ranker, or calibration pipeline. This is isolation, not an exemption: anchor produces no production metric."
+  }
+}

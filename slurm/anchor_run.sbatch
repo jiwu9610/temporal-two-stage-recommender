@@ -72,14 +72,22 @@ source "${RECBOLE_VENV}/bin/activate"
 python -c "import recbole, torch; print('recbole', recbole.__version__, '| torch', torch.__version__, '| cuda?', torch.cuda.is_available())"
 python -u -m scripts.anchor.run_recbole_anchor \
     --category "$CAT" \
-    --legs "$RECBOLE_LEGS" \
+    --legs "$RECBOLE_LEGS" --skip-existing \
     $EXTRA
-deactivate
+echo "=== CHECKPOINT: recbole legs done, leaving venv ==="
+deactivate || true
+echo "=== CHECKPOINT: venv deactivated ==="
 
 # ---- Phase 2: two-tower leg D (production conda env, isolated outputs) -----
+# ~/.bashrc's final command can return non-zero in non-interactive shells;
+# under set -e that killed the job SILENTLY right here (9075626_0, exit 1 with
+# no traceback -- the checkpoints exist so this can never be a mystery again).
 if [ "$RUN_TWO_TOWER" = "1" ]; then
+    set +e
     source ~/.bashrc
+    set -e
     conda activate "${CONDA_ENV:-tae}"
+    echo "=== CHECKPOINT: conda env $(python -c 'import sys;print(sys.prefix)') ==="
     python -u -m scripts.anchor.train_two_tower_anchor --category "$CAT"
     python -u -m scripts.anchor.score_predictions --category "$CAT"
 fi

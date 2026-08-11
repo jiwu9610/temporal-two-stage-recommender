@@ -1,0 +1,467 @@
+Tue 11 Aug 2026 12:56:44 INFO  [Training]: train_batch_size = [2048] train_neg_sample_args: [{'distribution': 'uniform', 'sample_num': 1, 'alpha': 1.0, 'dynamic': False, 'candidate_num': 0}]
+Tue 11 Aug 2026 12:56:44 INFO  [Evaluation]: eval_batch_size = [4096] eval_args: [{'split': {'LS': 'valid_and_test'}, 'order': 'TO', 'group_by': 'user', 'mode': {'valid': 'full', 'test': 'full'}}]
+Tue 11 Aug 2026 12:56:55 INFO  epoch 0 training [time: 0.54s, train loss: 0.0000]
+Tue 11 Aug 2026 12:57:04 INFO  epoch 0 evaluating [time: 8.95s, valid_score: 0.023200]
+Tue 11 Aug 2026 12:57:04 INFO  valid result: 
+recall@10 : 0.0422    recall@50 : 0.0819    recall@100 : 0.1101    ndcg@10 : 0.0232    ndcg@50 : 0.0317    ndcg@100 : 0.0362
+Tue 11 Aug 2026 12:57:04 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/Pop-Aug-11-2026_12-56-44.pth
+Tue 11 Aug 2026 12:57:04 INFO  Loading model structure and parameters from /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/Pop-Aug-11-2026_12-56-44.pth
+Tue 11 Aug 2026 12:57:26 WARNING  command line args [--category Books --legs pop,itemknn,sasrec,sasrec_len20] will not be used in RecBole
+Tue 11 Aug 2026 12:57:27 INFO  [Training]: train_batch_size = [2048] train_neg_sample_args: [{'distribution': 'uniform', 'sample_num': 1, 'alpha': 1.0, 'dynamic': False, 'candidate_num': 0}]
+Tue 11 Aug 2026 12:57:27 INFO  [Evaluation]: eval_batch_size = [4096] eval_args: [{'split': {'LS': 'valid_and_test'}, 'order': 'TO', 'group_by': 'user', 'mode': {'valid': 'full', 'test': 'full'}}]
+Tue 11 Aug 2026 12:57:31 INFO  epoch 0 training [time: 0.37s, train loss: 0.0000]
+Tue 11 Aug 2026 12:57:43 INFO  epoch 0 evaluating [time: 11.63s, valid_score: 0.055800]
+Tue 11 Aug 2026 12:57:43 INFO  valid result: 
+recall@10 : 0.0904    recall@50 : 0.1653    recall@100 : 0.2083    ndcg@10 : 0.0558    ndcg@50 : 0.0721    ndcg@100 : 0.0791
+Tue 11 Aug 2026 12:57:48 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/ItemKNN-Aug-11-2026_12-57-31.pth
+Tue 11 Aug 2026 12:57:49 INFO  Loading model structure and parameters from /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/ItemKNN-Aug-11-2026_12-57-31.pth
+Tue 11 Aug 2026 12:58:18 WARNING  command line args [--category Books --legs pop,itemknn,sasrec,sasrec_len20] will not be used in RecBole
+Tue 11 Aug 2026 12:58:22 INFO  [Training]: train_batch_size = [2048] train_neg_sample_args: [{'distribution': 'none', 'sample_num': 'none', 'alpha': 'none', 'dynamic': False, 'candidate_num': 0}]
+Tue 11 Aug 2026 12:58:22 INFO  [Evaluation]: eval_batch_size = [4096] eval_args: [{'split': {'LS': 'valid_and_test'}, 'order': 'TO', 'group_by': 'user', 'mode': {'valid': 'full', 'test': 'full'}}]
+Tue 11 Aug 2026 12:58:26 INFO  epoch 0 training [time: 3.30s, train loss: 499.7253]
+Tue 11 Aug 2026 12:58:26 INFO  epoch 0 evaluating [time: 0.14s, valid_score: 0.023600]
+Tue 11 Aug 2026 12:58:26 INFO  valid result: 
+recall@10 : 0.0427    recall@50 : 0.0771    recall@100 : 0.1085    ndcg@10 : 0.0236    ndcg@50 : 0.0311    ndcg@100 : 0.0362
+Tue 11 Aug 2026 12:58:26 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_12-58-22.pth
+Tue 11 Aug 2026 12:58:29 INFO  epoch 1 training [time: 2.94s, train loss: 480.2518]
+Tue 11 Aug 2026 12:58:29 INFO  epoch 1 evaluating [time: 0.15s, valid_score: 0.023300]
+Tue 11 Aug 2026 12:58:29 INFO  valid result: 
+recall@10 : 0.0416    recall@50 : 0.0809    recall@100 : 0.111    ndcg@10 : 0.0233    ndcg@50 : 0.0318    ndcg@100 : 0.0366
+Tue 11 Aug 2026 12:58:32 INFO  epoch 2 training [time: 2.90s, train loss: 470.2878]
+Tue 11 Aug 2026 12:58:32 INFO  epoch 2 evaluating [time: 0.16s, valid_score: 0.024200]
+Tue 11 Aug 2026 12:58:32 INFO  valid result: 
+recall@10 : 0.0437    recall@50 : 0.0918    recall@100 : 0.1252    ndcg@10 : 0.0242    ndcg@50 : 0.0346    ndcg@100 : 0.04
+Tue 11 Aug 2026 12:58:32 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_12-58-22.pth
+Tue 11 Aug 2026 12:58:35 INFO  epoch 3 training [time: 2.89s, train loss: 458.6200]
+Tue 11 Aug 2026 12:58:35 INFO  epoch 3 evaluating [time: 0.15s, valid_score: 0.031700]
+Tue 11 Aug 2026 12:58:35 INFO  valid result: 
+recall@10 : 0.0549    recall@50 : 0.1119    recall@100 : 0.1559    ndcg@10 : 0.0317    ndcg@50 : 0.044    ndcg@100 : 0.0511
+Tue 11 Aug 2026 12:58:35 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_12-58-22.pth
+Tue 11 Aug 2026 12:58:38 INFO  epoch 4 training [time: 2.91s, train loss: 445.3642]
+Tue 11 Aug 2026 12:58:38 INFO  epoch 4 evaluating [time: 0.15s, valid_score: 0.037600]
+Tue 11 Aug 2026 12:58:38 INFO  valid result: 
+recall@10 : 0.0639    recall@50 : 0.1299    recall@100 : 0.1774    ndcg@10 : 0.0376    ndcg@50 : 0.0519    ndcg@100 : 0.0596
+Tue 11 Aug 2026 12:58:38 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_12-58-22.pth
+Tue 11 Aug 2026 12:58:41 INFO  epoch 5 training [time: 2.92s, train loss: 433.7244]
+Tue 11 Aug 2026 12:58:41 INFO  epoch 5 evaluating [time: 0.14s, valid_score: 0.039900]
+Tue 11 Aug 2026 12:58:41 INFO  valid result: 
+recall@10 : 0.0691    recall@50 : 0.1412    recall@100 : 0.1922    ndcg@10 : 0.0399    ndcg@50 : 0.0555    ndcg@100 : 0.0638
+Tue 11 Aug 2026 12:58:41 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_12-58-22.pth
+Tue 11 Aug 2026 12:58:44 INFO  epoch 6 training [time: 2.91s, train loss: 423.6988]
+Tue 11 Aug 2026 12:58:44 INFO  epoch 6 evaluating [time: 0.14s, valid_score: 0.043100]
+Tue 11 Aug 2026 12:58:44 INFO  valid result: 
+recall@10 : 0.0756    recall@50 : 0.153    recall@100 : 0.2033    ndcg@10 : 0.0431    ndcg@50 : 0.0598    ndcg@100 : 0.0679
+Tue 11 Aug 2026 12:58:44 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_12-58-22.pth
+Tue 11 Aug 2026 12:58:47 INFO  epoch 7 training [time: 2.91s, train loss: 414.5490]
+Tue 11 Aug 2026 12:58:47 INFO  epoch 7 evaluating [time: 0.14s, valid_score: 0.046500]
+Tue 11 Aug 2026 12:58:47 INFO  valid result: 
+recall@10 : 0.0818    recall@50 : 0.1643    recall@100 : 0.2167    ndcg@10 : 0.0465    ndcg@50 : 0.0642    ndcg@100 : 0.0727
+Tue 11 Aug 2026 12:58:47 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_12-58-22.pth
+Tue 11 Aug 2026 12:58:50 INFO  epoch 8 training [time: 2.91s, train loss: 405.9530]
+Tue 11 Aug 2026 12:58:50 INFO  epoch 8 evaluating [time: 0.14s, valid_score: 0.048400]
+Tue 11 Aug 2026 12:58:50 INFO  valid result: 
+recall@10 : 0.0855    recall@50 : 0.1693    recall@100 : 0.2246    ndcg@10 : 0.0484    ndcg@50 : 0.0667    ndcg@100 : 0.0757
+Tue 11 Aug 2026 12:58:50 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_12-58-22.pth
+Tue 11 Aug 2026 12:58:53 INFO  epoch 9 training [time: 2.90s, train loss: 397.7025]
+Tue 11 Aug 2026 12:58:54 INFO  epoch 9 evaluating [time: 0.14s, valid_score: 0.050900]
+Tue 11 Aug 2026 12:58:54 INFO  valid result: 
+recall@10 : 0.0908    recall@50 : 0.1813    recall@100 : 0.2368    ndcg@10 : 0.0509    ndcg@50 : 0.0706    ndcg@100 : 0.0796
+Tue 11 Aug 2026 12:58:54 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_12-58-22.pth
+Tue 11 Aug 2026 12:58:56 INFO  epoch 10 training [time: 2.91s, train loss: 389.7783]
+Tue 11 Aug 2026 12:58:57 INFO  epoch 10 evaluating [time: 0.14s, valid_score: 0.051900]
+Tue 11 Aug 2026 12:58:57 INFO  valid result: 
+recall@10 : 0.0939    recall@50 : 0.1865    recall@100 : 0.2435    ndcg@10 : 0.0519    ndcg@50 : 0.0721    ndcg@100 : 0.0813
+Tue 11 Aug 2026 12:58:57 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_12-58-22.pth
+Tue 11 Aug 2026 12:59:00 INFO  epoch 11 training [time: 2.91s, train loss: 382.3324]
+Tue 11 Aug 2026 12:59:00 INFO  epoch 11 evaluating [time: 0.15s, valid_score: 0.053300]
+Tue 11 Aug 2026 12:59:00 INFO  valid result: 
+recall@10 : 0.0969    recall@50 : 0.1918    recall@100 : 0.2483    ndcg@10 : 0.0533    ndcg@50 : 0.074    ndcg@100 : 0.0832
+Tue 11 Aug 2026 12:59:00 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_12-58-22.pth
+Tue 11 Aug 2026 12:59:03 INFO  epoch 12 training [time: 2.90s, train loss: 375.2258]
+Tue 11 Aug 2026 12:59:03 INFO  epoch 12 evaluating [time: 0.14s, valid_score: 0.054500]
+Tue 11 Aug 2026 12:59:03 INFO  valid result: 
+recall@10 : 0.1012    recall@50 : 0.1981    recall@100 : 0.255    ndcg@10 : 0.0545    ndcg@50 : 0.0758    ndcg@100 : 0.085
+Tue 11 Aug 2026 12:59:03 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_12-58-22.pth
+Tue 11 Aug 2026 12:59:06 INFO  epoch 13 training [time: 2.91s, train loss: 368.4008]
+Tue 11 Aug 2026 12:59:06 INFO  epoch 13 evaluating [time: 0.14s, valid_score: 0.055200]
+Tue 11 Aug 2026 12:59:06 INFO  valid result: 
+recall@10 : 0.104    recall@50 : 0.2019    recall@100 : 0.2573    ndcg@10 : 0.0552    ndcg@50 : 0.0767    ndcg@100 : 0.0857
+Tue 11 Aug 2026 12:59:06 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_12-58-22.pth
+Tue 11 Aug 2026 12:59:09 INFO  epoch 14 training [time: 2.91s, train loss: 362.4732]
+Tue 11 Aug 2026 12:59:09 INFO  epoch 14 evaluating [time: 0.14s, valid_score: 0.056300]
+Tue 11 Aug 2026 12:59:09 INFO  valid result: 
+recall@10 : 0.1071    recall@50 : 0.2059    recall@100 : 0.2599    ndcg@10 : 0.0563    ndcg@50 : 0.0779    ndcg@100 : 0.0867
+Tue 11 Aug 2026 12:59:09 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_12-58-22.pth
+Tue 11 Aug 2026 12:59:12 INFO  epoch 15 training [time: 2.89s, train loss: 356.9702]
+Tue 11 Aug 2026 12:59:12 INFO  epoch 15 evaluating [time: 0.14s, valid_score: 0.056900]
+Tue 11 Aug 2026 12:59:12 INFO  valid result: 
+recall@10 : 0.1103    recall@50 : 0.209    recall@100 : 0.2648    ndcg@10 : 0.0569    ndcg@50 : 0.0786    ndcg@100 : 0.0876
+Tue 11 Aug 2026 12:59:12 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_12-58-22.pth
+Tue 11 Aug 2026 12:59:15 INFO  epoch 16 training [time: 2.91s, train loss: 351.7546]
+Tue 11 Aug 2026 12:59:15 INFO  epoch 16 evaluating [time: 0.14s, valid_score: 0.056300]
+Tue 11 Aug 2026 12:59:15 INFO  valid result: 
+recall@10 : 0.1115    recall@50 : 0.2103    recall@100 : 0.2665    ndcg@10 : 0.0563    ndcg@50 : 0.078    ndcg@100 : 0.0871
+Tue 11 Aug 2026 12:59:18 INFO  epoch 17 training [time: 2.92s, train loss: 347.0756]
+Tue 11 Aug 2026 12:59:18 INFO  epoch 17 evaluating [time: 0.14s, valid_score: 0.057800]
+Tue 11 Aug 2026 12:59:18 INFO  valid result: 
+recall@10 : 0.1143    recall@50 : 0.2152    recall@100 : 0.2702    ndcg@10 : 0.0578    ndcg@50 : 0.0798    ndcg@100 : 0.0887
+Tue 11 Aug 2026 12:59:18 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_12-58-22.pth
+Tue 11 Aug 2026 12:59:21 INFO  epoch 18 training [time: 2.90s, train loss: 343.0937]
+Tue 11 Aug 2026 12:59:21 INFO  epoch 18 evaluating [time: 0.14s, valid_score: 0.057500]
+Tue 11 Aug 2026 12:59:21 INFO  valid result: 
+recall@10 : 0.116    recall@50 : 0.2169    recall@100 : 0.2721    ndcg@10 : 0.0575    ndcg@50 : 0.0794    ndcg@100 : 0.0884
+Tue 11 Aug 2026 12:59:24 INFO  epoch 19 training [time: 2.91s, train loss: 339.5908]
+Tue 11 Aug 2026 12:59:24 INFO  epoch 19 evaluating [time: 0.14s, valid_score: 0.058300]
+Tue 11 Aug 2026 12:59:24 INFO  valid result: 
+recall@10 : 0.1165    recall@50 : 0.2181    recall@100 : 0.274    ndcg@10 : 0.0583    ndcg@50 : 0.0806    ndcg@100 : 0.0896
+Tue 11 Aug 2026 12:59:24 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_12-58-22.pth
+Tue 11 Aug 2026 12:59:27 INFO  epoch 20 training [time: 2.91s, train loss: 336.4145]
+Tue 11 Aug 2026 12:59:27 INFO  epoch 20 evaluating [time: 0.14s, valid_score: 0.058100]
+Tue 11 Aug 2026 12:59:27 INFO  valid result: 
+recall@10 : 0.1173    recall@50 : 0.2197    recall@100 : 0.2747    ndcg@10 : 0.0581    ndcg@50 : 0.0805    ndcg@100 : 0.0894
+Tue 11 Aug 2026 12:59:30 INFO  epoch 21 training [time: 2.91s, train loss: 333.6475]
+Tue 11 Aug 2026 12:59:30 INFO  epoch 21 evaluating [time: 0.15s, valid_score: 0.057300]
+Tue 11 Aug 2026 12:59:30 INFO  valid result: 
+recall@10 : 0.1172    recall@50 : 0.2186    recall@100 : 0.2755    ndcg@10 : 0.0573    ndcg@50 : 0.0795    ndcg@100 : 0.0887
+Tue 11 Aug 2026 12:59:33 INFO  epoch 22 training [time: 2.91s, train loss: 331.2105]
+Tue 11 Aug 2026 12:59:33 INFO  epoch 22 evaluating [time: 0.14s, valid_score: 0.058300]
+Tue 11 Aug 2026 12:59:33 INFO  valid result: 
+recall@10 : 0.1194    recall@50 : 0.2216    recall@100 : 0.2761    ndcg@10 : 0.0583    ndcg@50 : 0.0807    ndcg@100 : 0.0895
+Tue 11 Aug 2026 12:59:33 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_12-58-22.pth
+Tue 11 Aug 2026 12:59:36 INFO  epoch 23 training [time: 2.97s, train loss: 328.6592]
+Tue 11 Aug 2026 12:59:37 INFO  epoch 23 evaluating [time: 0.14s, valid_score: 0.058300]
+Tue 11 Aug 2026 12:59:37 INFO  valid result: 
+recall@10 : 0.1201    recall@50 : 0.2196    recall@100 : 0.2759    ndcg@10 : 0.0583    ndcg@50 : 0.0801    ndcg@100 : 0.0893
+Tue 11 Aug 2026 12:59:37 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_12-58-22.pth
+Tue 11 Aug 2026 12:59:40 INFO  epoch 24 training [time: 3.00s, train loss: 326.9909]
+Tue 11 Aug 2026 12:59:40 INFO  epoch 24 evaluating [time: 0.15s, valid_score: 0.057700]
+Tue 11 Aug 2026 12:59:40 INFO  valid result: 
+recall@10 : 0.1203    recall@50 : 0.2186    recall@100 : 0.2768    ndcg@10 : 0.0577    ndcg@50 : 0.0793    ndcg@100 : 0.0887
+Tue 11 Aug 2026 12:59:43 INFO  epoch 25 training [time: 2.90s, train loss: 324.9639]
+Tue 11 Aug 2026 12:59:43 INFO  epoch 25 evaluating [time: 0.14s, valid_score: 0.057800]
+Tue 11 Aug 2026 12:59:43 INFO  valid result: 
+recall@10 : 0.1211    recall@50 : 0.2219    recall@100 : 0.2786    ndcg@10 : 0.0578    ndcg@50 : 0.0798    ndcg@100 : 0.089
+Tue 11 Aug 2026 12:59:46 INFO  epoch 26 training [time: 2.91s, train loss: 323.4898]
+Tue 11 Aug 2026 12:59:46 INFO  epoch 26 evaluating [time: 0.15s, valid_score: 0.058000]
+Tue 11 Aug 2026 12:59:46 INFO  valid result: 
+recall@10 : 0.1215    recall@50 : 0.2213    recall@100 : 0.2794    ndcg@10 : 0.058    ndcg@50 : 0.0799    ndcg@100 : 0.0894
+Tue 11 Aug 2026 12:59:49 INFO  epoch 27 training [time: 2.92s, train loss: 322.0458]
+Tue 11 Aug 2026 12:59:49 INFO  epoch 27 evaluating [time: 0.15s, valid_score: 0.057500]
+Tue 11 Aug 2026 12:59:49 INFO  valid result: 
+recall@10 : 0.1205    recall@50 : 0.2219    recall@100 : 0.2765    ndcg@10 : 0.0575    ndcg@50 : 0.0796    ndcg@100 : 0.0885
+Tue 11 Aug 2026 12:59:52 INFO  epoch 28 training [time: 2.90s, train loss: 320.6227]
+Tue 11 Aug 2026 12:59:52 INFO  epoch 28 evaluating [time: 0.14s, valid_score: 0.057000]
+Tue 11 Aug 2026 12:59:52 INFO  valid result: 
+recall@10 : 0.1201    recall@50 : 0.2221    recall@100 : 0.2781    ndcg@10 : 0.057    ndcg@50 : 0.0792    ndcg@100 : 0.0883
+Tue 11 Aug 2026 12:59:55 INFO  epoch 29 training [time: 2.91s, train loss: 319.4634]
+Tue 11 Aug 2026 12:59:55 INFO  epoch 29 evaluating [time: 0.14s, valid_score: 0.058600]
+Tue 11 Aug 2026 12:59:55 INFO  valid result: 
+recall@10 : 0.1215    recall@50 : 0.222    recall@100 : 0.2801    ndcg@10 : 0.0586    ndcg@50 : 0.0806    ndcg@100 : 0.09
+Tue 11 Aug 2026 12:59:55 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_12-58-22.pth
+Tue 11 Aug 2026 12:59:58 INFO  epoch 30 training [time: 2.89s, train loss: 318.4306]
+Tue 11 Aug 2026 12:59:58 INFO  epoch 30 evaluating [time: 0.15s, valid_score: 0.058100]
+Tue 11 Aug 2026 12:59:58 INFO  valid result: 
+recall@10 : 0.122    recall@50 : 0.2234    recall@100 : 0.2816    ndcg@10 : 0.0581    ndcg@50 : 0.0804    ndcg@100 : 0.0898
+Tue 11 Aug 2026 13:00:01 INFO  epoch 31 training [time: 2.91s, train loss: 317.5627]
+Tue 11 Aug 2026 13:00:01 INFO  epoch 31 evaluating [time: 0.14s, valid_score: 0.057300]
+Tue 11 Aug 2026 13:00:01 INFO  valid result: 
+recall@10 : 0.1203    recall@50 : 0.2211    recall@100 : 0.2824    ndcg@10 : 0.0573    ndcg@50 : 0.0795    ndcg@100 : 0.0894
+Tue 11 Aug 2026 13:00:04 INFO  epoch 32 training [time: 2.92s, train loss: 316.6026]
+Tue 11 Aug 2026 13:00:04 INFO  epoch 32 evaluating [time: 0.14s, valid_score: 0.058700]
+Tue 11 Aug 2026 13:00:04 INFO  valid result: 
+recall@10 : 0.1214    recall@50 : 0.2245    recall@100 : 0.2843    ndcg@10 : 0.0587    ndcg@50 : 0.0813    ndcg@100 : 0.091
+Tue 11 Aug 2026 13:00:04 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_12-58-22.pth
+Tue 11 Aug 2026 13:00:07 INFO  epoch 33 training [time: 2.90s, train loss: 315.2881]
+Tue 11 Aug 2026 13:00:07 INFO  epoch 33 evaluating [time: 0.14s, valid_score: 0.058600]
+Tue 11 Aug 2026 13:00:07 INFO  valid result: 
+recall@10 : 0.1211    recall@50 : 0.2246    recall@100 : 0.2848    ndcg@10 : 0.0586    ndcg@50 : 0.0813    ndcg@100 : 0.091
+Tue 11 Aug 2026 13:00:10 INFO  epoch 34 training [time: 2.91s, train loss: 314.7677]
+Tue 11 Aug 2026 13:00:10 INFO  epoch 34 evaluating [time: 0.15s, valid_score: 0.057700]
+Tue 11 Aug 2026 13:00:10 INFO  valid result: 
+recall@10 : 0.1207    recall@50 : 0.2228    recall@100 : 0.2812    ndcg@10 : 0.0577    ndcg@50 : 0.0802    ndcg@100 : 0.0896
+Tue 11 Aug 2026 13:00:13 INFO  epoch 35 training [time: 2.90s, train loss: 314.1728]
+Tue 11 Aug 2026 13:00:13 INFO  epoch 35 evaluating [time: 0.14s, valid_score: 0.058400]
+Tue 11 Aug 2026 13:00:13 INFO  valid result: 
+recall@10 : 0.1225    recall@50 : 0.2223    recall@100 : 0.2818    ndcg@10 : 0.0584    ndcg@50 : 0.0802    ndcg@100 : 0.0899
+Tue 11 Aug 2026 13:00:16 INFO  epoch 36 training [time: 2.92s, train loss: 313.2660]
+Tue 11 Aug 2026 13:00:16 INFO  epoch 36 evaluating [time: 0.14s, valid_score: 0.058300]
+Tue 11 Aug 2026 13:00:16 INFO  valid result: 
+recall@10 : 0.1218    recall@50 : 0.2251    recall@100 : 0.2837    ndcg@10 : 0.0583    ndcg@50 : 0.0809    ndcg@100 : 0.0904
+Tue 11 Aug 2026 13:00:19 INFO  epoch 37 training [time: 2.93s, train loss: 312.9904]
+Tue 11 Aug 2026 13:00:20 INFO  epoch 37 evaluating [time: 0.14s, valid_score: 0.058500]
+Tue 11 Aug 2026 13:00:20 INFO  valid result: 
+recall@10 : 0.1222    recall@50 : 0.2245    recall@100 : 0.2831    ndcg@10 : 0.0585    ndcg@50 : 0.0809    ndcg@100 : 0.0904
+Tue 11 Aug 2026 13:00:22 INFO  epoch 38 training [time: 2.94s, train loss: 312.2001]
+Tue 11 Aug 2026 13:00:23 INFO  epoch 38 evaluating [time: 0.14s, valid_score: 0.057600]
+Tue 11 Aug 2026 13:00:23 INFO  valid result: 
+recall@10 : 0.1211    recall@50 : 0.2256    recall@100 : 0.2831    ndcg@10 : 0.0576    ndcg@50 : 0.0805    ndcg@100 : 0.0899
+Tue 11 Aug 2026 13:00:25 INFO  epoch 39 training [time: 2.92s, train loss: 311.7791]
+Tue 11 Aug 2026 13:00:26 INFO  epoch 39 evaluating [time: 0.14s, valid_score: 0.057400]
+Tue 11 Aug 2026 13:00:26 INFO  valid result: 
+recall@10 : 0.12    recall@50 : 0.2257    recall@100 : 0.2822    ndcg@10 : 0.0574    ndcg@50 : 0.0806    ndcg@100 : 0.0897
+Tue 11 Aug 2026 13:00:29 INFO  epoch 40 training [time: 2.92s, train loss: 310.8197]
+Tue 11 Aug 2026 13:00:29 INFO  epoch 40 evaluating [time: 0.14s, valid_score: 0.058200]
+Tue 11 Aug 2026 13:00:29 INFO  valid result: 
+recall@10 : 0.122    recall@50 : 0.2245    recall@100 : 0.2813    ndcg@10 : 0.0582    ndcg@50 : 0.0807    ndcg@100 : 0.0899
+Tue 11 Aug 2026 13:00:32 INFO  epoch 41 training [time: 2.91s, train loss: 310.6274]
+Tue 11 Aug 2026 13:00:32 INFO  epoch 41 evaluating [time: 0.14s, valid_score: 0.058300]
+Tue 11 Aug 2026 13:00:32 INFO  valid result: 
+recall@10 : 0.1224    recall@50 : 0.2253    recall@100 : 0.2839    ndcg@10 : 0.0583    ndcg@50 : 0.0808    ndcg@100 : 0.0903
+Tue 11 Aug 2026 13:00:35 INFO  epoch 42 training [time: 2.91s, train loss: 310.0418]
+Tue 11 Aug 2026 13:00:35 INFO  epoch 42 evaluating [time: 0.14s, valid_score: 0.058400]
+Tue 11 Aug 2026 13:00:35 INFO  valid result: 
+recall@10 : 0.1221    recall@50 : 0.2258    recall@100 : 0.2851    ndcg@10 : 0.0584    ndcg@50 : 0.0813    ndcg@100 : 0.0909
+Tue 11 Aug 2026 13:00:38 INFO  epoch 43 training [time: 2.91s, train loss: 309.1243]
+Tue 11 Aug 2026 13:00:38 INFO  epoch 43 evaluating [time: 0.15s, valid_score: 0.058200]
+Tue 11 Aug 2026 13:00:38 INFO  valid result: 
+recall@10 : 0.1215    recall@50 : 0.2261    recall@100 : 0.2851    ndcg@10 : 0.0582    ndcg@50 : 0.0811    ndcg@100 : 0.0907
+Tue 11 Aug 2026 13:00:38 INFO  Finished training, best eval result in epoch 32
+Tue 11 Aug 2026 13:00:38 INFO  Loading model structure and parameters from /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_12-58-22.pth
+Tue 11 Aug 2026 13:00:43 WARNING  command line args [--category Books --legs pop,itemknn,sasrec,sasrec_len20] will not be used in RecBole
+Tue 11 Aug 2026 13:00:47 INFO  [Training]: train_batch_size = [2048] train_neg_sample_args: [{'distribution': 'none', 'sample_num': 'none', 'alpha': 'none', 'dynamic': False, 'candidate_num': 0}]
+Tue 11 Aug 2026 13:00:47 INFO  [Evaluation]: eval_batch_size = [4096] eval_args: [{'split': {'LS': 'valid_and_test'}, 'order': 'TO', 'group_by': 'user', 'mode': {'valid': 'full', 'test': 'full'}}]
+Tue 11 Aug 2026 13:00:49 INFO  epoch 0 training [time: 2.37s, train loss: 499.0728]
+Tue 11 Aug 2026 13:00:49 INFO  epoch 0 evaluating [time: 0.10s, valid_score: 0.022500]
+Tue 11 Aug 2026 13:00:49 INFO  valid result: 
+recall@10 : 0.0395    recall@50 : 0.0793    recall@100 : 0.1073    ndcg@10 : 0.0225    ndcg@50 : 0.0312    ndcg@100 : 0.0358
+Tue 11 Aug 2026 13:00:49 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_13-00-47.pth
+Tue 11 Aug 2026 13:00:52 INFO  epoch 1 training [time: 2.28s, train loss: 479.6659]
+Tue 11 Aug 2026 13:00:52 INFO  epoch 1 evaluating [time: 0.10s, valid_score: 0.024000]
+Tue 11 Aug 2026 13:00:52 INFO  valid result: 
+recall@10 : 0.0433    recall@50 : 0.0831    recall@100 : 0.1131    ndcg@10 : 0.024    ndcg@50 : 0.0325    ndcg@100 : 0.0373
+Tue 11 Aug 2026 13:00:52 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_13-00-47.pth
+Tue 11 Aug 2026 13:00:54 INFO  epoch 2 training [time: 2.27s, train loss: 468.8094]
+Tue 11 Aug 2026 13:00:54 INFO  epoch 2 evaluating [time: 0.10s, valid_score: 0.026200]
+Tue 11 Aug 2026 13:00:54 INFO  valid result: 
+recall@10 : 0.0487    recall@50 : 0.0998    recall@100 : 0.1355    ndcg@10 : 0.0262    ndcg@50 : 0.0372    ndcg@100 : 0.043
+Tue 11 Aug 2026 13:00:54 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_13-00-47.pth
+Tue 11 Aug 2026 13:00:57 INFO  epoch 3 training [time: 2.28s, train loss: 456.3341]
+Tue 11 Aug 2026 13:00:57 INFO  epoch 3 evaluating [time: 0.10s, valid_score: 0.029600]
+Tue 11 Aug 2026 13:00:57 INFO  valid result: 
+recall@10 : 0.0536    recall@50 : 0.109    recall@100 : 0.1537    ndcg@10 : 0.0296    ndcg@50 : 0.0417    ndcg@100 : 0.0489
+Tue 11 Aug 2026 13:00:57 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_13-00-47.pth
+Tue 11 Aug 2026 13:00:59 INFO  epoch 4 training [time: 2.29s, train loss: 444.7819]
+Tue 11 Aug 2026 13:00:59 INFO  epoch 4 evaluating [time: 0.10s, valid_score: 0.034800]
+Tue 11 Aug 2026 13:00:59 INFO  valid result: 
+recall@10 : 0.059    recall@50 : 0.1241    recall@100 : 0.1729    ndcg@10 : 0.0348    ndcg@50 : 0.049    ndcg@100 : 0.0569
+Tue 11 Aug 2026 13:00:59 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_13-00-47.pth
+Tue 11 Aug 2026 13:01:01 INFO  epoch 5 training [time: 2.29s, train loss: 434.5173]
+Tue 11 Aug 2026 13:01:01 INFO  epoch 5 evaluating [time: 0.10s, valid_score: 0.039800]
+Tue 11 Aug 2026 13:01:01 INFO  valid result: 
+recall@10 : 0.0678    recall@50 : 0.1425    recall@100 : 0.1902    ndcg@10 : 0.0398    ndcg@50 : 0.056    ndcg@100 : 0.0637
+Tue 11 Aug 2026 13:01:02 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_13-00-47.pth
+Tue 11 Aug 2026 13:01:04 INFO  epoch 6 training [time: 2.34s, train loss: 424.6488]
+Tue 11 Aug 2026 13:01:04 INFO  epoch 6 evaluating [time: 0.10s, valid_score: 0.043000]
+Tue 11 Aug 2026 13:01:04 INFO  valid result: 
+recall@10 : 0.0742    recall@50 : 0.1536    recall@100 : 0.2081    ndcg@10 : 0.043    ndcg@50 : 0.0601    ndcg@100 : 0.069
+Tue 11 Aug 2026 13:01:04 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_13-00-47.pth
+Tue 11 Aug 2026 13:01:06 INFO  epoch 7 training [time: 2.33s, train loss: 415.0144]
+Tue 11 Aug 2026 13:01:06 INFO  epoch 7 evaluating [time: 0.10s, valid_score: 0.046500]
+Tue 11 Aug 2026 13:01:06 INFO  valid result: 
+recall@10 : 0.0811    recall@50 : 0.1634    recall@100 : 0.2189    ndcg@10 : 0.0465    ndcg@50 : 0.0643    ndcg@100 : 0.0733
+Tue 11 Aug 2026 13:01:06 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_13-00-47.pth
+Tue 11 Aug 2026 13:01:09 INFO  epoch 8 training [time: 2.29s, train loss: 406.1242]
+Tue 11 Aug 2026 13:01:09 INFO  epoch 8 evaluating [time: 0.10s, valid_score: 0.048800]
+Tue 11 Aug 2026 13:01:09 INFO  valid result: 
+recall@10 : 0.0851    recall@50 : 0.1726    recall@100 : 0.2272    ndcg@10 : 0.0488    ndcg@50 : 0.0678    ndcg@100 : 0.0767
+Tue 11 Aug 2026 13:01:09 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_13-00-47.pth
+Tue 11 Aug 2026 13:01:11 INFO  epoch 9 training [time: 2.27s, train loss: 397.8225]
+Tue 11 Aug 2026 13:01:11 INFO  epoch 9 evaluating [time: 0.10s, valid_score: 0.050900]
+Tue 11 Aug 2026 13:01:11 INFO  valid result: 
+recall@10 : 0.0905    recall@50 : 0.1798    recall@100 : 0.237    ndcg@10 : 0.0509    ndcg@50 : 0.0704    ndcg@100 : 0.0796
+Tue 11 Aug 2026 13:01:11 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_13-00-47.pth
+Tue 11 Aug 2026 13:01:14 INFO  epoch 10 training [time: 2.34s, train loss: 389.8587]
+Tue 11 Aug 2026 13:01:14 INFO  epoch 10 evaluating [time: 0.09s, valid_score: 0.051700]
+Tue 11 Aug 2026 13:01:14 INFO  valid result: 
+recall@10 : 0.0928    recall@50 : 0.1893    recall@100 : 0.2461    ndcg@10 : 0.0517    ndcg@50 : 0.0729    ndcg@100 : 0.0821
+Tue 11 Aug 2026 13:01:14 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_13-00-47.pth
+Tue 11 Aug 2026 13:01:16 INFO  epoch 11 training [time: 2.31s, train loss: 382.1726]
+Tue 11 Aug 2026 13:01:16 INFO  epoch 11 evaluating [time: 0.10s, valid_score: 0.053800]
+Tue 11 Aug 2026 13:01:16 INFO  valid result: 
+recall@10 : 0.0975    recall@50 : 0.1948    recall@100 : 0.2502    ndcg@10 : 0.0538    ndcg@50 : 0.0752    ndcg@100 : 0.0842
+Tue 11 Aug 2026 13:01:16 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_13-00-47.pth
+Tue 11 Aug 2026 13:01:18 INFO  epoch 12 training [time: 2.31s, train loss: 375.0722]
+Tue 11 Aug 2026 13:01:19 INFO  epoch 12 evaluating [time: 0.09s, valid_score: 0.055500]
+Tue 11 Aug 2026 13:01:19 INFO  valid result: 
+recall@10 : 0.1031    recall@50 : 0.1995    recall@100 : 0.255    ndcg@10 : 0.0555    ndcg@50 : 0.0767    ndcg@100 : 0.0857
+Tue 11 Aug 2026 13:01:19 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_13-00-47.pth
+Tue 11 Aug 2026 13:01:21 INFO  epoch 13 training [time: 2.32s, train loss: 368.5773]
+Tue 11 Aug 2026 13:01:21 INFO  epoch 13 evaluating [time: 0.09s, valid_score: 0.055900]
+Tue 11 Aug 2026 13:01:21 INFO  valid result: 
+recall@10 : 0.1057    recall@50 : 0.2044    recall@100 : 0.26    ndcg@10 : 0.0559    ndcg@50 : 0.0776    ndcg@100 : 0.0866
+Tue 11 Aug 2026 13:01:21 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_13-00-47.pth
+Tue 11 Aug 2026 13:01:23 INFO  epoch 14 training [time: 2.31s, train loss: 362.4163]
+Tue 11 Aug 2026 13:01:23 INFO  epoch 14 evaluating [time: 0.09s, valid_score: 0.055800]
+Tue 11 Aug 2026 13:01:23 INFO  valid result: 
+recall@10 : 0.1063    recall@50 : 0.2075    recall@100 : 0.2643    ndcg@10 : 0.0558    ndcg@50 : 0.0782    ndcg@100 : 0.0874
+Tue 11 Aug 2026 13:01:26 INFO  epoch 15 training [time: 2.31s, train loss: 356.6979]
+Tue 11 Aug 2026 13:01:26 INFO  epoch 15 evaluating [time: 0.09s, valid_score: 0.056900]
+Tue 11 Aug 2026 13:01:26 INFO  valid result: 
+recall@10 : 0.1111    recall@50 : 0.2123    recall@100 : 0.2692    ndcg@10 : 0.0569    ndcg@50 : 0.0792    ndcg@100 : 0.0884
+Tue 11 Aug 2026 13:01:26 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_13-00-47.pth
+Tue 11 Aug 2026 13:01:28 INFO  epoch 16 training [time: 2.31s, train loss: 351.8055]
+Tue 11 Aug 2026 13:01:28 INFO  epoch 16 evaluating [time: 0.10s, valid_score: 0.057000]
+Tue 11 Aug 2026 13:01:28 INFO  valid result: 
+recall@10 : 0.1119    recall@50 : 0.2129    recall@100 : 0.2683    ndcg@10 : 0.057    ndcg@50 : 0.0793    ndcg@100 : 0.0883
+Tue 11 Aug 2026 13:01:28 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_13-00-47.pth
+Tue 11 Aug 2026 13:01:31 INFO  epoch 17 training [time: 2.32s, train loss: 347.4230]
+Tue 11 Aug 2026 13:01:31 INFO  epoch 17 evaluating [time: 0.09s, valid_score: 0.057700]
+Tue 11 Aug 2026 13:01:31 INFO  valid result: 
+recall@10 : 0.1172    recall@50 : 0.215    recall@100 : 0.2722    ndcg@10 : 0.0577    ndcg@50 : 0.0792    ndcg@100 : 0.0884
+Tue 11 Aug 2026 13:01:31 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_13-00-47.pth
+Tue 11 Aug 2026 13:01:33 INFO  epoch 18 training [time: 2.29s, train loss: 343.2951]
+Tue 11 Aug 2026 13:01:33 INFO  epoch 18 evaluating [time: 0.09s, valid_score: 0.057500]
+Tue 11 Aug 2026 13:01:33 INFO  valid result: 
+recall@10 : 0.1168    recall@50 : 0.2151    recall@100 : 0.2708    ndcg@10 : 0.0575    ndcg@50 : 0.0792    ndcg@100 : 0.0882
+Tue 11 Aug 2026 13:01:35 INFO  epoch 19 training [time: 2.31s, train loss: 339.8675]
+Tue 11 Aug 2026 13:01:36 INFO  epoch 19 evaluating [time: 0.09s, valid_score: 0.058700]
+Tue 11 Aug 2026 13:01:36 INFO  valid result: 
+recall@10 : 0.1165    recall@50 : 0.2175    recall@100 : 0.2758    ndcg@10 : 0.0587    ndcg@50 : 0.0811    ndcg@100 : 0.0905
+Tue 11 Aug 2026 13:01:36 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_13-00-47.pth
+Tue 11 Aug 2026 13:01:38 INFO  epoch 20 training [time: 2.30s, train loss: 336.7123]
+Tue 11 Aug 2026 13:01:38 INFO  epoch 20 evaluating [time: 0.09s, valid_score: 0.058800]
+Tue 11 Aug 2026 13:01:38 INFO  valid result: 
+recall@10 : 0.1196    recall@50 : 0.2195    recall@100 : 0.2763    ndcg@10 : 0.0588    ndcg@50 : 0.0808    ndcg@100 : 0.09
+Tue 11 Aug 2026 13:01:38 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_13-00-47.pth
+Tue 11 Aug 2026 13:01:40 INFO  epoch 21 training [time: 2.30s, train loss: 333.8585]
+Tue 11 Aug 2026 13:01:40 INFO  epoch 21 evaluating [time: 0.09s, valid_score: 0.057900]
+Tue 11 Aug 2026 13:01:40 INFO  valid result: 
+recall@10 : 0.118    recall@50 : 0.2175    recall@100 : 0.2757    ndcg@10 : 0.0579    ndcg@50 : 0.0799    ndcg@100 : 0.0893
+Tue 11 Aug 2026 13:01:43 INFO  epoch 22 training [time: 2.34s, train loss: 331.5961]
+Tue 11 Aug 2026 13:01:43 INFO  epoch 22 evaluating [time: 0.09s, valid_score: 0.058300]
+Tue 11 Aug 2026 13:01:43 INFO  valid result: 
+recall@10 : 0.119    recall@50 : 0.2211    recall@100 : 0.2772    ndcg@10 : 0.0583    ndcg@50 : 0.0809    ndcg@100 : 0.09
+Tue 11 Aug 2026 13:01:45 INFO  epoch 23 training [time: 2.31s, train loss: 329.4738]
+Tue 11 Aug 2026 13:01:45 INFO  epoch 23 evaluating [time: 0.10s, valid_score: 0.058500]
+Tue 11 Aug 2026 13:01:45 INFO  valid result: 
+recall@10 : 0.1204    recall@50 : 0.2224    recall@100 : 0.2764    ndcg@10 : 0.0585    ndcg@50 : 0.0809    ndcg@100 : 0.0896
+Tue 11 Aug 2026 13:01:48 INFO  epoch 24 training [time: 2.30s, train loss: 327.8850]
+Tue 11 Aug 2026 13:01:48 INFO  epoch 24 evaluating [time: 0.09s, valid_score: 0.058000]
+Tue 11 Aug 2026 13:01:48 INFO  valid result: 
+recall@10 : 0.1194    recall@50 : 0.2212    recall@100 : 0.2749    ndcg@10 : 0.058    ndcg@50 : 0.0806    ndcg@100 : 0.0893
+Tue 11 Aug 2026 13:01:50 INFO  epoch 25 training [time: 2.32s, train loss: 325.7813]
+Tue 11 Aug 2026 13:01:50 INFO  epoch 25 evaluating [time: 0.10s, valid_score: 0.058500]
+Tue 11 Aug 2026 13:01:50 INFO  valid result: 
+recall@10 : 0.1207    recall@50 : 0.221    recall@100 : 0.2777    ndcg@10 : 0.0585    ndcg@50 : 0.0806    ndcg@100 : 0.0898
+Tue 11 Aug 2026 13:01:52 INFO  epoch 26 training [time: 2.32s, train loss: 324.4336]
+Tue 11 Aug 2026 13:01:52 INFO  epoch 26 evaluating [time: 0.09s, valid_score: 0.058200]
+Tue 11 Aug 2026 13:01:52 INFO  valid result: 
+recall@10 : 0.1212    recall@50 : 0.2237    recall@100 : 0.2796    ndcg@10 : 0.0582    ndcg@50 : 0.0807    ndcg@100 : 0.0898
+Tue 11 Aug 2026 13:01:55 INFO  epoch 27 training [time: 2.31s, train loss: 322.8548]
+Tue 11 Aug 2026 13:01:55 INFO  epoch 27 evaluating [time: 0.09s, valid_score: 0.058000]
+Tue 11 Aug 2026 13:01:55 INFO  valid result: 
+recall@10 : 0.1205    recall@50 : 0.2221    recall@100 : 0.2774    ndcg@10 : 0.058    ndcg@50 : 0.0805    ndcg@100 : 0.0894
+Tue 11 Aug 2026 13:01:57 INFO  epoch 28 training [time: 2.31s, train loss: 321.6942]
+Tue 11 Aug 2026 13:01:57 INFO  epoch 28 evaluating [time: 0.11s, valid_score: 0.057300]
+Tue 11 Aug 2026 13:01:57 INFO  valid result: 
+recall@10 : 0.1201    recall@50 : 0.222    recall@100 : 0.2779    ndcg@10 : 0.0573    ndcg@50 : 0.0798    ndcg@100 : 0.0889
+Tue 11 Aug 2026 13:02:00 INFO  epoch 29 training [time: 2.33s, train loss: 320.5923]
+Tue 11 Aug 2026 13:02:00 INFO  epoch 29 evaluating [time: 0.09s, valid_score: 0.059000]
+Tue 11 Aug 2026 13:02:00 INFO  valid result: 
+recall@10 : 0.122    recall@50 : 0.2228    recall@100 : 0.2788    ndcg@10 : 0.059    ndcg@50 : 0.0813    ndcg@100 : 0.0903
+Tue 11 Aug 2026 13:02:00 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_13-00-47.pth
+Tue 11 Aug 2026 13:02:02 INFO  epoch 30 training [time: 2.30s, train loss: 319.5976]
+Tue 11 Aug 2026 13:02:02 INFO  epoch 30 evaluating [time: 0.09s, valid_score: 0.059500]
+Tue 11 Aug 2026 13:02:02 INFO  valid result: 
+recall@10 : 0.1227    recall@50 : 0.2251    recall@100 : 0.2798    ndcg@10 : 0.0595    ndcg@50 : 0.0821    ndcg@100 : 0.0909
+Tue 11 Aug 2026 13:02:02 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_13-00-47.pth
+Tue 11 Aug 2026 13:02:05 INFO  epoch 31 training [time: 2.30s, train loss: 318.9555]
+Tue 11 Aug 2026 13:02:05 INFO  epoch 31 evaluating [time: 0.10s, valid_score: 0.058500]
+Tue 11 Aug 2026 13:02:05 INFO  valid result: 
+recall@10 : 0.1224    recall@50 : 0.2228    recall@100 : 0.2782    ndcg@10 : 0.0585    ndcg@50 : 0.0806    ndcg@100 : 0.0895
+Tue 11 Aug 2026 13:02:07 INFO  epoch 32 training [time: 2.31s, train loss: 317.8985]
+Tue 11 Aug 2026 13:02:07 INFO  epoch 32 evaluating [time: 0.09s, valid_score: 0.059400]
+Tue 11 Aug 2026 13:02:07 INFO  valid result: 
+recall@10 : 0.1229    recall@50 : 0.2262    recall@100 : 0.2814    ndcg@10 : 0.0594    ndcg@50 : 0.0821    ndcg@100 : 0.0911
+Tue 11 Aug 2026 13:02:09 INFO  epoch 33 training [time: 2.32s, train loss: 316.9271]
+Tue 11 Aug 2026 13:02:09 INFO  epoch 33 evaluating [time: 0.09s, valid_score: 0.059400]
+Tue 11 Aug 2026 13:02:09 INFO  valid result: 
+recall@10 : 0.1235    recall@50 : 0.2249    recall@100 : 0.2816    ndcg@10 : 0.0594    ndcg@50 : 0.0819    ndcg@100 : 0.0911
+Tue 11 Aug 2026 13:02:12 INFO  epoch 34 training [time: 2.31s, train loss: 316.0512]
+Tue 11 Aug 2026 13:02:12 INFO  epoch 34 evaluating [time: 0.10s, valid_score: 0.058400]
+Tue 11 Aug 2026 13:02:12 INFO  valid result: 
+recall@10 : 0.1217    recall@50 : 0.2247    recall@100 : 0.2805    ndcg@10 : 0.0584    ndcg@50 : 0.0812    ndcg@100 : 0.0902
+Tue 11 Aug 2026 13:02:14 INFO  epoch 35 training [time: 2.32s, train loss: 315.6466]
+Tue 11 Aug 2026 13:02:14 INFO  epoch 35 evaluating [time: 0.10s, valid_score: 0.059200]
+Tue 11 Aug 2026 13:02:14 INFO  valid result: 
+recall@10 : 0.124    recall@50 : 0.2277    recall@100 : 0.2801    ndcg@10 : 0.0592    ndcg@50 : 0.082    ndcg@100 : 0.0905
+Tue 11 Aug 2026 13:02:17 INFO  epoch 36 training [time: 2.30s, train loss: 314.8638]
+Tue 11 Aug 2026 13:02:17 INFO  epoch 36 evaluating [time: 0.09s, valid_score: 0.059000]
+Tue 11 Aug 2026 13:02:17 INFO  valid result: 
+recall@10 : 0.1227    recall@50 : 0.227    recall@100 : 0.2816    ndcg@10 : 0.059    ndcg@50 : 0.0819    ndcg@100 : 0.0907
+Tue 11 Aug 2026 13:02:19 INFO  epoch 37 training [time: 2.30s, train loss: 314.4061]
+Tue 11 Aug 2026 13:02:19 INFO  epoch 37 evaluating [time: 0.10s, valid_score: 0.059700]
+Tue 11 Aug 2026 13:02:19 INFO  valid result: 
+recall@10 : 0.1238    recall@50 : 0.2249    recall@100 : 0.2836    ndcg@10 : 0.0597    ndcg@50 : 0.082    ndcg@100 : 0.0915
+Tue 11 Aug 2026 13:02:19 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_13-00-47.pth
+Tue 11 Aug 2026 13:02:21 INFO  epoch 38 training [time: 2.31s, train loss: 313.6973]
+Tue 11 Aug 2026 13:02:21 INFO  epoch 38 evaluating [time: 0.09s, valid_score: 0.058600]
+Tue 11 Aug 2026 13:02:21 INFO  valid result: 
+recall@10 : 0.1232    recall@50 : 0.2266    recall@100 : 0.2825    ndcg@10 : 0.0586    ndcg@50 : 0.0814    ndcg@100 : 0.0904
+Tue 11 Aug 2026 13:02:24 INFO  epoch 39 training [time: 2.30s, train loss: 312.7718]
+Tue 11 Aug 2026 13:02:24 INFO  epoch 39 evaluating [time: 0.09s, valid_score: 0.059100]
+Tue 11 Aug 2026 13:02:24 INFO  valid result: 
+recall@10 : 0.1238    recall@50 : 0.2262    recall@100 : 0.2823    ndcg@10 : 0.0591    ndcg@50 : 0.0817    ndcg@100 : 0.0907
+Tue 11 Aug 2026 13:02:26 INFO  epoch 40 training [time: 2.30s, train loss: 312.6229]
+Tue 11 Aug 2026 13:02:26 INFO  epoch 40 evaluating [time: 0.09s, valid_score: 0.059100]
+Tue 11 Aug 2026 13:02:26 INFO  valid result: 
+recall@10 : 0.1225    recall@50 : 0.2262    recall@100 : 0.281    ndcg@10 : 0.0591    ndcg@50 : 0.082    ndcg@100 : 0.0909
+Tue 11 Aug 2026 13:02:29 INFO  epoch 41 training [time: 2.32s, train loss: 311.7237]
+Tue 11 Aug 2026 13:02:29 INFO  epoch 41 evaluating [time: 0.10s, valid_score: 0.059600]
+Tue 11 Aug 2026 13:02:29 INFO  valid result: 
+recall@10 : 0.1241    recall@50 : 0.2274    recall@100 : 0.2853    ndcg@10 : 0.0596    ndcg@50 : 0.0824    ndcg@100 : 0.0918
+Tue 11 Aug 2026 13:02:31 INFO  epoch 42 training [time: 2.28s, train loss: 311.3582]
+Tue 11 Aug 2026 13:02:31 INFO  epoch 42 evaluating [time: 0.10s, valid_score: 0.059100]
+Tue 11 Aug 2026 13:02:31 INFO  valid result: 
+recall@10 : 0.1237    recall@50 : 0.226    recall@100 : 0.2854    ndcg@10 : 0.0591    ndcg@50 : 0.0817    ndcg@100 : 0.0914
+Tue 11 Aug 2026 13:02:33 INFO  epoch 43 training [time: 2.28s, train loss: 310.9251]
+Tue 11 Aug 2026 13:02:33 INFO  epoch 43 evaluating [time: 0.09s, valid_score: 0.060300]
+Tue 11 Aug 2026 13:02:33 INFO  valid result: 
+recall@10 : 0.1257    recall@50 : 0.2266    recall@100 : 0.2835    ndcg@10 : 0.0603    ndcg@50 : 0.0825    ndcg@100 : 0.0918
+Tue 11 Aug 2026 13:02:33 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_13-00-47.pth
+Tue 11 Aug 2026 13:02:36 INFO  epoch 44 training [time: 2.29s, train loss: 310.4186]
+Tue 11 Aug 2026 13:02:36 INFO  epoch 44 evaluating [time: 0.09s, valid_score: 0.060100]
+Tue 11 Aug 2026 13:02:36 INFO  valid result: 
+recall@10 : 0.1242    recall@50 : 0.2266    recall@100 : 0.2831    ndcg@10 : 0.0601    ndcg@50 : 0.0827    ndcg@100 : 0.0919
+Tue 11 Aug 2026 13:02:38 INFO  epoch 45 training [time: 2.29s, train loss: 310.2265]
+Tue 11 Aug 2026 13:02:38 INFO  epoch 45 evaluating [time: 0.09s, valid_score: 0.059400]
+Tue 11 Aug 2026 13:02:38 INFO  valid result: 
+recall@10 : 0.124    recall@50 : 0.2275    recall@100 : 0.2823    ndcg@10 : 0.0594    ndcg@50 : 0.0821    ndcg@100 : 0.091
+Tue 11 Aug 2026 13:02:41 INFO  epoch 46 training [time: 2.30s, train loss: 309.7880]
+Tue 11 Aug 2026 13:02:41 INFO  epoch 46 evaluating [time: 0.09s, valid_score: 0.060200]
+Tue 11 Aug 2026 13:02:41 INFO  valid result: 
+recall@10 : 0.1264    recall@50 : 0.2252    recall@100 : 0.2839    ndcg@10 : 0.0602    ndcg@50 : 0.082    ndcg@100 : 0.0915
+Tue 11 Aug 2026 13:02:43 INFO  epoch 47 training [time: 2.31s, train loss: 309.2985]
+Tue 11 Aug 2026 13:02:43 INFO  epoch 47 evaluating [time: 0.09s, valid_score: 0.059300]
+Tue 11 Aug 2026 13:02:43 INFO  valid result: 
+recall@10 : 0.1236    recall@50 : 0.2264    recall@100 : 0.2833    ndcg@10 : 0.0593    ndcg@50 : 0.0821    ndcg@100 : 0.0913
+Tue 11 Aug 2026 13:02:45 INFO  epoch 48 training [time: 2.30s, train loss: 308.4773]
+Tue 11 Aug 2026 13:02:45 INFO  epoch 48 evaluating [time: 0.09s, valid_score: 0.059300]
+Tue 11 Aug 2026 13:02:45 INFO  valid result: 
+recall@10 : 0.1232    recall@50 : 0.2268    recall@100 : 0.2846    ndcg@10 : 0.0593    ndcg@50 : 0.0823    ndcg@100 : 0.0916
+Tue 11 Aug 2026 13:02:48 INFO  epoch 49 training [time: 2.30s, train loss: 308.3695]
+Tue 11 Aug 2026 13:02:48 INFO  epoch 49 evaluating [time: 0.09s, valid_score: 0.058800]
+Tue 11 Aug 2026 13:02:48 INFO  valid result: 
+recall@10 : 0.1229    recall@50 : 0.2249    recall@100 : 0.2851    ndcg@10 : 0.0588    ndcg@50 : 0.0814    ndcg@100 : 0.0912
+Tue 11 Aug 2026 13:02:50 INFO  epoch 50 training [time: 2.30s, train loss: 308.0225]
+Tue 11 Aug 2026 13:02:50 INFO  epoch 50 evaluating [time: 0.09s, valid_score: 0.059300]
+Tue 11 Aug 2026 13:02:50 INFO  valid result: 
+recall@10 : 0.1238    recall@50 : 0.2266    recall@100 : 0.2844    ndcg@10 : 0.0593    ndcg@50 : 0.082    ndcg@100 : 0.0914
+Tue 11 Aug 2026 13:02:52 INFO  epoch 51 training [time: 2.29s, train loss: 307.8558]
+Tue 11 Aug 2026 13:02:53 INFO  epoch 51 evaluating [time: 0.10s, valid_score: 0.058400]
+Tue 11 Aug 2026 13:02:53 INFO  valid result: 
+recall@10 : 0.1224    recall@50 : 0.2266    recall@100 : 0.2826    ndcg@10 : 0.0584    ndcg@50 : 0.0813    ndcg@100 : 0.0904
+Tue 11 Aug 2026 13:02:55 INFO  epoch 52 training [time: 2.30s, train loss: 307.0948]
+Tue 11 Aug 2026 13:02:55 INFO  epoch 52 evaluating [time: 0.09s, valid_score: 0.058800]
+Tue 11 Aug 2026 13:02:55 INFO  valid result: 
+recall@10 : 0.1232    recall@50 : 0.2254    recall@100 : 0.2846    ndcg@10 : 0.0588    ndcg@50 : 0.0814    ndcg@100 : 0.091
+Tue 11 Aug 2026 13:02:57 INFO  epoch 53 training [time: 2.33s, train loss: 306.9429]
+Tue 11 Aug 2026 13:02:57 INFO  epoch 53 evaluating [time: 0.10s, valid_score: 0.058700]
+Tue 11 Aug 2026 13:02:57 INFO  valid result: 
+recall@10 : 0.1231    recall@50 : 0.2245    recall@100 : 0.2835    ndcg@10 : 0.0587    ndcg@50 : 0.0811    ndcg@100 : 0.0907
+Tue 11 Aug 2026 13:03:00 INFO  epoch 54 training [time: 2.31s, train loss: 306.4158]
+Tue 11 Aug 2026 13:03:00 INFO  epoch 54 evaluating [time: 0.09s, valid_score: 0.059300]
+Tue 11 Aug 2026 13:03:00 INFO  valid result: 
+recall@10 : 0.1254    recall@50 : 0.2262    recall@100 : 0.284    ndcg@10 : 0.0593    ndcg@50 : 0.0815    ndcg@100 : 0.0909
+Tue 11 Aug 2026 13:03:00 INFO  Finished training, best eval result in epoch 43
+Tue 11 Aug 2026 13:03:00 INFO  Loading model structure and parameters from /projects/PROJECT_ALLOC/R-project/results/anchor/Books/_ckpt/SASRec-Aug-11-2026_13-00-47.pth

@@ -31,6 +31,19 @@ _NUMPY_ALIASES = {
 
 def _patch_numpy(np):
     import warnings
+
+    # Trailing-underscore scalar names removed in numpy 2.0 that RecBole
+    # 1.2.1 still reads (Config.compatibility_settings assigns
+    # ``np.float = np.float_`` etc. on every Config() call — the plain
+    # aliases alone don't survive that path).
+    for name, target in {
+        "float_": np.float64,
+        "complex_": np.complex128,
+        "unicode_": np.str_,
+    }.items():
+        if not hasattr(np, name):
+            setattr(np, name, target)
+
     for name, target in _NUMPY_ALIASES.items():
         with warnings.catch_warnings():
             # numpy>=2 emits FutureWarning from __getattr__ for some removed

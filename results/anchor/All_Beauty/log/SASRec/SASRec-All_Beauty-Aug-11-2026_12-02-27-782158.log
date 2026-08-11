@@ -1,0 +1,144 @@
+Tue 11 Aug 2026 12:02:27 INFO  [Training]: train_batch_size = [2048] train_neg_sample_args: [{'distribution': 'none', 'sample_num': 'none', 'alpha': 'none', 'dynamic': False, 'candidate_num': 0}]
+Tue 11 Aug 2026 12:02:27 INFO  [Evaluation]: eval_batch_size = [4096] eval_args: [{'split': {'LS': 'valid_and_test'}, 'order': 'TO', 'group_by': 'user', 'mode': {'valid': 'full', 'test': 'full'}}]
+Tue 11 Aug 2026 12:02:38 INFO  epoch 0 training [time: 0.94s, train loss: 5.8936]
+Tue 11 Aug 2026 12:02:38 INFO  epoch 0 evaluating [time: 0.01s, valid_score: 0.010000]
+Tue 11 Aug 2026 12:02:38 INFO  valid result: 
+recall@10 : 0.0277    recall@50 : 0.1937    recall@100 : 0.3162    ndcg@10 : 0.01    ndcg@50 : 0.0439    ndcg@100 : 0.0636
+Tue 11 Aug 2026 12:02:38 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/SASRec-Aug-11-2026_12-02-27.pth
+Tue 11 Aug 2026 12:02:39 INFO  epoch 1 training [time: 0.69s, train loss: 5.8763]
+Tue 11 Aug 2026 12:02:39 INFO  epoch 1 evaluating [time: 0.01s, valid_score: 0.010000]
+Tue 11 Aug 2026 12:02:39 INFO  valid result: 
+recall@10 : 0.0277    recall@50 : 0.1937    recall@100 : 0.3241    ndcg@10 : 0.01    ndcg@50 : 0.0442    ndcg@100 : 0.0651
+Tue 11 Aug 2026 12:02:39 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/SASRec-Aug-11-2026_12-02-27.pth
+Tue 11 Aug 2026 12:02:40 INFO  epoch 2 training [time: 0.69s, train loss: 5.8582]
+Tue 11 Aug 2026 12:02:40 INFO  epoch 2 evaluating [time: 0.02s, valid_score: 0.007800]
+Tue 11 Aug 2026 12:02:40 INFO  valid result: 
+recall@10 : 0.0198    recall@50 : 0.1858    recall@100 : 0.3202    ndcg@10 : 0.0078    ndcg@50 : 0.0429    ndcg@100 : 0.0647
+Tue 11 Aug 2026 12:02:40 INFO  epoch 3 training [time: 0.71s, train loss: 5.8456]
+Tue 11 Aug 2026 12:02:40 INFO  epoch 3 evaluating [time: 0.01s, valid_score: 0.008000]
+Tue 11 Aug 2026 12:02:40 INFO  valid result: 
+recall@10 : 0.0198    recall@50 : 0.1976    recall@100 : 0.3202    ndcg@10 : 0.008    ndcg@50 : 0.0457    ndcg@100 : 0.0655
+Tue 11 Aug 2026 12:02:41 INFO  epoch 4 training [time: 0.66s, train loss: 5.8252]
+Tue 11 Aug 2026 12:02:41 INFO  epoch 4 evaluating [time: 0.02s, valid_score: 0.009100]
+Tue 11 Aug 2026 12:02:41 INFO  valid result: 
+recall@10 : 0.0237    recall@50 : 0.1937    recall@100 : 0.3241    ndcg@10 : 0.0091    ndcg@50 : 0.0454    ndcg@100 : 0.0664
+Tue 11 Aug 2026 12:02:42 INFO  epoch 5 training [time: 0.68s, train loss: 5.8023]
+Tue 11 Aug 2026 12:02:42 INFO  epoch 5 evaluating [time: 0.01s, valid_score: 0.011300]
+Tue 11 Aug 2026 12:02:42 INFO  valid result: 
+recall@10 : 0.0316    recall@50 : 0.1937    recall@100 : 0.3281    ndcg@10 : 0.0113    ndcg@50 : 0.0458    ndcg@100 : 0.0675
+Tue 11 Aug 2026 12:02:42 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/SASRec-Aug-11-2026_12-02-27.pth
+Tue 11 Aug 2026 12:02:42 INFO  epoch 6 training [time: 0.65s, train loss: 5.7836]
+Tue 11 Aug 2026 12:02:42 INFO  epoch 6 evaluating [time: 0.01s, valid_score: 0.012700]
+Tue 11 Aug 2026 12:02:42 INFO  valid result: 
+recall@10 : 0.0356    recall@50 : 0.1858    recall@100 : 0.336    ndcg@10 : 0.0127    ndcg@50 : 0.0453    ndcg@100 : 0.0696
+Tue 11 Aug 2026 12:02:42 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/SASRec-Aug-11-2026_12-02-27.pth
+Tue 11 Aug 2026 12:02:43 INFO  epoch 7 training [time: 0.69s, train loss: 5.7709]
+Tue 11 Aug 2026 12:02:43 INFO  epoch 7 evaluating [time: 0.02s, valid_score: 0.014300]
+Tue 11 Aug 2026 12:02:43 INFO  valid result: 
+recall@10 : 0.0395    recall@50 : 0.1818    recall@100 : 0.3518    ndcg@10 : 0.0143    ndcg@50 : 0.045    ndcg@100 : 0.0725
+Tue 11 Aug 2026 12:02:43 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/SASRec-Aug-11-2026_12-02-27.pth
+Tue 11 Aug 2026 12:02:44 INFO  epoch 8 training [time: 0.73s, train loss: 5.7473]
+Tue 11 Aug 2026 12:02:44 INFO  epoch 8 evaluating [time: 0.01s, valid_score: 0.015500]
+Tue 11 Aug 2026 12:02:44 INFO  valid result: 
+recall@10 : 0.0435    recall@50 : 0.1976    recall@100 : 0.3478    ndcg@10 : 0.0155    ndcg@50 : 0.0481    ndcg@100 : 0.0723
+Tue 11 Aug 2026 12:02:44 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/SASRec-Aug-11-2026_12-02-27.pth
+Tue 11 Aug 2026 12:02:45 INFO  epoch 9 training [time: 0.70s, train loss: 5.7257]
+Tue 11 Aug 2026 12:02:45 INFO  epoch 9 evaluating [time: 0.01s, valid_score: 0.015600]
+Tue 11 Aug 2026 12:02:45 INFO  valid result: 
+recall@10 : 0.0435    recall@50 : 0.2016    recall@100 : 0.3518    ndcg@10 : 0.0156    ndcg@50 : 0.0491    ndcg@100 : 0.0732
+Tue 11 Aug 2026 12:02:45 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/SASRec-Aug-11-2026_12-02-27.pth
+Tue 11 Aug 2026 12:02:45 INFO  epoch 10 training [time: 0.65s, train loss: 5.7106]
+Tue 11 Aug 2026 12:02:45 INFO  epoch 10 evaluating [time: 0.01s, valid_score: 0.015700]
+Tue 11 Aug 2026 12:02:45 INFO  valid result: 
+recall@10 : 0.0435    recall@50 : 0.2016    recall@100 : 0.3676    ndcg@10 : 0.0157    ndcg@50 : 0.0495    ndcg@100 : 0.0762
+Tue 11 Aug 2026 12:02:45 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/SASRec-Aug-11-2026_12-02-27.pth
+Tue 11 Aug 2026 12:02:46 INFO  epoch 11 training [time: 0.68s, train loss: 5.6911]
+Tue 11 Aug 2026 12:02:46 INFO  epoch 11 evaluating [time: 0.01s, valid_score: 0.015900]
+Tue 11 Aug 2026 12:02:46 INFO  valid result: 
+recall@10 : 0.0435    recall@50 : 0.2174    recall@100 : 0.3715    ndcg@10 : 0.0159    ndcg@50 : 0.0528    ndcg@100 : 0.0775
+Tue 11 Aug 2026 12:02:46 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/SASRec-Aug-11-2026_12-02-27.pth
+Tue 11 Aug 2026 12:02:47 INFO  epoch 12 training [time: 0.64s, train loss: 5.6722]
+Tue 11 Aug 2026 12:02:47 INFO  epoch 12 evaluating [time: 0.01s, valid_score: 0.015000]
+Tue 11 Aug 2026 12:02:47 INFO  valid result: 
+recall@10 : 0.0395    recall@50 : 0.2134    recall@100 : 0.3715    ndcg@10 : 0.015    ndcg@50 : 0.0526    ndcg@100 : 0.0781
+Tue 11 Aug 2026 12:02:47 INFO  epoch 13 training [time: 0.70s, train loss: 5.6545]
+Tue 11 Aug 2026 12:02:47 INFO  epoch 13 evaluating [time: 0.02s, valid_score: 0.016400]
+Tue 11 Aug 2026 12:02:47 INFO  valid result: 
+recall@10 : 0.0435    recall@50 : 0.2174    recall@100 : 0.3755    ndcg@10 : 0.0164    ndcg@50 : 0.0536    ndcg@100 : 0.0791
+Tue 11 Aug 2026 12:02:47 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/SASRec-Aug-11-2026_12-02-27.pth
+Tue 11 Aug 2026 12:02:48 INFO  epoch 14 training [time: 0.68s, train loss: 5.6361]
+Tue 11 Aug 2026 12:02:48 INFO  epoch 14 evaluating [time: 0.01s, valid_score: 0.014000]
+Tue 11 Aug 2026 12:02:48 INFO  valid result: 
+recall@10 : 0.0356    recall@50 : 0.2292    recall@100 : 0.3874    ndcg@10 : 0.014    ndcg@50 : 0.0556    ndcg@100 : 0.0809
+Tue 11 Aug 2026 12:02:49 INFO  epoch 15 training [time: 0.65s, train loss: 5.6175]
+Tue 11 Aug 2026 12:02:49 INFO  epoch 15 evaluating [time: 0.01s, valid_score: 0.014400]
+Tue 11 Aug 2026 12:02:49 INFO  valid result: 
+recall@10 : 0.0395    recall@50 : 0.2292    recall@100 : 0.3834    ndcg@10 : 0.0144    ndcg@50 : 0.0553    ndcg@100 : 0.0801
+Tue 11 Aug 2026 12:02:49 INFO  epoch 16 training [time: 0.65s, train loss: 5.5949]
+Tue 11 Aug 2026 12:02:49 INFO  epoch 16 evaluating [time: 0.01s, valid_score: 0.015900]
+Tue 11 Aug 2026 12:02:49 INFO  valid result: 
+recall@10 : 0.0435    recall@50 : 0.2332    recall@100 : 0.3874    ndcg@10 : 0.0159    ndcg@50 : 0.0567    ndcg@100 : 0.0815
+Tue 11 Aug 2026 12:02:50 INFO  epoch 17 training [time: 0.69s, train loss: 5.5765]
+Tue 11 Aug 2026 12:02:50 INFO  epoch 17 evaluating [time: 0.01s, valid_score: 0.016000]
+Tue 11 Aug 2026 12:02:50 INFO  valid result: 
+recall@10 : 0.0435    recall@50 : 0.2253    recall@100 : 0.3953    ndcg@10 : 0.016    ndcg@50 : 0.0558    ndcg@100 : 0.0834
+Tue 11 Aug 2026 12:02:51 INFO  epoch 18 training [time: 0.65s, train loss: 5.5584]
+Tue 11 Aug 2026 12:02:51 INFO  epoch 18 evaluating [time: 0.01s, valid_score: 0.017800]
+Tue 11 Aug 2026 12:02:51 INFO  valid result: 
+recall@10 : 0.0474    recall@50 : 0.2372    recall@100 : 0.3992    ndcg@10 : 0.0178    ndcg@50 : 0.0589    ndcg@100 : 0.0851
+Tue 11 Aug 2026 12:02:51 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/SASRec-Aug-11-2026_12-02-27.pth
+Tue 11 Aug 2026 12:02:51 INFO  epoch 19 training [time: 0.71s, train loss: 5.5350]
+Tue 11 Aug 2026 12:02:51 INFO  epoch 19 evaluating [time: 0.02s, valid_score: 0.019100]
+Tue 11 Aug 2026 12:02:51 INFO  valid result: 
+recall@10 : 0.0514    recall@50 : 0.2451    recall@100 : 0.419    ndcg@10 : 0.0191    ndcg@50 : 0.0609    ndcg@100 : 0.0889
+Tue 11 Aug 2026 12:02:51 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/SASRec-Aug-11-2026_12-02-27.pth
+Tue 11 Aug 2026 12:02:52 INFO  epoch 20 training [time: 0.69s, train loss: 5.5081]
+Tue 11 Aug 2026 12:02:52 INFO  epoch 20 evaluating [time: 0.01s, valid_score: 0.017500]
+Tue 11 Aug 2026 12:02:52 INFO  valid result: 
+recall@10 : 0.0474    recall@50 : 0.2569    recall@100 : 0.4111    ndcg@10 : 0.0175    ndcg@50 : 0.0633    ndcg@100 : 0.0882
+Tue 11 Aug 2026 12:02:53 INFO  epoch 21 training [time: 0.63s, train loss: 5.4940]
+Tue 11 Aug 2026 12:02:53 INFO  epoch 21 evaluating [time: 0.02s, valid_score: 0.020700]
+Tue 11 Aug 2026 12:02:53 INFO  valid result: 
+recall@10 : 0.0553    recall@50 : 0.2688    recall@100 : 0.415    ndcg@10 : 0.0207    ndcg@50 : 0.0671    ndcg@100 : 0.0908
+Tue 11 Aug 2026 12:02:53 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/SASRec-Aug-11-2026_12-02-27.pth
+Tue 11 Aug 2026 12:02:53 INFO  epoch 22 training [time: 0.69s, train loss: 5.4731]
+Tue 11 Aug 2026 12:02:53 INFO  epoch 22 evaluating [time: 0.02s, valid_score: 0.023200]
+Tue 11 Aug 2026 12:02:53 INFO  valid result: 
+recall@10 : 0.0632    recall@50 : 0.2688    recall@100 : 0.4269    ndcg@10 : 0.0232    ndcg@50 : 0.0683    ndcg@100 : 0.094
+Tue 11 Aug 2026 12:02:53 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/SASRec-Aug-11-2026_12-02-27.pth
+Tue 11 Aug 2026 12:02:54 INFO  epoch 23 training [time: 0.70s, train loss: 5.4493]
+Tue 11 Aug 2026 12:02:54 INFO  epoch 23 evaluating [time: 0.01s, valid_score: 0.026300]
+Tue 11 Aug 2026 12:02:54 INFO  valid result: 
+recall@10 : 0.0711    recall@50 : 0.2885    recall@100 : 0.4269    ndcg@10 : 0.0263    ndcg@50 : 0.0732    ndcg@100 : 0.0956
+Tue 11 Aug 2026 12:02:54 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/SASRec-Aug-11-2026_12-02-27.pth
+Tue 11 Aug 2026 12:02:55 INFO  epoch 24 training [time: 0.69s, train loss: 5.4268]
+Tue 11 Aug 2026 12:02:55 INFO  epoch 24 evaluating [time: 0.01s, valid_score: 0.029000]
+Tue 11 Aug 2026 12:02:55 INFO  valid result: 
+recall@10 : 0.0791    recall@50 : 0.3004    recall@100 : 0.4466    ndcg@10 : 0.029    ndcg@50 : 0.0764    ndcg@100 : 0.1
+Tue 11 Aug 2026 12:02:55 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/SASRec-Aug-11-2026_12-02-27.pth
+Tue 11 Aug 2026 12:02:56 INFO  epoch 25 training [time: 0.68s, train loss: 5.4040]
+Tue 11 Aug 2026 12:02:56 INFO  epoch 25 evaluating [time: 0.01s, valid_score: 0.030400]
+Tue 11 Aug 2026 12:02:56 INFO  valid result: 
+recall@10 : 0.083    recall@50 : 0.3004    recall@100 : 0.4664    ndcg@10 : 0.0304    ndcg@50 : 0.0776    ndcg@100 : 0.1043
+Tue 11 Aug 2026 12:02:56 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/SASRec-Aug-11-2026_12-02-27.pth
+Tue 11 Aug 2026 12:02:56 INFO  epoch 26 training [time: 0.67s, train loss: 5.3766]
+Tue 11 Aug 2026 12:02:56 INFO  epoch 26 evaluating [time: 0.01s, valid_score: 0.031500]
+Tue 11 Aug 2026 12:02:56 INFO  valid result: 
+recall@10 : 0.083    recall@50 : 0.3083    recall@100 : 0.4743    ndcg@10 : 0.0315    ndcg@50 : 0.0808    ndcg@100 : 0.1075
+Tue 11 Aug 2026 12:02:56 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/SASRec-Aug-11-2026_12-02-27.pth
+Tue 11 Aug 2026 12:02:57 INFO  epoch 27 training [time: 0.67s, train loss: 5.3500]
+Tue 11 Aug 2026 12:02:57 INFO  epoch 27 evaluating [time: 0.02s, valid_score: 0.031600]
+Tue 11 Aug 2026 12:02:57 INFO  valid result: 
+recall@10 : 0.083    recall@50 : 0.3202    recall@100 : 0.502    ndcg@10 : 0.0316    ndcg@50 : 0.0834    ndcg@100 : 0.1125
+Tue 11 Aug 2026 12:02:57 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/SASRec-Aug-11-2026_12-02-27.pth
+Tue 11 Aug 2026 12:02:58 INFO  epoch 28 training [time: 0.67s, train loss: 5.3270]
+Tue 11 Aug 2026 12:02:58 INFO  epoch 28 evaluating [time: 0.02s, valid_score: 0.031700]
+Tue 11 Aug 2026 12:02:58 INFO  valid result: 
+recall@10 : 0.083    recall@50 : 0.3202    recall@100 : 0.502    ndcg@10 : 0.0317    ndcg@50 : 0.0839    ndcg@100 : 0.1133
+Tue 11 Aug 2026 12:02:58 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/SASRec-Aug-11-2026_12-02-27.pth
+Tue 11 Aug 2026 12:02:58 INFO  epoch 29 training [time: 0.65s, train loss: 5.3039]
+Tue 11 Aug 2026 12:02:58 INFO  epoch 29 evaluating [time: 0.01s, valid_score: 0.032700]
+Tue 11 Aug 2026 12:02:58 INFO  valid result: 
+recall@10 : 0.083    recall@50 : 0.3202    recall@100 : 0.5257    ndcg@10 : 0.0327    ndcg@50 : 0.0853    ndcg@100 : 0.1185
+Tue 11 Aug 2026 12:02:58 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/SASRec-Aug-11-2026_12-02-27.pth
+Tue 11 Aug 2026 12:02:58 INFO  Loading model structure and parameters from /projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/SASRec-Aug-11-2026_12-02-27.pth

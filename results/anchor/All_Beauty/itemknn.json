@@ -1,0 +1,82 @@
+{
+  "category": "All_Beauty",
+  "leg": "itemknn",
+  "leg_letter": "B",
+  "model": "ItemKNN",
+  "started_utc": "2026-08-11T17:56:56.383656+00:00",
+  "elapsed_seconds": 0.35,
+  "environment": {
+    "python": "3.10.18",
+    "recbole": "1.2.1",
+    "torch": "2.13.0+cu130",
+    "device": "cuda",
+    "venv_hint": "/projects/PROJECT_ALLOC/envs/recbole-anchor"
+  },
+  "protocol": {
+    "identity": "raw parent_asin (canonicalize.py bypassed \u2014 anchor identity)",
+    "dataset_kind": "slice_general",
+    "split": "per-user leave-one-out via RecBole LS:valid_and_test, order TO on the pre-sorted anchor .inter (export gate asserts identity with leave_last_two parquet)",
+    "ranking": "full catalogue (eval mode 'full')",
+    "seen_mask": "RecBole general-model full-sort eval masks each user's history (train items at valid; train+valid items at test) before ranking.",
+    "selection_metric": "val NDCG@10 (RecBole valid_metric)",
+    "selection_asymmetry_memo": "SELECTION ASYMMETRY (memo, Track C item 4): the two-tower leg D early-stops / selects its checkpoint on val Recall@100 (scripts/retrieval/train_two_tower.py), while every RecBole leg selects on val NDCG@10 (valid_metric). The two legs therefore optimize different selection criteria; small cross-leg deltas can be an artifact of this asymmetry, not of model class.",
+    "slice_caveat": "SLICE CAVEAT: slice legs (our raw-slice 5/5-core) are never quoted next to published official-benchmark numbers. All_Beauty is footnote-only (253 users after dedup-first 5/5-core \u2014 degenerate scale).",
+    "max_item_list_length": null,
+    "seed": 42,
+    "isolation_declaration": "ANCHOR ISOLATION: this split follows the official per-user leave-one-out protocol, which ignores the global temporal cutoffs of the production pipeline. Anchor training interactions fall inside the production locked test window [t2, t3). Every artifact under data/anchor/ and results/anchor/ (including any anchor two-tower checkpoint) is for protocol/pipeline health-checking only and MUST NOT enter a production candidate, ranker, or calibration pipeline. This is isolation, not an exemption: anchor produces no production metric."
+  },
+  "config_snapshot": {
+    "epochs": 200,
+    "stopping_step": 10,
+    "learning_rate": 0.001,
+    "train_batch_size": 2048,
+    "eval_batch_size": 4096,
+    "train_neg_sample_args": {
+      "distribution": "uniform",
+      "sample_num": 1,
+      "alpha": 1.0,
+      "dynamic": false,
+      "candidate_num": 0
+    },
+    "MAX_ITEM_LIST_LENGTH": 50,
+    "n_layers": null,
+    "n_heads": null,
+    "hidden_size": null,
+    "inner_size": null,
+    "loss_type": null,
+    "k": 100,
+    "shrink": 0.0,
+    "data_path": "/projects/PROJECT_ALLOC/R-project/data/anchor/All_Beauty",
+    "benchmark_filename": null
+  },
+  "data_stats": {
+    "n_users_incl_pad": 254,
+    "n_items_incl_pad": 357,
+    "n_interactions": 2535
+  },
+  "best_valid_score": 0.0366,
+  "valid_metrics": {
+    "recall@10": 0.083,
+    "recall@50": 0.2174,
+    "recall@100": 0.3794,
+    "ndcg@10": 0.0366,
+    "ndcg@50": 0.0649,
+    "ndcg@100": 0.0911
+  },
+  "test_metrics": {
+    "recall@10": 0.0514,
+    "recall@50": 0.17,
+    "recall@100": 0.2885,
+    "ndcg@10": 0.0256,
+    "ndcg@50": 0.051,
+    "ndcg@100": 0.0702
+  },
+  "topk_dump": {
+    "path": "/projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/itemknn_top101.csv.gz",
+    "k": 101,
+    "rows": 25553,
+    "n_users": 253
+  },
+  "gate": null,
+  "saved_model_file": "/projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/ItemKNN-Aug-11-2026_12-56-56.pth"
+}

@@ -1,0 +1,462 @@
+Tue 11 Aug 2026 12:56:45 INFO  [Training]: train_batch_size = [2048] train_neg_sample_args: [{'distribution': 'uniform', 'sample_num': 1, 'alpha': 1.0, 'dynamic': False, 'candidate_num': 0}]
+Tue 11 Aug 2026 12:56:45 INFO  [Evaluation]: eval_batch_size = [4096] eval_args: [{'split': {'LS': 'valid_and_test'}, 'order': 'TO', 'group_by': 'user', 'mode': {'valid': 'full', 'test': 'full'}}]
+Tue 11 Aug 2026 12:56:55 INFO  epoch 0 training [time: 0.71s, train loss: 0.0000]
+Tue 11 Aug 2026 12:57:15 INFO  epoch 0 evaluating [time: 19.55s, valid_score: 0.015800]
+Tue 11 Aug 2026 12:57:15 INFO  valid result: 
+recall@10 : 0.0312    recall@50 : 0.0867    recall@100 : 0.1304    ndcg@10 : 0.0158    ndcg@50 : 0.0275    ndcg@100 : 0.0346
+Tue 11 Aug 2026 12:57:15 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/Pop-Aug-11-2026_12-56-46.pth
+Tue 11 Aug 2026 12:57:15 INFO  Loading model structure and parameters from /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/Pop-Aug-11-2026_12-56-46.pth
+Tue 11 Aug 2026 12:58:04 WARNING  command line args [--category Video_Games --legs pop,itemknn,sasrec,sasrec_len20,official_sasrec,official_sasrec_len20] will not be used in RecBole
+Tue 11 Aug 2026 12:58:06 INFO  [Training]: train_batch_size = [2048] train_neg_sample_args: [{'distribution': 'uniform', 'sample_num': 1, 'alpha': 1.0, 'dynamic': False, 'candidate_num': 0}]
+Tue 11 Aug 2026 12:58:06 INFO  [Evaluation]: eval_batch_size = [4096] eval_args: [{'split': {'LS': 'valid_and_test'}, 'order': 'TO', 'group_by': 'user', 'mode': {'valid': 'full', 'test': 'full'}}]
+Tue 11 Aug 2026 12:58:11 INFO  epoch 0 training [time: 0.40s, train loss: 0.0000]
+Tue 11 Aug 2026 12:58:38 INFO  epoch 0 evaluating [time: 26.70s, valid_score: 0.027600]
+Tue 11 Aug 2026 12:58:38 INFO  valid result: 
+recall@10 : 0.05    recall@50 : 0.1105    recall@100 : 0.1495    ndcg@10 : 0.0276    ndcg@50 : 0.0408    ndcg@100 : 0.0471
+Tue 11 Aug 2026 12:58:53 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/ItemKNN-Aug-11-2026_12-58-11.pth
+Tue 11 Aug 2026 12:58:57 INFO  Loading model structure and parameters from /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/ItemKNN-Aug-11-2026_12-58-11.pth
+Tue 11 Aug 2026 13:00:02 WARNING  command line args [--category Video_Games --legs pop,itemknn,sasrec,sasrec_len20,official_sasrec,official_sasrec_len20] will not be used in RecBole
+Tue 11 Aug 2026 13:00:10 INFO  [Training]: train_batch_size = [2048] train_neg_sample_args: [{'distribution': 'none', 'sample_num': 'none', 'alpha': 'none', 'dynamic': False, 'candidate_num': 0}]
+Tue 11 Aug 2026 13:00:10 INFO  [Evaluation]: eval_batch_size = [4096] eval_args: [{'split': {'LS': 'valid_and_test'}, 'order': 'TO', 'group_by': 'user', 'mode': {'valid': 'full', 'test': 'full'}}]
+Tue 11 Aug 2026 13:00:15 INFO  epoch 0 training [time: 5.60s, train loss: 776.2216]
+Tue 11 Aug 2026 13:00:16 INFO  epoch 0 evaluating [time: 0.32s, valid_score: 0.015700]
+Tue 11 Aug 2026 13:00:16 INFO  valid result: 
+recall@10 : 0.0312    recall@50 : 0.0857    recall@100 : 0.1306    ndcg@10 : 0.0157    ndcg@50 : 0.0273    ndcg@100 : 0.0346
+Tue 11 Aug 2026 13:00:16 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-00-10.pth
+Tue 11 Aug 2026 13:00:20 INFO  epoch 1 training [time: 4.80s, train loss: 746.9716]
+Tue 11 Aug 2026 13:00:21 INFO  epoch 1 evaluating [time: 0.32s, valid_score: 0.018900]
+Tue 11 Aug 2026 13:00:21 INFO  valid result: 
+recall@10 : 0.0374    recall@50 : 0.0995    recall@100 : 0.1474    ndcg@10 : 0.0189    ndcg@50 : 0.0322    ndcg@100 : 0.0399
+Tue 11 Aug 2026 13:00:21 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-00-10.pth
+Tue 11 Aug 2026 13:00:25 INFO  epoch 2 training [time: 4.74s, train loss: 726.3467]
+Tue 11 Aug 2026 13:00:26 INFO  epoch 2 evaluating [time: 0.33s, valid_score: 0.023800]
+Tue 11 Aug 2026 13:00:26 INFO  valid result: 
+recall@10 : 0.0469    recall@50 : 0.1359    recall@100 : 0.2013    ndcg@10 : 0.0238    ndcg@50 : 0.0429    ndcg@100 : 0.0535
+Tue 11 Aug 2026 13:00:26 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-00-10.pth
+Tue 11 Aug 2026 13:00:31 INFO  epoch 3 training [time: 4.72s, train loss: 699.7641]
+Tue 11 Aug 2026 13:00:31 INFO  epoch 3 evaluating [time: 0.32s, valid_score: 0.029600]
+Tue 11 Aug 2026 13:00:31 INFO  valid result: 
+recall@10 : 0.0584    recall@50 : 0.1586    recall@100 : 0.2303    ndcg@10 : 0.0296    ndcg@50 : 0.0511    ndcg@100 : 0.0627
+Tue 11 Aug 2026 13:00:31 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-00-10.pth
+Tue 11 Aug 2026 13:00:36 INFO  epoch 4 training [time: 4.70s, train loss: 683.8160]
+Tue 11 Aug 2026 13:00:36 INFO  epoch 4 evaluating [time: 0.32s, valid_score: 0.034100]
+Tue 11 Aug 2026 13:00:36 INFO  valid result: 
+recall@10 : 0.067    recall@50 : 0.1743    recall@100 : 0.2467    ndcg@10 : 0.0341    ndcg@50 : 0.0573    ndcg@100 : 0.069
+Tue 11 Aug 2026 13:00:36 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-00-10.pth
+Tue 11 Aug 2026 13:00:41 INFO  epoch 5 training [time: 4.72s, train loss: 671.0526]
+Tue 11 Aug 2026 13:00:41 INFO  epoch 5 evaluating [time: 0.32s, valid_score: 0.037500]
+Tue 11 Aug 2026 13:00:41 INFO  valid result: 
+recall@10 : 0.0737    recall@50 : 0.187    recall@100 : 0.2616    ndcg@10 : 0.0375    ndcg@50 : 0.062    ndcg@100 : 0.0741
+Tue 11 Aug 2026 13:00:41 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-00-10.pth
+Tue 11 Aug 2026 13:00:46 INFO  epoch 6 training [time: 4.73s, train loss: 659.8501]
+Tue 11 Aug 2026 13:00:46 INFO  epoch 6 evaluating [time: 0.33s, valid_score: 0.040900]
+Tue 11 Aug 2026 13:00:46 INFO  valid result: 
+recall@10 : 0.0798    recall@50 : 0.1978    recall@100 : 0.2747    ndcg@10 : 0.0409    ndcg@50 : 0.0665    ndcg@100 : 0.0789
+Tue 11 Aug 2026 13:00:46 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-00-10.pth
+Tue 11 Aug 2026 13:00:51 INFO  epoch 7 training [time: 4.73s, train loss: 650.0269]
+Tue 11 Aug 2026 13:00:51 INFO  epoch 7 evaluating [time: 0.32s, valid_score: 0.044000]
+Tue 11 Aug 2026 13:00:51 INFO  valid result: 
+recall@10 : 0.0864    recall@50 : 0.2091    recall@100 : 0.2868    ndcg@10 : 0.044    ndcg@50 : 0.0705    ndcg@100 : 0.0831
+Tue 11 Aug 2026 13:00:51 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-00-10.pth
+Tue 11 Aug 2026 13:00:56 INFO  epoch 8 training [time: 4.73s, train loss: 641.4985]
+Tue 11 Aug 2026 13:00:56 INFO  epoch 8 evaluating [time: 0.32s, valid_score: 0.045800]
+Tue 11 Aug 2026 13:00:56 INFO  valid result: 
+recall@10 : 0.0907    recall@50 : 0.2154    recall@100 : 0.2953    ndcg@10 : 0.0458    ndcg@50 : 0.0728    ndcg@100 : 0.0858
+Tue 11 Aug 2026 13:00:56 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-00-10.pth
+Tue 11 Aug 2026 13:01:01 INFO  epoch 9 training [time: 4.71s, train loss: 634.4622]
+Tue 11 Aug 2026 13:01:01 INFO  epoch 9 evaluating [time: 0.33s, valid_score: 0.045600]
+Tue 11 Aug 2026 13:01:01 INFO  valid result: 
+recall@10 : 0.0909    recall@50 : 0.2169    recall@100 : 0.2982    ndcg@10 : 0.0456    ndcg@50 : 0.073    ndcg@100 : 0.0862
+Tue 11 Aug 2026 13:01:06 INFO  epoch 10 training [time: 4.73s, train loss: 628.3964]
+Tue 11 Aug 2026 13:01:06 INFO  epoch 10 evaluating [time: 0.32s, valid_score: 0.045300]
+Tue 11 Aug 2026 13:01:06 INFO  valid result: 
+recall@10 : 0.0922    recall@50 : 0.2227    recall@100 : 0.3025    ndcg@10 : 0.0453    ndcg@50 : 0.0737    ndcg@100 : 0.0866
+Tue 11 Aug 2026 13:01:11 INFO  epoch 11 training [time: 4.71s, train loss: 622.9765]
+Tue 11 Aug 2026 13:01:11 INFO  epoch 11 evaluating [time: 0.32s, valid_score: 0.045800]
+Tue 11 Aug 2026 13:01:11 INFO  valid result: 
+recall@10 : 0.0936    recall@50 : 0.2248    recall@100 : 0.3036    ndcg@10 : 0.0458    ndcg@50 : 0.0744    ndcg@100 : 0.0871
+Tue 11 Aug 2026 13:01:11 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-00-10.pth
+Tue 11 Aug 2026 13:01:16 INFO  epoch 12 training [time: 4.72s, train loss: 617.9564]
+Tue 11 Aug 2026 13:01:16 INFO  epoch 12 evaluating [time: 0.32s, valid_score: 0.045300]
+Tue 11 Aug 2026 13:01:16 INFO  valid result: 
+recall@10 : 0.0942    recall@50 : 0.2276    recall@100 : 0.3063    ndcg@10 : 0.0453    ndcg@50 : 0.0744    ndcg@100 : 0.0871
+Tue 11 Aug 2026 13:01:21 INFO  epoch 13 training [time: 4.73s, train loss: 613.5225]
+Tue 11 Aug 2026 13:01:22 INFO  epoch 13 evaluating [time: 0.32s, valid_score: 0.044600]
+Tue 11 Aug 2026 13:01:22 INFO  valid result: 
+recall@10 : 0.0938    recall@50 : 0.2294    recall@100 : 0.3079    ndcg@10 : 0.0446    ndcg@50 : 0.0741    ndcg@100 : 0.0868
+Tue 11 Aug 2026 13:01:26 INFO  epoch 14 training [time: 4.74s, train loss: 610.1298]
+Tue 11 Aug 2026 13:01:27 INFO  epoch 14 evaluating [time: 0.32s, valid_score: 0.044500]
+Tue 11 Aug 2026 13:01:27 INFO  valid result: 
+recall@10 : 0.0955    recall@50 : 0.2274    recall@100 : 0.3072    ndcg@10 : 0.0445    ndcg@50 : 0.0733    ndcg@100 : 0.0862
+Tue 11 Aug 2026 13:01:31 INFO  epoch 15 training [time: 4.72s, train loss: 607.0436]
+Tue 11 Aug 2026 13:01:32 INFO  epoch 15 evaluating [time: 0.32s, valid_score: 0.044900]
+Tue 11 Aug 2026 13:01:32 INFO  valid result: 
+recall@10 : 0.0966    recall@50 : 0.2312    recall@100 : 0.3106    ndcg@10 : 0.0449    ndcg@50 : 0.0741    ndcg@100 : 0.087
+Tue 11 Aug 2026 13:01:36 INFO  epoch 16 training [time: 4.73s, train loss: 603.7302]
+Tue 11 Aug 2026 13:01:37 INFO  epoch 16 evaluating [time: 0.33s, valid_score: 0.044600]
+Tue 11 Aug 2026 13:01:37 INFO  valid result: 
+recall@10 : 0.0964    recall@50 : 0.2303    recall@100 : 0.3083    ndcg@10 : 0.0446    ndcg@50 : 0.0737    ndcg@100 : 0.0863
+Tue 11 Aug 2026 13:01:41 INFO  epoch 17 training [time: 4.75s, train loss: 601.3318]
+Tue 11 Aug 2026 13:01:42 INFO  epoch 17 evaluating [time: 0.32s, valid_score: 0.044100]
+Tue 11 Aug 2026 13:01:42 INFO  valid result: 
+recall@10 : 0.0965    recall@50 : 0.2287    recall@100 : 0.3098    ndcg@10 : 0.0441    ndcg@50 : 0.0729    ndcg@100 : 0.0861
+Tue 11 Aug 2026 13:01:46 INFO  epoch 18 training [time: 4.73s, train loss: 598.7136]
+Tue 11 Aug 2026 13:01:47 INFO  epoch 18 evaluating [time: 0.32s, valid_score: 0.044500]
+Tue 11 Aug 2026 13:01:47 INFO  valid result: 
+recall@10 : 0.0972    recall@50 : 0.2305    recall@100 : 0.3084    ndcg@10 : 0.0445    ndcg@50 : 0.0735    ndcg@100 : 0.0861
+Tue 11 Aug 2026 13:01:51 INFO  epoch 19 training [time: 4.69s, train loss: 596.6823]
+Tue 11 Aug 2026 13:01:52 INFO  epoch 19 evaluating [time: 0.32s, valid_score: 0.043800]
+Tue 11 Aug 2026 13:01:52 INFO  valid result: 
+recall@10 : 0.0967    recall@50 : 0.2328    recall@100 : 0.3087    ndcg@10 : 0.0438    ndcg@50 : 0.0734    ndcg@100 : 0.0856
+Tue 11 Aug 2026 13:01:57 INFO  epoch 20 training [time: 4.70s, train loss: 594.9528]
+Tue 11 Aug 2026 13:01:57 INFO  epoch 20 evaluating [time: 0.32s, valid_score: 0.043300]
+Tue 11 Aug 2026 13:01:57 INFO  valid result: 
+recall@10 : 0.0959    recall@50 : 0.2289    recall@100 : 0.3083    ndcg@10 : 0.0433    ndcg@50 : 0.0722    ndcg@100 : 0.0851
+Tue 11 Aug 2026 13:02:02 INFO  epoch 21 training [time: 4.71s, train loss: 593.0402]
+Tue 11 Aug 2026 13:02:02 INFO  epoch 21 evaluating [time: 0.32s, valid_score: 0.043400]
+Tue 11 Aug 2026 13:02:02 INFO  valid result: 
+recall@10 : 0.0976    recall@50 : 0.2298    recall@100 : 0.3085    ndcg@10 : 0.0434    ndcg@50 : 0.072    ndcg@100 : 0.0848
+Tue 11 Aug 2026 13:02:07 INFO  epoch 22 training [time: 4.71s, train loss: 591.6052]
+Tue 11 Aug 2026 13:02:07 INFO  epoch 22 evaluating [time: 0.32s, valid_score: 0.043000]
+Tue 11 Aug 2026 13:02:07 INFO  valid result: 
+recall@10 : 0.0954    recall@50 : 0.2282    recall@100 : 0.3077    ndcg@10 : 0.043    ndcg@50 : 0.0718    ndcg@100 : 0.0847
+Tue 11 Aug 2026 13:02:07 INFO  Finished training, best eval result in epoch 11
+Tue 11 Aug 2026 13:02:07 INFO  Loading model structure and parameters from /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-00-10.pth
+Tue 11 Aug 2026 13:02:19 WARNING  command line args [--category Video_Games --legs pop,itemknn,sasrec,sasrec_len20,official_sasrec,official_sasrec_len20] will not be used in RecBole
+Tue 11 Aug 2026 13:02:26 INFO  [Training]: train_batch_size = [2048] train_neg_sample_args: [{'distribution': 'none', 'sample_num': 'none', 'alpha': 'none', 'dynamic': False, 'candidate_num': 0}]
+Tue 11 Aug 2026 13:02:26 INFO  [Evaluation]: eval_batch_size = [4096] eval_args: [{'split': {'LS': 'valid_and_test'}, 'order': 'TO', 'group_by': 'user', 'mode': {'valid': 'full', 'test': 'full'}}]
+Tue 11 Aug 2026 13:02:29 INFO  epoch 0 training [time: 3.73s, train loss: 774.7409]
+Tue 11 Aug 2026 13:02:30 INFO  epoch 0 evaluating [time: 0.23s, valid_score: 0.015700]
+Tue 11 Aug 2026 13:02:30 INFO  valid result: 
+recall@10 : 0.0311    recall@50 : 0.0856    recall@100 : 0.1293    ndcg@10 : 0.0157    ndcg@50 : 0.0273    ndcg@100 : 0.0344
+Tue 11 Aug 2026 13:02:30 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-02-26.pth
+Tue 11 Aug 2026 13:02:33 INFO  epoch 1 training [time: 3.66s, train loss: 747.1166]
+Tue 11 Aug 2026 13:02:34 INFO  epoch 1 evaluating [time: 0.24s, valid_score: 0.016800]
+Tue 11 Aug 2026 13:02:34 INFO  valid result: 
+recall@10 : 0.0333    recall@50 : 0.0932    recall@100 : 0.1397    ndcg@10 : 0.0168    ndcg@50 : 0.0296    ndcg@100 : 0.0371
+Tue 11 Aug 2026 13:02:34 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-02-26.pth
+Tue 11 Aug 2026 13:02:37 INFO  epoch 2 training [time: 3.66s, train loss: 730.8706]
+Tue 11 Aug 2026 13:02:38 INFO  epoch 2 evaluating [time: 0.24s, valid_score: 0.023000]
+Tue 11 Aug 2026 13:02:38 INFO  valid result: 
+recall@10 : 0.0464    recall@50 : 0.1324    recall@100 : 0.1952    ndcg@10 : 0.023    ndcg@50 : 0.0416    ndcg@100 : 0.0518
+Tue 11 Aug 2026 13:02:38 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-02-26.pth
+Tue 11 Aug 2026 13:02:41 INFO  epoch 3 training [time: 3.67s, train loss: 703.7579]
+Tue 11 Aug 2026 13:02:41 INFO  epoch 3 evaluating [time: 0.23s, valid_score: 0.029500]
+Tue 11 Aug 2026 13:02:41 INFO  valid result: 
+recall@10 : 0.0581    recall@50 : 0.1596    recall@100 : 0.2313    ndcg@10 : 0.0295    ndcg@50 : 0.0513    ndcg@100 : 0.0629
+Tue 11 Aug 2026 13:02:42 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-02-26.pth
+Tue 11 Aug 2026 13:02:45 INFO  epoch 4 training [time: 3.67s, train loss: 683.8004]
+Tue 11 Aug 2026 13:02:45 INFO  epoch 4 evaluating [time: 0.24s, valid_score: 0.034700]
+Tue 11 Aug 2026 13:02:45 INFO  valid result: 
+recall@10 : 0.0674    recall@50 : 0.1769    recall@100 : 0.2518    ndcg@10 : 0.0347    ndcg@50 : 0.0585    ndcg@100 : 0.0706
+Tue 11 Aug 2026 13:02:45 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-02-26.pth
+Tue 11 Aug 2026 13:02:49 INFO  epoch 5 training [time: 3.71s, train loss: 669.9152]
+Tue 11 Aug 2026 13:02:49 INFO  epoch 5 evaluating [time: 0.23s, valid_score: 0.038200]
+Tue 11 Aug 2026 13:02:49 INFO  valid result: 
+recall@10 : 0.0745    recall@50 : 0.1891    recall@100 : 0.2641    ndcg@10 : 0.0382    ndcg@50 : 0.0631    ndcg@100 : 0.0752
+Tue 11 Aug 2026 13:02:49 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-02-26.pth
+Tue 11 Aug 2026 13:02:53 INFO  epoch 6 training [time: 3.69s, train loss: 658.8438]
+Tue 11 Aug 2026 13:02:53 INFO  epoch 6 evaluating [time: 0.23s, valid_score: 0.041800]
+Tue 11 Aug 2026 13:02:53 INFO  valid result: 
+recall@10 : 0.0818    recall@50 : 0.1989    recall@100 : 0.2781    ndcg@10 : 0.0418    ndcg@50 : 0.0672    ndcg@100 : 0.08
+Tue 11 Aug 2026 13:02:53 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-02-26.pth
+Tue 11 Aug 2026 13:02:57 INFO  epoch 7 training [time: 3.70s, train loss: 649.7073]
+Tue 11 Aug 2026 13:02:57 INFO  epoch 7 evaluating [time: 0.24s, valid_score: 0.043600]
+Tue 11 Aug 2026 13:02:57 INFO  valid result: 
+recall@10 : 0.0853    recall@50 : 0.2095    recall@100 : 0.2844    ndcg@10 : 0.0436    ndcg@50 : 0.0706    ndcg@100 : 0.0827
+Tue 11 Aug 2026 13:02:57 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-02-26.pth
+Tue 11 Aug 2026 13:03:01 INFO  epoch 8 training [time: 3.69s, train loss: 641.7039]
+Tue 11 Aug 2026 13:03:01 INFO  epoch 8 evaluating [time: 0.23s, valid_score: 0.045600]
+Tue 11 Aug 2026 13:03:01 INFO  valid result: 
+recall@10 : 0.09    recall@50 : 0.2154    recall@100 : 0.2944    ndcg@10 : 0.0456    ndcg@50 : 0.0729    ndcg@100 : 0.0856
+Tue 11 Aug 2026 13:03:01 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-02-26.pth
+Tue 11 Aug 2026 13:03:05 INFO  epoch 9 training [time: 3.67s, train loss: 634.5803]
+Tue 11 Aug 2026 13:03:05 INFO  epoch 9 evaluating [time: 0.23s, valid_score: 0.046000]
+Tue 11 Aug 2026 13:03:05 INFO  valid result: 
+recall@10 : 0.0916    recall@50 : 0.2167    recall@100 : 0.2981    ndcg@10 : 0.046    ndcg@50 : 0.0732    ndcg@100 : 0.0864
+Tue 11 Aug 2026 13:03:05 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-02-26.pth
+Tue 11 Aug 2026 13:03:09 INFO  epoch 10 training [time: 3.67s, train loss: 628.5425]
+Tue 11 Aug 2026 13:03:09 INFO  epoch 10 evaluating [time: 0.23s, valid_score: 0.046100]
+Tue 11 Aug 2026 13:03:09 INFO  valid result: 
+recall@10 : 0.094    recall@50 : 0.2238    recall@100 : 0.3033    ndcg@10 : 0.0461    ndcg@50 : 0.0743    ndcg@100 : 0.0872
+Tue 11 Aug 2026 13:03:09 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-02-26.pth
+Tue 11 Aug 2026 13:03:13 INFO  epoch 11 training [time: 3.66s, train loss: 623.2410]
+Tue 11 Aug 2026 13:03:13 INFO  epoch 11 evaluating [time: 0.23s, valid_score: 0.046400]
+Tue 11 Aug 2026 13:03:13 INFO  valid result: 
+recall@10 : 0.0953    recall@50 : 0.2239    recall@100 : 0.304    ndcg@10 : 0.0464    ndcg@50 : 0.0743    ndcg@100 : 0.0873
+Tue 11 Aug 2026 13:03:13 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-02-26.pth
+Tue 11 Aug 2026 13:03:17 INFO  epoch 12 training [time: 3.69s, train loss: 618.1047]
+Tue 11 Aug 2026 13:03:17 INFO  epoch 12 evaluating [time: 0.24s, valid_score: 0.046600]
+Tue 11 Aug 2026 13:03:17 INFO  valid result: 
+recall@10 : 0.0964    recall@50 : 0.2275    recall@100 : 0.3086    ndcg@10 : 0.0466    ndcg@50 : 0.0751    ndcg@100 : 0.0882
+Tue 11 Aug 2026 13:03:17 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-02-26.pth
+Tue 11 Aug 2026 13:03:21 INFO  epoch 13 training [time: 3.67s, train loss: 614.1118]
+Tue 11 Aug 2026 13:03:21 INFO  epoch 13 evaluating [time: 0.24s, valid_score: 0.046200]
+Tue 11 Aug 2026 13:03:21 INFO  valid result: 
+recall@10 : 0.0971    recall@50 : 0.2316    recall@100 : 0.31    ndcg@10 : 0.0462    ndcg@50 : 0.0753    ndcg@100 : 0.088
+Tue 11 Aug 2026 13:03:25 INFO  epoch 14 training [time: 3.72s, train loss: 610.3910]
+Tue 11 Aug 2026 13:03:25 INFO  epoch 14 evaluating [time: 0.24s, valid_score: 0.046000]
+Tue 11 Aug 2026 13:03:25 INFO  valid result: 
+recall@10 : 0.0974    recall@50 : 0.2296    recall@100 : 0.3095    ndcg@10 : 0.046    ndcg@50 : 0.0747    ndcg@100 : 0.0876
+Tue 11 Aug 2026 13:03:29 INFO  epoch 15 training [time: 3.67s, train loss: 606.8296]
+Tue 11 Aug 2026 13:03:29 INFO  epoch 15 evaluating [time: 0.23s, valid_score: 0.045600]
+Tue 11 Aug 2026 13:03:29 INFO  valid result: 
+recall@10 : 0.0977    recall@50 : 0.2314    recall@100 : 0.3105    ndcg@10 : 0.0456    ndcg@50 : 0.0747    ndcg@100 : 0.0875
+Tue 11 Aug 2026 13:03:33 INFO  epoch 16 training [time: 3.70s, train loss: 603.9015]
+Tue 11 Aug 2026 13:03:33 INFO  epoch 16 evaluating [time: 0.24s, valid_score: 0.045200]
+Tue 11 Aug 2026 13:03:33 INFO  valid result: 
+recall@10 : 0.0975    recall@50 : 0.2308    recall@100 : 0.3106    ndcg@10 : 0.0452    ndcg@50 : 0.0741    ndcg@100 : 0.0871
+Tue 11 Aug 2026 13:03:36 INFO  epoch 17 training [time: 3.67s, train loss: 601.2502]
+Tue 11 Aug 2026 13:03:37 INFO  epoch 17 evaluating [time: 0.23s, valid_score: 0.044600]
+Tue 11 Aug 2026 13:03:37 INFO  valid result: 
+recall@10 : 0.0973    recall@50 : 0.233    recall@100 : 0.3104    ndcg@10 : 0.0446    ndcg@50 : 0.0741    ndcg@100 : 0.0866
+Tue 11 Aug 2026 13:03:40 INFO  epoch 18 training [time: 3.70s, train loss: 599.1326]
+Tue 11 Aug 2026 13:03:41 INFO  epoch 18 evaluating [time: 0.24s, valid_score: 0.045300]
+Tue 11 Aug 2026 13:03:41 INFO  valid result: 
+recall@10 : 0.0986    recall@50 : 0.2334    recall@100 : 0.3142    ndcg@10 : 0.0453    ndcg@50 : 0.0746    ndcg@100 : 0.0877
+Tue 11 Aug 2026 13:03:44 INFO  epoch 19 training [time: 3.69s, train loss: 597.1089]
+Tue 11 Aug 2026 13:03:45 INFO  epoch 19 evaluating [time: 0.23s, valid_score: 0.044600]
+Tue 11 Aug 2026 13:03:45 INFO  valid result: 
+recall@10 : 0.0979    recall@50 : 0.2327    recall@100 : 0.3133    ndcg@10 : 0.0446    ndcg@50 : 0.0739    ndcg@100 : 0.087
+Tue 11 Aug 2026 13:03:48 INFO  epoch 20 training [time: 3.71s, train loss: 595.2035]
+Tue 11 Aug 2026 13:03:48 INFO  epoch 20 evaluating [time: 0.23s, valid_score: 0.044000]
+Tue 11 Aug 2026 13:03:48 INFO  valid result: 
+recall@10 : 0.0963    recall@50 : 0.2309    recall@100 : 0.3108    ndcg@10 : 0.044    ndcg@50 : 0.0734    ndcg@100 : 0.0863
+Tue 11 Aug 2026 13:03:52 INFO  epoch 21 training [time: 3.69s, train loss: 593.2243]
+Tue 11 Aug 2026 13:03:52 INFO  epoch 21 evaluating [time: 0.23s, valid_score: 0.043800]
+Tue 11 Aug 2026 13:03:52 INFO  valid result: 
+recall@10 : 0.0978    recall@50 : 0.2319    recall@100 : 0.3114    ndcg@10 : 0.0438    ndcg@50 : 0.073    ndcg@100 : 0.0859
+Tue 11 Aug 2026 13:03:56 INFO  epoch 22 training [time: 3.70s, train loss: 591.7633]
+Tue 11 Aug 2026 13:03:56 INFO  epoch 22 evaluating [time: 0.23s, valid_score: 0.044100]
+Tue 11 Aug 2026 13:03:56 INFO  valid result: 
+recall@10 : 0.0982    recall@50 : 0.2338    recall@100 : 0.3121    ndcg@10 : 0.0441    ndcg@50 : 0.0735    ndcg@100 : 0.0862
+Tue 11 Aug 2026 13:04:00 INFO  epoch 23 training [time: 3.69s, train loss: 590.2730]
+Tue 11 Aug 2026 13:04:00 INFO  epoch 23 evaluating [time: 0.23s, valid_score: 0.044200]
+Tue 11 Aug 2026 13:04:00 INFO  valid result: 
+recall@10 : 0.0985    recall@50 : 0.2324    recall@100 : 0.3139    ndcg@10 : 0.0442    ndcg@50 : 0.0733    ndcg@100 : 0.0865
+Tue 11 Aug 2026 13:04:00 INFO  Finished training, best eval result in epoch 12
+Tue 11 Aug 2026 13:04:00 INFO  Loading model structure and parameters from /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-02-26.pth
+Tue 11 Aug 2026 13:04:12 WARNING  command line args [--category Video_Games --legs pop,itemknn,sasrec,sasrec_len20,official_sasrec,official_sasrec_len20] will not be used in RecBole
+Tue 11 Aug 2026 13:04:27 INFO  [Training]: train_batch_size = [2048] train_neg_sample_args: [{'distribution': 'none', 'sample_num': 'none', 'alpha': 'none', 'dynamic': False, 'candidate_num': 0}]
+Tue 11 Aug 2026 13:04:27 INFO  [Evaluation]: eval_batch_size = [4096] eval_args: [{'split': {'LS': 'valid_and_test'}, 'order': 'TO', 'group_by': 'user', 'mode': {'valid': 'full', 'test': 'full'}}]
+Tue 11 Aug 2026 13:04:41 INFO  epoch 0 training [time: 14.15s, train loss: 2393.6401]
+Tue 11 Aug 2026 13:04:42 INFO  epoch 0 evaluating [time: 1.14s, valid_score: 0.018300]
+Tue 11 Aug 2026 13:04:42 INFO  valid result: 
+recall@10 : 0.0363    recall@50 : 0.0992    recall@100 : 0.1464    ndcg@10 : 0.0183    ndcg@50 : 0.0319    ndcg@100 : 0.0395
+Tue 11 Aug 2026 13:04:42 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-04-27.pth
+Tue 11 Aug 2026 13:04:56 INFO  epoch 1 training [time: 14.15s, train loss: 2224.3262]
+Tue 11 Aug 2026 13:04:57 INFO  epoch 1 evaluating [time: 1.14s, valid_score: 0.028800]
+Tue 11 Aug 2026 13:04:57 INFO  valid result: 
+recall@10 : 0.0563    recall@50 : 0.1535    recall@100 : 0.2212    ndcg@10 : 0.0288    ndcg@50 : 0.0497    ndcg@100 : 0.0607
+Tue 11 Aug 2026 13:04:57 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-04-27.pth
+Tue 11 Aug 2026 13:05:12 INFO  epoch 2 training [time: 14.13s, train loss: 2127.1065]
+Tue 11 Aug 2026 13:05:13 INFO  epoch 2 evaluating [time: 1.15s, valid_score: 0.035200]
+Tue 11 Aug 2026 13:05:13 INFO  valid result: 
+recall@10 : 0.0688    recall@50 : 0.1778    recall@100 : 0.2508    ndcg@10 : 0.0352    ndcg@50 : 0.0587    ndcg@100 : 0.0706
+Tue 11 Aug 2026 13:05:13 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-04-27.pth
+Tue 11 Aug 2026 13:05:27 INFO  epoch 3 training [time: 14.22s, train loss: 2074.9120]
+Tue 11 Aug 2026 13:05:28 INFO  epoch 3 evaluating [time: 1.15s, valid_score: 0.040700]
+Tue 11 Aug 2026 13:05:28 INFO  valid result: 
+recall@10 : 0.0792    recall@50 : 0.1974    recall@100 : 0.2714    ndcg@10 : 0.0407    ndcg@50 : 0.0663    ndcg@100 : 0.0782
+Tue 11 Aug 2026 13:05:28 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-04-27.pth
+Tue 11 Aug 2026 13:05:42 INFO  epoch 4 training [time: 14.23s, train loss: 2034.0192]
+Tue 11 Aug 2026 13:05:44 INFO  epoch 4 evaluating [time: 1.15s, valid_score: 0.044000]
+Tue 11 Aug 2026 13:05:44 INFO  valid result: 
+recall@10 : 0.0866    recall@50 : 0.2121    recall@100 : 0.2889    ndcg@10 : 0.044    ndcg@50 : 0.0713    ndcg@100 : 0.0837
+Tue 11 Aug 2026 13:05:44 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-04-27.pth
+Tue 11 Aug 2026 13:05:58 INFO  epoch 5 training [time: 14.31s, train loss: 2002.4261]
+Tue 11 Aug 2026 13:05:59 INFO  epoch 5 evaluating [time: 1.14s, valid_score: 0.046800]
+Tue 11 Aug 2026 13:05:59 INFO  valid result: 
+recall@10 : 0.0925    recall@50 : 0.2223    recall@100 : 0.3016    ndcg@10 : 0.0468    ndcg@50 : 0.075    ndcg@100 : 0.0878
+Tue 11 Aug 2026 13:05:59 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-04-27.pth
+Tue 11 Aug 2026 13:06:13 INFO  epoch 6 training [time: 14.24s, train loss: 1977.6204]
+Tue 11 Aug 2026 13:06:14 INFO  epoch 6 evaluating [time: 1.14s, valid_score: 0.048300]
+Tue 11 Aug 2026 13:06:14 INFO  valid result: 
+recall@10 : 0.0962    recall@50 : 0.2284    recall@100 : 0.3078    ndcg@10 : 0.0483    ndcg@50 : 0.0771    ndcg@100 : 0.09
+Tue 11 Aug 2026 13:06:15 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-04-27.pth
+Tue 11 Aug 2026 13:06:29 INFO  epoch 7 training [time: 14.10s, train loss: 1959.5794]
+Tue 11 Aug 2026 13:06:30 INFO  epoch 7 evaluating [time: 1.15s, valid_score: 0.048900]
+Tue 11 Aug 2026 13:06:30 INFO  valid result: 
+recall@10 : 0.0986    recall@50 : 0.2342    recall@100 : 0.315    ndcg@10 : 0.0489    ndcg@50 : 0.0784    ndcg@100 : 0.0915
+Tue 11 Aug 2026 13:06:30 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-04-27.pth
+Tue 11 Aug 2026 13:06:44 INFO  epoch 8 training [time: 14.13s, train loss: 1943.4249]
+Tue 11 Aug 2026 13:06:45 INFO  epoch 8 evaluating [time: 1.15s, valid_score: 0.049400]
+Tue 11 Aug 2026 13:06:45 INFO  valid result: 
+recall@10 : 0.1004    recall@50 : 0.2362    recall@100 : 0.3166    ndcg@10 : 0.0494    ndcg@50 : 0.079    ndcg@100 : 0.092
+Tue 11 Aug 2026 13:06:45 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-04-27.pth
+Tue 11 Aug 2026 13:06:59 INFO  epoch 9 training [time: 14.09s, train loss: 1931.6492]
+Tue 11 Aug 2026 13:07:00 INFO  epoch 9 evaluating [time: 1.14s, valid_score: 0.049200]
+Tue 11 Aug 2026 13:07:00 INFO  valid result: 
+recall@10 : 0.1015    recall@50 : 0.2377    recall@100 : 0.3198    ndcg@10 : 0.0492    ndcg@50 : 0.0788    ndcg@100 : 0.0921
+Tue 11 Aug 2026 13:07:14 INFO  epoch 10 training [time: 14.09s, train loss: 1921.3736]
+Tue 11 Aug 2026 13:07:16 INFO  epoch 10 evaluating [time: 1.14s, valid_score: 0.049700]
+Tue 11 Aug 2026 13:07:16 INFO  valid result: 
+recall@10 : 0.1029    recall@50 : 0.2412    recall@100 : 0.3224    ndcg@10 : 0.0497    ndcg@50 : 0.0798    ndcg@100 : 0.093
+Tue 11 Aug 2026 13:07:16 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-04-27.pth
+Tue 11 Aug 2026 13:07:30 INFO  epoch 11 training [time: 14.13s, train loss: 1912.9312]
+Tue 11 Aug 2026 13:07:31 INFO  epoch 11 evaluating [time: 1.13s, valid_score: 0.049400]
+Tue 11 Aug 2026 13:07:31 INFO  valid result: 
+recall@10 : 0.1033    recall@50 : 0.2413    recall@100 : 0.3234    ndcg@10 : 0.0494    ndcg@50 : 0.0794    ndcg@100 : 0.0927
+Tue 11 Aug 2026 13:07:45 INFO  epoch 12 training [time: 14.08s, train loss: 1904.6302]
+Tue 11 Aug 2026 13:07:46 INFO  epoch 12 evaluating [time: 1.16s, valid_score: 0.049900]
+Tue 11 Aug 2026 13:07:46 INFO  valid result: 
+recall@10 : 0.1039    recall@50 : 0.2429    recall@100 : 0.3246    ndcg@10 : 0.0499    ndcg@50 : 0.0802    ndcg@100 : 0.0934
+Tue 11 Aug 2026 13:07:46 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-04-27.pth
+Tue 11 Aug 2026 13:08:00 INFO  epoch 13 training [time: 14.13s, train loss: 1897.6482]
+Tue 11 Aug 2026 13:08:01 INFO  epoch 13 evaluating [time: 1.14s, valid_score: 0.049000]
+Tue 11 Aug 2026 13:08:01 INFO  valid result: 
+recall@10 : 0.1036    recall@50 : 0.2431    recall@100 : 0.326    ndcg@10 : 0.049    ndcg@50 : 0.0794    ndcg@100 : 0.0928
+Tue 11 Aug 2026 13:08:16 INFO  epoch 14 training [time: 14.09s, train loss: 1892.2112]
+Tue 11 Aug 2026 13:08:17 INFO  epoch 14 evaluating [time: 1.14s, valid_score: 0.049400]
+Tue 11 Aug 2026 13:08:17 INFO  valid result: 
+recall@10 : 0.1047    recall@50 : 0.2447    recall@100 : 0.3266    ndcg@10 : 0.0494    ndcg@50 : 0.0799    ndcg@100 : 0.0932
+Tue 11 Aug 2026 13:08:31 INFO  epoch 15 training [time: 14.13s, train loss: 1886.6695]
+Tue 11 Aug 2026 13:08:32 INFO  epoch 15 evaluating [time: 1.14s, valid_score: 0.049200]
+Tue 11 Aug 2026 13:08:32 INFO  valid result: 
+recall@10 : 0.1043    recall@50 : 0.2443    recall@100 : 0.3258    ndcg@10 : 0.0492    ndcg@50 : 0.0796    ndcg@100 : 0.0928
+Tue 11 Aug 2026 13:08:46 INFO  epoch 16 training [time: 14.07s, train loss: 1882.7737]
+Tue 11 Aug 2026 13:08:47 INFO  epoch 16 evaluating [time: 1.15s, valid_score: 0.049200]
+Tue 11 Aug 2026 13:08:47 INFO  valid result: 
+recall@10 : 0.105    recall@50 : 0.2453    recall@100 : 0.3269    ndcg@10 : 0.0492    ndcg@50 : 0.0798    ndcg@100 : 0.093
+Tue 11 Aug 2026 13:09:01 INFO  epoch 17 training [time: 14.14s, train loss: 1877.9128]
+Tue 11 Aug 2026 13:09:02 INFO  epoch 17 evaluating [time: 1.15s, valid_score: 0.049300]
+Tue 11 Aug 2026 13:09:02 INFO  valid result: 
+recall@10 : 0.1059    recall@50 : 0.2458    recall@100 : 0.3269    ndcg@10 : 0.0493    ndcg@50 : 0.0797    ndcg@100 : 0.0929
+Tue 11 Aug 2026 13:09:17 INFO  epoch 18 training [time: 14.09s, train loss: 1874.1210]
+Tue 11 Aug 2026 13:09:18 INFO  epoch 18 evaluating [time: 1.14s, valid_score: 0.049000]
+Tue 11 Aug 2026 13:09:18 INFO  valid result: 
+recall@10 : 0.1048    recall@50 : 0.2447    recall@100 : 0.3269    ndcg@10 : 0.049    ndcg@50 : 0.0795    ndcg@100 : 0.0929
+Tue 11 Aug 2026 13:09:32 INFO  epoch 19 training [time: 14.12s, train loss: 1870.5452]
+Tue 11 Aug 2026 13:09:33 INFO  epoch 19 evaluating [time: 1.14s, valid_score: 0.049600]
+Tue 11 Aug 2026 13:09:33 INFO  valid result: 
+recall@10 : 0.1062    recall@50 : 0.247    recall@100 : 0.3287    ndcg@10 : 0.0496    ndcg@50 : 0.0803    ndcg@100 : 0.0935
+Tue 11 Aug 2026 13:09:47 INFO  epoch 20 training [time: 14.08s, train loss: 1868.2669]
+Tue 11 Aug 2026 13:09:48 INFO  epoch 20 evaluating [time: 1.14s, valid_score: 0.049500]
+Tue 11 Aug 2026 13:09:48 INFO  valid result: 
+recall@10 : 0.106    recall@50 : 0.2485    recall@100 : 0.3309    ndcg@10 : 0.0495    ndcg@50 : 0.0805    ndcg@100 : 0.0939
+Tue 11 Aug 2026 13:10:02 INFO  epoch 21 training [time: 14.11s, train loss: 1864.5242]
+Tue 11 Aug 2026 13:10:03 INFO  epoch 21 evaluating [time: 1.13s, valid_score: 0.049100]
+Tue 11 Aug 2026 13:10:03 INFO  valid result: 
+recall@10 : 0.106    recall@50 : 0.2464    recall@100 : 0.3293    ndcg@10 : 0.0491    ndcg@50 : 0.0797    ndcg@100 : 0.0931
+Tue 11 Aug 2026 13:10:18 INFO  epoch 22 training [time: 14.17s, train loss: 1861.8883]
+Tue 11 Aug 2026 13:10:19 INFO  epoch 22 evaluating [time: 1.15s, valid_score: 0.049300]
+Tue 11 Aug 2026 13:10:19 INFO  valid result: 
+recall@10 : 0.1065    recall@50 : 0.2469    recall@100 : 0.3294    ndcg@10 : 0.0493    ndcg@50 : 0.0799    ndcg@100 : 0.0933
+Tue 11 Aug 2026 13:10:33 INFO  epoch 23 training [time: 14.16s, train loss: 1860.4430]
+Tue 11 Aug 2026 13:10:34 INFO  epoch 23 evaluating [time: 1.15s, valid_score: 0.049100]
+Tue 11 Aug 2026 13:10:34 INFO  valid result: 
+recall@10 : 0.1063    recall@50 : 0.248    recall@100 : 0.3296    ndcg@10 : 0.0491    ndcg@50 : 0.08    ndcg@100 : 0.0932
+Tue 11 Aug 2026 13:10:34 INFO  Finished training, best eval result in epoch 12
+Tue 11 Aug 2026 13:10:34 INFO  Loading model structure and parameters from /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-04-27.pth
+Tue 11 Aug 2026 13:11:24 WARNING  command line args [--category Video_Games --legs pop,itemknn,sasrec,sasrec_len20,official_sasrec,official_sasrec_len20] will not be used in RecBole
+Tue 11 Aug 2026 13:11:39 INFO  [Training]: train_batch_size = [2048] train_neg_sample_args: [{'distribution': 'none', 'sample_num': 'none', 'alpha': 'none', 'dynamic': False, 'candidate_num': 0}]
+Tue 11 Aug 2026 13:11:39 INFO  [Evaluation]: eval_batch_size = [4096] eval_args: [{'split': {'LS': 'valid_and_test'}, 'order': 'TO', 'group_by': 'user', 'mode': {'valid': 'full', 'test': 'full'}}]
+Tue 11 Aug 2026 13:11:50 INFO  epoch 0 training [time: 11.01s, train loss: 2391.2030]
+Tue 11 Aug 2026 13:11:51 INFO  epoch 0 evaluating [time: 0.86s, valid_score: 0.018000]
+Tue 11 Aug 2026 13:11:51 INFO  valid result: 
+recall@10 : 0.0356    recall@50 : 0.0959    recall@100 : 0.1419    ndcg@10 : 0.018    ndcg@50 : 0.031    ndcg@100 : 0.0384
+Tue 11 Aug 2026 13:11:51 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-11-39.pth
+Tue 11 Aug 2026 13:12:02 INFO  epoch 1 training [time: 11.00s, train loss: 2234.8176]
+Tue 11 Aug 2026 13:12:02 INFO  epoch 1 evaluating [time: 0.87s, valid_score: 0.027600]
+Tue 11 Aug 2026 13:12:02 INFO  valid result: 
+recall@10 : 0.0544    recall@50 : 0.1507    recall@100 : 0.2184    ndcg@10 : 0.0276    ndcg@50 : 0.0483    ndcg@100 : 0.0593
+Tue 11 Aug 2026 13:12:03 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-11-39.pth
+Tue 11 Aug 2026 13:12:14 INFO  epoch 2 training [time: 11.00s, train loss: 2127.8431]
+Tue 11 Aug 2026 13:12:14 INFO  epoch 2 evaluating [time: 0.87s, valid_score: 0.035100]
+Tue 11 Aug 2026 13:12:14 INFO  valid result: 
+recall@10 : 0.0687    recall@50 : 0.1781    recall@100 : 0.2509    ndcg@10 : 0.0351    ndcg@50 : 0.0587    ndcg@100 : 0.0705
+Tue 11 Aug 2026 13:12:14 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-11-39.pth
+Tue 11 Aug 2026 13:12:25 INFO  epoch 3 training [time: 11.02s, train loss: 2073.7595]
+Tue 11 Aug 2026 13:12:26 INFO  epoch 3 evaluating [time: 0.87s, valid_score: 0.040600]
+Tue 11 Aug 2026 13:12:26 INFO  valid result: 
+recall@10 : 0.0794    recall@50 : 0.1981    recall@100 : 0.2736    ndcg@10 : 0.0406    ndcg@50 : 0.0663    ndcg@100 : 0.0785
+Tue 11 Aug 2026 13:12:26 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-11-39.pth
+Tue 11 Aug 2026 13:12:37 INFO  epoch 4 training [time: 11.03s, train loss: 2032.4070]
+Tue 11 Aug 2026 13:12:38 INFO  epoch 4 evaluating [time: 0.87s, valid_score: 0.044500]
+Tue 11 Aug 2026 13:12:38 INFO  valid result: 
+recall@10 : 0.0877    recall@50 : 0.2137    recall@100 : 0.2914    ndcg@10 : 0.0445    ndcg@50 : 0.0718    ndcg@100 : 0.0844
+Tue 11 Aug 2026 13:12:38 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-11-39.pth
+Tue 11 Aug 2026 13:12:49 INFO  epoch 5 training [time: 11.06s, train loss: 2000.4582]
+Tue 11 Aug 2026 13:12:50 INFO  epoch 5 evaluating [time: 0.87s, valid_score: 0.047100]
+Tue 11 Aug 2026 13:12:50 INFO  valid result: 
+recall@10 : 0.0935    recall@50 : 0.2243    recall@100 : 0.3025    ndcg@10 : 0.0471    ndcg@50 : 0.0755    ndcg@100 : 0.0882
+Tue 11 Aug 2026 13:12:50 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-11-39.pth
+Tue 11 Aug 2026 13:13:01 INFO  epoch 6 training [time: 11.04s, train loss: 1975.7542]
+Tue 11 Aug 2026 13:13:02 INFO  epoch 6 evaluating [time: 0.87s, valid_score: 0.048700]
+Tue 11 Aug 2026 13:13:02 INFO  valid result: 
+recall@10 : 0.0973    recall@50 : 0.2305    recall@100 : 0.3104    ndcg@10 : 0.0487    ndcg@50 : 0.0777    ndcg@100 : 0.0906
+Tue 11 Aug 2026 13:13:02 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-11-39.pth
+Tue 11 Aug 2026 13:13:13 INFO  epoch 7 training [time: 10.92s, train loss: 1956.9269]
+Tue 11 Aug 2026 13:13:14 INFO  epoch 7 evaluating [time: 0.87s, valid_score: 0.049400]
+Tue 11 Aug 2026 13:13:14 INFO  valid result: 
+recall@10 : 0.0998    recall@50 : 0.2342    recall@100 : 0.3151    ndcg@10 : 0.0494    ndcg@50 : 0.0786    ndcg@100 : 0.0917
+Tue 11 Aug 2026 13:13:14 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-11-39.pth
+Tue 11 Aug 2026 13:13:25 INFO  epoch 8 training [time: 11.03s, train loss: 1942.4128]
+Tue 11 Aug 2026 13:13:26 INFO  epoch 8 evaluating [time: 0.87s, valid_score: 0.049300]
+Tue 11 Aug 2026 13:13:26 INFO  valid result: 
+recall@10 : 0.1005    recall@50 : 0.2379    recall@100 : 0.3199    ndcg@10 : 0.0493    ndcg@50 : 0.0792    ndcg@100 : 0.0925
+Tue 11 Aug 2026 13:13:37 INFO  epoch 9 training [time: 10.97s, train loss: 1930.1399]
+Tue 11 Aug 2026 13:13:38 INFO  epoch 9 evaluating [time: 0.87s, valid_score: 0.049400]
+Tue 11 Aug 2026 13:13:38 INFO  valid result: 
+recall@10 : 0.1017    recall@50 : 0.2402    recall@100 : 0.3217    ndcg@10 : 0.0494    ndcg@50 : 0.0795    ndcg@100 : 0.0927
+Tue 11 Aug 2026 13:13:38 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-11-39.pth
+Tue 11 Aug 2026 13:13:49 INFO  epoch 10 training [time: 10.97s, train loss: 1919.7421]
+Tue 11 Aug 2026 13:13:50 INFO  epoch 10 evaluating [time: 0.87s, valid_score: 0.049700]
+Tue 11 Aug 2026 13:13:50 INFO  valid result: 
+recall@10 : 0.1028    recall@50 : 0.2415    recall@100 : 0.3244    ndcg@10 : 0.0497    ndcg@50 : 0.0799    ndcg@100 : 0.0933
+Tue 11 Aug 2026 13:13:50 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-11-39.pth
+Tue 11 Aug 2026 13:14:01 INFO  epoch 11 training [time: 10.98s, train loss: 1911.3844]
+Tue 11 Aug 2026 13:14:02 INFO  epoch 11 evaluating [time: 0.87s, valid_score: 0.049200]
+Tue 11 Aug 2026 13:14:02 INFO  valid result: 
+recall@10 : 0.1032    recall@50 : 0.2424    recall@100 : 0.324    ndcg@10 : 0.0492    ndcg@50 : 0.0795    ndcg@100 : 0.0927
+Tue 11 Aug 2026 13:14:12 INFO  epoch 12 training [time: 10.90s, train loss: 1903.3559]
+Tue 11 Aug 2026 13:14:13 INFO  epoch 12 evaluating [time: 0.86s, valid_score: 0.049900]
+Tue 11 Aug 2026 13:14:13 INFO  valid result: 
+recall@10 : 0.1043    recall@50 : 0.2432    recall@100 : 0.3265    ndcg@10 : 0.0499    ndcg@50 : 0.0802    ndcg@100 : 0.0937
+Tue 11 Aug 2026 13:14:13 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-11-39.pth
+Tue 11 Aug 2026 13:14:24 INFO  epoch 13 training [time: 10.95s, train loss: 1897.2690]
+Tue 11 Aug 2026 13:14:25 INFO  epoch 13 evaluating [time: 0.87s, valid_score: 0.048800]
+Tue 11 Aug 2026 13:14:25 INFO  valid result: 
+recall@10 : 0.1033    recall@50 : 0.2431    recall@100 : 0.326    ndcg@10 : 0.0488    ndcg@50 : 0.0792    ndcg@100 : 0.0926
+Tue 11 Aug 2026 13:14:36 INFO  epoch 14 training [time: 10.92s, train loss: 1891.0389]
+Tue 11 Aug 2026 13:14:37 INFO  epoch 14 evaluating [time: 0.87s, valid_score: 0.049500]
+Tue 11 Aug 2026 13:14:37 INFO  valid result: 
+recall@10 : 0.1043    recall@50 : 0.2452    recall@100 : 0.3284    ndcg@10 : 0.0495    ndcg@50 : 0.0801    ndcg@100 : 0.0936
+Tue 11 Aug 2026 13:14:48 INFO  epoch 15 training [time: 10.89s, train loss: 1886.4945]
+Tue 11 Aug 2026 13:14:49 INFO  epoch 15 evaluating [time: 0.87s, valid_score: 0.049200]
+Tue 11 Aug 2026 13:14:49 INFO  valid result: 
+recall@10 : 0.1044    recall@50 : 0.2448    recall@100 : 0.3265    ndcg@10 : 0.0492    ndcg@50 : 0.0798    ndcg@100 : 0.093
+Tue 11 Aug 2026 13:15:00 INFO  epoch 16 training [time: 10.95s, train loss: 1881.7216]
+Tue 11 Aug 2026 13:15:01 INFO  epoch 16 evaluating [time: 0.87s, valid_score: 0.048900]
+Tue 11 Aug 2026 13:15:01 INFO  valid result: 
+recall@10 : 0.1042    recall@50 : 0.2457    recall@100 : 0.3278    ndcg@10 : 0.0489    ndcg@50 : 0.0797    ndcg@100 : 0.093
+Tue 11 Aug 2026 13:15:11 INFO  epoch 17 training [time: 10.89s, train loss: 1877.8226]
+Tue 11 Aug 2026 13:15:12 INFO  epoch 17 evaluating [time: 0.87s, valid_score: 0.049200]
+Tue 11 Aug 2026 13:15:12 INFO  valid result: 
+recall@10 : 0.1052    recall@50 : 0.2463    recall@100 : 0.3287    ndcg@10 : 0.0492    ndcg@50 : 0.08    ndcg@100 : 0.0933
+Tue 11 Aug 2026 13:15:23 INFO  epoch 18 training [time: 10.89s, train loss: 1874.1527]
+Tue 11 Aug 2026 13:15:24 INFO  epoch 18 evaluating [time: 0.87s, valid_score: 0.049200]
+Tue 11 Aug 2026 13:15:24 INFO  valid result: 
+recall@10 : 0.105    recall@50 : 0.246    recall@100 : 0.3301    ndcg@10 : 0.0492    ndcg@50 : 0.08    ndcg@100 : 0.0936
+Tue 11 Aug 2026 13:15:35 INFO  epoch 19 training [time: 11.03s, train loss: 1870.6759]
+Tue 11 Aug 2026 13:15:36 INFO  epoch 19 evaluating [time: 0.87s, valid_score: 0.049500]
+Tue 11 Aug 2026 13:15:36 INFO  valid result: 
+recall@10 : 0.1057    recall@50 : 0.2472    recall@100 : 0.3304    ndcg@10 : 0.0495    ndcg@50 : 0.0803    ndcg@100 : 0.0938
+Tue 11 Aug 2026 13:15:47 INFO  epoch 20 training [time: 11.05s, train loss: 1867.2720]
+Tue 11 Aug 2026 13:15:48 INFO  epoch 20 evaluating [time: 0.88s, valid_score: 0.049400]
+Tue 11 Aug 2026 13:15:48 INFO  valid result: 
+recall@10 : 0.1057    recall@50 : 0.2487    recall@100 : 0.3323    ndcg@10 : 0.0494    ndcg@50 : 0.0805    ndcg@100 : 0.0941
+Tue 11 Aug 2026 13:15:59 INFO  epoch 21 training [time: 10.98s, train loss: 1864.4522]
+Tue 11 Aug 2026 13:16:00 INFO  epoch 21 evaluating [time: 0.87s, valid_score: 0.048600]
+Tue 11 Aug 2026 13:16:00 INFO  valid result: 
+recall@10 : 0.1048    recall@50 : 0.2469    recall@100 : 0.3307    ndcg@10 : 0.0486    ndcg@50 : 0.0796    ndcg@100 : 0.0932
+Tue 11 Aug 2026 13:16:11 INFO  epoch 22 training [time: 11.14s, train loss: 1862.2029]
+Tue 11 Aug 2026 13:16:12 INFO  epoch 22 evaluating [time: 0.87s, valid_score: 0.049000]
+Tue 11 Aug 2026 13:16:12 INFO  valid result: 
+recall@10 : 0.1057    recall@50 : 0.2471    recall@100 : 0.3311    ndcg@10 : 0.049    ndcg@50 : 0.0798    ndcg@100 : 0.0934
+Tue 11 Aug 2026 13:16:23 INFO  epoch 23 training [time: 11.19s, train loss: 1859.0082]
+Tue 11 Aug 2026 13:16:24 INFO  epoch 23 evaluating [time: 0.87s, valid_score: 0.048900]
+Tue 11 Aug 2026 13:16:24 INFO  valid result: 
+recall@10 : 0.1059    recall@50 : 0.2483    recall@100 : 0.3313    ndcg@10 : 0.0489    ndcg@50 : 0.0798    ndcg@100 : 0.0933
+Tue 11 Aug 2026 13:16:24 INFO  Finished training, best eval result in epoch 12
+Tue 11 Aug 2026 13:16:24 INFO  Loading model structure and parameters from /projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-11-39.pth
