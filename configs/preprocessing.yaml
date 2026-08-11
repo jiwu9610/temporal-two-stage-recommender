@@ -78,6 +78,9 @@ temporal_snapshots:
   # events to decide who survives). Nothing is dropped -- these thresholds
   # only define the candidate pool and the warm/cold reporting split.
   eligibility:
+    # Stays 5 through the rebuild wave (MEMO D1): min_item_history is a
+    # candidate-builder-level knob; any new value lands in the P4.4 joint
+    # freeze commit together with the content-source setting, not here.
     min_item_history_interactions: 5   # candidate pool membership
     warm_user_min_history: 3           # warm vs cold user reporting threshold
 
@@ -93,13 +96,50 @@ temporal_snapshots:
   # defaults so the final-test snapshot stays comparable with the
   # phase1_temporal baseline. Explicit per-category dates win over quantiles.
   three_snapshot:
+    # Quantile provenance of the pinned dates below (kept for the record;
+    # explicit cutoffs always win in resolve_four_cutoffs).
     cutoff_quantiles:
       t0: 0.70
       t1: 0.80
       t2: 0.90
-    cutoffs: {}
-      # Example:
-      # Video_Games: {t0: "2020-01-01", t1: "2021-01-13", t2: "2022-01-31"}
+    # Rebuild-wave pin (approved 2026-08-11, MEMO D4; REBUILD_WAVE_SPEC P2.1):
+    # t0/t1/t2/t3 for ALL four categories are pinned EXPLICITLY to the epoch-ms
+    # values in each category's pre-rebuild temporal_ranker/snapshot_manifest.json.
+    # t3 is pinned too: the canon-v2 un-merge makes interactions_clean strictly
+    # grow, so a floating max-timestamp+1ms t3 would drift the test-window upper
+    # bound and break byte-comparable windows. Naive ISO strings are read as UTC;
+    # millisecond precision round-trips exactly through
+    # scripts.data.temporal_ranker_pipeline.resolve_four_cutoffs (frozen in
+    # tests/test_preprocessing_pipeline.py::test_three_snapshot_cutoffs_pinned_roundtrip).
+    #
+    # All_Beauty t3 EXCEPTION (approved MEMO D4, a locked-test-window protocol
+    # change committed before any test read): pinned to manifest T3 minus 166
+    # days -- 2023-09-09T00:39:36 - 166d = 2023-03-27T00:39:36 (whole-second
+    # arithmetic; the manifest's .667s sub-second fraction is dropped by the
+    # approved pin, i.e. 1694219976667ms - 14342400000ms = 1679877576667ms,
+    # pinned at 1679877576000ms). This moves the 166-day collection-truncation
+    # ramp out of the AB test window; it creates no new signal.
+    cutoffs:
+      All_Beauty:
+        t0: "2020-12-06T01:42:47.372"    # 1607218967372
+        t1: "2021-05-24T02:47:14.801"    # 1621824434801
+        t2: "2022-01-26T03:13:49.879"    # 1643166829879
+        t3: "2023-03-27T00:39:36"        # 1679877576000 = manifest T3 - 166d (see note)
+      Video_Games:
+        t0: "2020-01-28T00:56:26.322"    # 1580172986322
+        t1: "2021-01-13T02:20:38.807"    # 1610504438807
+        t2: "2022-01-31T10:49:38.086"    # 1643626178086
+        t3: "2023-04-02T23:33:18.072"    # 1680478398072
+      Books:
+        t0: "2018-11-27T14:59:58.937"    # 1543330798937
+        t1: "2020-01-06T02:44:36.145"    # 1578278676145
+        t2: "2021-06-07T13:42:30.040"    # 1623073350040
+        t3: "2023-03-22T00:21:52.032"    # 1679444512032
+      Electronics:
+        t0: "2020-04-30T16:09:54.150"    # 1588262994150
+        t1: "2021-03-16T19:48:52.589"    # 1615924132589
+        t2: "2022-03-04T22:52:58.144"    # 1646434378144
+        t3: "2023-03-20T20:48:25.320"    # 1679345305320
 
 # Where outputs land. Each category writes to data/processed/{category}/.
 output:

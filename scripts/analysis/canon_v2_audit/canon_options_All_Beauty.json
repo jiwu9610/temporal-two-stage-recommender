@@ -1,0 +1,52 @@
+{
+  "category": "All_Beauty",
+  "generated_utc": "2026-08-11T17:09:22+00:00",
+  "repo_commit": "6d58634f6b771204240ae4e49909c3f7ac9bf8cb",
+  "predicate": {
+    "title": "shipped scripts.data.canonicalize.normalize_title (lowercase/strip/whitespace-collapse; empty never merges; FROZEN in tests)",
+    "store": "shipped scripts.data.canonicalize.store_merge_key (verbatim; null/whitespace-only never merges)",
+    "winner": "highest rating_number, ties by parent_asin ascending (deterministic; historical v1 runs used an unstable sort, so tie winners -- and remapped-row counts on tie groups -- could differ)"
+  },
+  "totals": {
+    "n_meta_rows_after_parent_dedup": 112590,
+    "n_review_rows": 701528
+  },
+  "options": {
+    "current_v1_exact_title": {
+      "n_multi_asin_groups": 1445,
+      "n_parent_asins_folded": 2024,
+      "n_canonical_items": 110566,
+      "n_review_rows_remapped": 16251,
+      "pct_review_rows_remapped_of_catalog_rows": 2.3165,
+      "pct_review_rows_remapped_of_all_rows": 2.3165,
+      "n_review_rows_on_catalog": 701528
+    },
+    "a_norm_title_only": {
+      "n_multi_asin_groups": 1463,
+      "n_parent_asins_folded": 2043,
+      "n_canonical_items": 110547,
+      "n_review_rows_remapped": 16278,
+      "pct_review_rows_remapped_of_catalog_rows": 2.3204,
+      "pct_review_rows_remapped_of_all_rows": 2.3204,
+      "n_review_rows_on_catalog": 701528
+    },
+    "b_norm_title_store": {
+      "n_multi_asin_groups": 1252,
+      "n_parent_asins_folded": 1763,
+      "n_canonical_items": 110827,
+      "n_review_rows_remapped": 13980,
+      "pct_review_rows_remapped_of_catalog_rows": 1.9928,
+      "pct_review_rows_remapped_of_all_rows": 1.9928,
+      "n_review_rows_on_catalog": 701528
+    },
+    "c_no_merge": {
+      "n_multi_asin_groups": 0,
+      "n_parent_asins_folded": 0,
+      "n_canonical_items": 112590,
+      "n_review_rows_remapped": 0,
+      "pct_review_rows_remapped_of_catalog_rows": 0.0,
+      "pct_review_rows_remapped_of_all_rows": 0.0,
+      "n_review_rows_on_catalog": 701528
+    }
+  }
+}

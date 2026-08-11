@@ -1,7 +1,10 @@
 """Unit tests for the Phase 0 preprocessing modules.
 
-Covers (on small synthetic inputs, no disk I/O):
-  - canonicalize.canonicalize
+Covers (on small synthetic inputs; the only disk reads are repo-committed
+config files):
+  - canonicalize.canonicalize (canon v2 merge key = (norm_title, store))
+  - the FROZEN canon-v2 normalization predicate
+  - the pinned three_snapshot cutoffs in configs/preprocessing.yaml
   - filtering.iterative_kcore
   - splitting.leave_last_two_split
   - feature_store.build_user_features / build_item_features
@@ -19,11 +22,13 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+import yaml
 
 # Make `scripts.*` importable when running pytest from repo root or tests/ dir.
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT))
 
-from scripts.data.canonicalize import canonicalize
+from scripts.data.canonicalize import canonicalize, normalize_title, store_merge_key
 from scripts.data.feature_store import (
     ITEM_FEATURE_COLUMNS,
     USER_FEATURE_COLUMNS,
@@ -41,39 +46,44 @@ from scripts.data.text_alignment import align_text_embeddings
 
 @pytest.fixture
 def synthetic_meta() -> pd.DataFrame:
-    # Two title-duplicate items (B1, B2 share "Sequel") -- B1 wins on rating_number.
-    # B3 is its own canonical item. ZZ has null title.
+    # Canon v2 merge key = (normalized title, store):
+    #   B1, B2 share ("sequel", "S1")            -> merge; B1 wins on rating_number.
+    #   B5 title "  SEQUEL  " store "S1"          -> normalizes into the same key, merges into B1.
+    #   B4 shares B3's title but store "S9" != "S2" -> cross-store, must NOT merge.
+    #   ZZ has null title                          -> never merges.
     return pd.DataFrame({
-        "parent_asin": ["B1", "B2", "B3", "ZZ"],
-        "title": ["Sequel", "Sequel", "Original", None],
-        "rating_number": [100, 30, 50, 5],
-        "store": ["S1", "S1", "S2", "S3"],
-        "main_category": ["Cat", "Cat", "Cat", None],
-        "price": ["10.00", "10.00", None, "5"],
-        "average_rating": [4.5, 4.5, 4.0, 3.0],
-        "features": [["a", "b"], ["a"], [], ["x", "y", "z"]],
-        "description": [["desc"], [], ["d1", "d2"], []],
-        "categories": [["c1"], ["c1"], ["c1", "c2"], []],
-        "bought_together": [["other"], [], [], None],
+        "parent_asin": ["B1", "B2", "B3", "ZZ", "B4", "B5"],
+        "title": ["Sequel", "Sequel", "Original", None, "Original", "  SEQUEL  "],
+        "rating_number": [100, 30, 50, 5, 40, 10],
+        "store": ["S1", "S1", "S2", "S3", "S9", "S1"],
+        "main_category": ["Cat", "Cat", "Cat", None, "Cat", "Cat"],
+        "price": ["10.00", "10.00", None, "5", None, "9.50"],
+        "average_rating": [4.5, 4.5, 4.0, 3.0, 3.5, 4.2],
+        "features": [["a", "b"], ["a"], [], ["x", "y", "z"], [], ["a"]],
+        "description": [["desc"], [], ["d1", "d2"], [], [], []],
+        "categories": [["c1"], ["c1"], ["c1", "c2"], [], ["c1"], ["c1"]],
+        "bought_together": [["other"], [], [], None, None, None],
     })
 
 
 @pytest.fixture
 def synthetic_reviews() -> pd.DataFrame:
     # Users:
-    #   U1: 4 reviews on B1, B3, B2 (duplicate), ZZ. After canonicalization (B2->B1)
-    #       and dedup (U1,B1) becomes 3 unique items.
-    #   U2: 3 reviews on B1, B3, ZZ — all canonical, distinct.
+    #   U1: 5 reviews on B1, B3, B2 (dup via merge), B5 (dup via merge), ZZ.
+    #       After canonicalization (B2->B1, B5->B1) and dedup -> 3 unique items.
+    #   U2: 4 reviews on B1, B3, ZZ, B4 — all canonical, distinct (B4 stays B4).
     #   U3: 2 reviews on B3, ZZ — too few for leave-last-two if min_user>=3.
     rows = []
     rows += [
         ("U1", "B1", 5, 1_000_000),
         ("U1", "B3", 4, 1_000_100),
         ("U1", "B2", 2, 1_000_200),  # B2 -> B1 by canonicalization, then dropped as dup
+        ("U1", "B5", 4, 1_000_250),  # B5 -> B1 (normalized title), then dropped as dup
         ("U1", "ZZ", 1, 1_000_300),
         ("U2", "B1", 3, 2_000_000),
         ("U2", "B3", 5, 2_000_100),
         ("U2", "ZZ", 4, 2_000_200),
+        ("U2", "B4", 5, 2_000_300),  # same title as B3 but different store: stays B4
         ("U3", "B3", 2, 3_000_000),
         ("U3", "ZZ", 5, 3_000_100),
     ]
@@ -84,24 +94,195 @@ def synthetic_reviews() -> pd.DataFrame:
 # canonicalize
 # ---------------------------------------------------------------------------
 
-def test_canonicalize_collapses_title_duplicates(synthetic_reviews, synthetic_meta):
+def test_canonicalize_collapses_same_store_title_duplicates(synthetic_reviews, synthetic_meta):
     clean, canon_map, canon_meta, stats = canonicalize(
         synthetic_reviews, synthetic_meta, positive_threshold=3.0
     )
     map_dict = dict(zip(canon_map["raw_parent_asin"], canon_map["canonical_parent_asin"]))
     assert map_dict["B2"] == "B1"
-    assert set(canon_meta["parent_asin"]) == {"B1", "B3", "ZZ"}
+    assert map_dict["B5"] == "B1"   # "  SEQUEL  " normalizes to "sequel", same store S1
+    assert map_dict["B4"] == "B4"   # same title as B3 but different store: no merge
+    assert map_dict["B3"] == "B3"
+    assert set(canon_meta["parent_asin"]) == {"B1", "B3", "ZZ", "B4"}
     u1_items = set(clean[clean["user_id"] == "U1"]["parent_asin"])
     assert u1_items == {"B1", "B3", "ZZ"}
+    u2_items = set(clean[clean["user_id"] == "U2"]["parent_asin"])
+    assert u2_items == {"B1", "B3", "ZZ", "B4"}
     assert (clean.loc[clean["rating"] >= 3, "label"] == 1).all()
     assert (clean.loc[clean["rating"] < 3, "label"] == 0).all()
     assert set(clean["label_type"]) <= {"positive", "hard_negative"}
     assert not clean.duplicated(["user_id", "parent_asin"]).any()
-    assert stats.duplicates_removed >= 1
-    assert stats.canonical_meta == 3
-    # Title "Sequel" had B1+B2 -> 1 group with >1 parent_asin; B2 collapsed.
-    assert stats.n_parent_asins_collapsed_by_title == 1
+    assert stats.duplicates_removed >= 2
+    assert stats.canonical_meta == 4
+    # Key ("sequel", "S1") had B1+B2+B5 -> 1 group with >1 parent_asin; B2+B5 collapsed.
+    # ("original", "S2") vs ("original", "S9") are DIFFERENT keys -> no group.
+    assert stats.n_parent_asins_collapsed_by_title == 2
     assert stats.n_title_duplicate_groups == 1
+
+
+def _tiny_reviews(asins) -> pd.DataFrame:
+    # One reviewer per item, distinct timestamps -- enough to drive canonicalize.
+    return pd.DataFrame({
+        "user_id": [f"U{i}" for i in range(len(asins))],
+        "parent_asin": list(asins),
+        "rating": [5] * len(asins),
+        "timestamp": list(range(1_000, 1_000 + len(asins))),
+    })
+
+
+def test_canon_v2_cross_store_same_title_never_merges():
+    # The Live2Pedal-style C1 bug: identical generic title sold by different
+    # stores. v1 folded these into one id; v2 must keep them apart.
+    meta = pd.DataFrame({
+        "parent_asin": ["A1", "A2", "A3"],
+        "title": ["Sustain Pedal", "Sustain Pedal", "Sustain Pedal"],
+        "store": ["Live2Pedal", "OtherBrand", "ThirdBrand"],
+        "rating_number": [500, 400, 300],
+    })
+    _, canon_map, canon_meta, stats = canonicalize(_tiny_reviews(meta["parent_asin"]), meta)
+    map_dict = dict(zip(canon_map["raw_parent_asin"], canon_map["canonical_parent_asin"]))
+    assert map_dict == {"A1": "A1", "A2": "A2", "A3": "A3"}
+    assert set(canon_meta["parent_asin"]) == {"A1", "A2", "A3"}
+    assert stats.n_parent_asins_collapsed_by_title == 0
+    assert stats.n_title_duplicate_groups == 0
+
+
+def test_canon_v2_null_or_empty_title_or_store_never_merges():
+    meta = pd.DataFrame({
+        "parent_asin": ["N1", "N2", "N3", "N4", "N5", "N6", "N7", "N8"],
+        # N1/N2: same title, null store. N3/N4: null title, same store.
+        # N5/N6: whitespace-only / empty title, same store.
+        # N7/N8: same title, whitespace-only / empty store.
+        "title": ["Journal", "Journal", None, None, "   ", "", "Diary", "Diary"],
+        "store": [None, None, "S", "S", "S", "S", "  ", ""],
+        "rating_number": [8, 7, 6, 5, 4, 3, 2, 1],
+    })
+    _, canon_map, _, stats = canonicalize(_tiny_reviews(meta["parent_asin"]), meta)
+    map_dict = dict(zip(canon_map["raw_parent_asin"], canon_map["canonical_parent_asin"]))
+    assert map_dict == {pa: pa for pa in meta["parent_asin"]}
+    assert stats.n_parent_asins_collapsed_by_title == 0
+    assert stats.n_title_duplicate_groups == 0
+
+
+def test_canon_v2_missing_store_column_merges_nothing():
+    # Guard symmetric to the missing-title guard: without a store column the
+    # v2 key cannot be formed -- falling back to title-only would reintroduce
+    # cross-store merges, so nothing merges at all.
+    meta = pd.DataFrame({
+        "parent_asin": ["A1", "A2"],
+        "title": ["Same Title", "Same Title"],
+        "rating_number": [10, 5],
+    })
+    _, canon_map, _, stats = canonicalize(_tiny_reviews(meta["parent_asin"]), meta)
+    map_dict = dict(zip(canon_map["raw_parent_asin"], canon_map["canonical_parent_asin"]))
+    assert map_dict == {"A1": "A1", "A2": "A2"}
+    assert stats.n_parent_asins_collapsed_by_title == 0
+    assert stats.n_title_duplicate_groups == 0
+
+
+def test_canon_v2_missing_title_column_merges_nothing():
+    meta = pd.DataFrame({
+        "parent_asin": ["A1", "A2"],
+        "store": ["S", "S"],
+        "rating_number": [10, 5],
+    })
+    _, canon_map, _, stats = canonicalize(_tiny_reviews(meta["parent_asin"]), meta)
+    map_dict = dict(zip(canon_map["raw_parent_asin"], canon_map["canonical_parent_asin"]))
+    assert map_dict == {"A1": "A1", "A2": "A2"}
+    assert stats.n_parent_asins_collapsed_by_title == 0
+
+
+def test_canon_v2_normalization_predicate_frozen():
+    # FROZEN (REBUILD_WAVE_SPEC section 1, Track D correction 2): the S1
+    # rebuild gate numbers are predicate-sensitive (+-0.5-1.5% observed between
+    # variants, e.g. Books rows 12.55% vs 12.82%). Any change to this predicate
+    # invalidates the recorded canon_v2_audit numbers and requires re-running
+    # scripts/analysis/canon_v2_audit/ plus advisor re-approval.
+    #
+    # Title leg: lowercase, strip, collapse ANY unicode-whitespace run to one space.
+    assert normalize_title("  Foo   BAR ") == "foo bar"
+    assert normalize_title("foo\t\n bar") == "foo bar"
+    assert normalize_title("Foo\u00a0Bar") == "foo bar"    # NBSP is whitespace too
+    assert normalize_title("FOO") == "foo"
+    assert normalize_title("Straße") == "straße"   # str.lower, NOT casefold
+    assert normalize_title(None) == ""
+    assert normalize_title(float("nan")) == ""
+    assert normalize_title("") == ""
+    assert normalize_title("   ") == ""                       # whitespace-only never merges
+    # Store leg: verbatim string -- case-, punctuation- and whitespace-sensitive.
+    assert store_merge_key("Live2Pedal") == "Live2Pedal"
+    assert store_merge_key(" Live2Pedal ") == " Live2Pedal "
+    assert store_merge_key("STORE") == "STORE"                # no case-folding
+    assert store_merge_key(None) == ""
+    assert store_merge_key("") == ""
+    assert store_merge_key("   ") == ""                       # whitespace-only never merges
+
+
+def test_canon_v2_winner_highest_rating_number_ties_by_asin():
+    meta = pd.DataFrame({
+        # Group 1 ("dup", "S"): Q7 wins on rating_number outright.
+        # Group 2 ("tie", "S"): all tie at 50 -> lexicographically smallest asin (A1) wins.
+        "parent_asin": ["Z9", "Q7", "M5", "T2", "A1", "T9"],
+        "title": ["Dup", "Dup", "Dup", "Tie", "Tie", "Tie"],
+        "store": ["S", "S", "S", "S", "S", "S"],
+        "rating_number": [50, 60, 40, 50, 50, 50],
+    })
+    _, canon_map, canon_meta, stats = canonicalize(_tiny_reviews(meta["parent_asin"]), meta)
+    map_dict = dict(zip(canon_map["raw_parent_asin"], canon_map["canonical_parent_asin"]))
+    assert map_dict["Z9"] == "Q7" and map_dict["M5"] == "Q7" and map_dict["Q7"] == "Q7"
+    assert map_dict["T2"] == "A1" and map_dict["T9"] == "A1" and map_dict["A1"] == "A1"
+    assert set(canon_meta["parent_asin"]) == {"Q7", "A1"}
+    assert stats.n_parent_asins_collapsed_by_title == 4
+    assert stats.n_title_duplicate_groups == 2
+
+
+# ---------------------------------------------------------------------------
+# pinned three_snapshot cutoffs (rebuild wave P2.1, MEMO D4)
+# ---------------------------------------------------------------------------
+
+# Epoch-ms values from each category's pre-rebuild
+# data/processed/{cat}/temporal_ranker/snapshot_manifest.json, hardcoded here so
+# the pin survives the S1/S2 artifact rebuilds. All_Beauty t3 is the approved
+# exception: manifest T3 (2023-09-09T00:39:36.667Z) - 166d, whole-second pin.
+PINNED_THREE_SNAPSHOT_CUTOFFS_MS = {
+    "All_Beauty":  {"t0": 1607218967372, "t1": 1621824434801, "t2": 1643166829879, "t3": 1679877576000},
+    "Video_Games": {"t0": 1580172986322, "t1": 1610504438807, "t2": 1643626178086, "t3": 1680478398072},
+    "Books":       {"t0": 1543330798937, "t1": 1578278676145, "t2": 1623073350040, "t3": 1679444512032},
+    "Electronics": {"t0": 1588262994150, "t1": 1615924132589, "t2": 1646434378144, "t3": 1679345305320},
+}
+
+
+def test_three_snapshot_cutoffs_pinned_roundtrip():
+    """The yaml pins must round-trip through resolve_four_cutoffs to EXACTLY
+    the pre-rebuild manifest ms values (AB t3 to its approved T3-166d pin)."""
+    from scripts.data.temporal_ranker_pipeline import resolve_four_cutoffs
+
+    cfg = yaml.safe_load((REPO_ROOT / "configs" / "preprocessing.yaml").read_text())
+    three = cfg["temporal_snapshots"]["three_snapshot"]
+    explicit_all = three.get("cutoffs") or {}
+    # Timestamps far below every pin: if t3 ever fell back to max_ms+1 the
+    # asserts below would fail loudly instead of silently floating.
+    dummy_clean = pd.DataFrame({"timestamp": [0, 10_000]})
+
+    for category, expected in PINNED_THREE_SNAPSHOT_CUTOFFS_MS.items():
+        explicit = explicit_all.get(category)
+        assert explicit, f"{category}: three_snapshot.cutoffs pin missing from preprocessing.yaml"
+        for k in ("t0", "t1", "t2", "t3"):
+            assert explicit.get(k), f"{category}: cutoff {k} not pinned explicitly"
+            assert isinstance(explicit[k], str), (
+                f"{category}: cutoff {k} must be a quoted ISO string, got {type(explicit[k])}"
+            )
+        resolved = resolve_four_cutoffs(
+            dummy_clean,
+            explicit=explicit,
+            quantiles=three.get("cutoff_quantiles"),
+        )
+        assert resolved["source"] == "explicit"
+        for k in ("t0", "t1", "t2", "t3"):
+            assert resolved[f"{k}_ms"] == expected[k], (
+                f"{category} {k}: yaml round-trips to {resolved[f'{k}_ms']}, "
+                f"pinned manifest value is {expected[k]}"
+            )
 
 
 # ---------------------------------------------------------------------------
