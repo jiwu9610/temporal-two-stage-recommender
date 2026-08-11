@@ -25,9 +25,11 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.data.temporal_split import MS_PER_DAY  # noqa: E402
 from scripts.retrieval.temporal_sources import (  # noqa: E402
+    build_content_profiles,
     build_covisitation,
     classify_targets,
     decayed_popularity,
+    recommend_content_knn,
     recommend_covisitation,
     windowed_popularity,
 )
@@ -167,6 +169,326 @@ def test_recommend_covisitation_deterministic_tiebreak(covis_history):
     hist = _mk([("U1", "IA", 5, day(50))])
     out = recommend_covisitation(hist, ["U1"], nb, {"U1": {"IA"}}, k=10)
     assert out["U1"] == ["IB", "IZ"]           # alphabetical on ties
+
+
+# ---------------------------------------------------------------------------
+# content i2i: profiles + kNN retrieval
+# ---------------------------------------------------------------------------
+
+def _unit(v):
+    v = np.asarray(v, dtype=np.float64)
+    return v / np.linalg.norm(v)
+
+
+@pytest.fixture
+def content_embeddings():
+    """2-d toy embeddings: IA/IB axis-aligned, IC a zero row (item without an
+    embedding after alignment), ID unnormalized on purpose."""
+    vecs = {"IA": [1.0, 0.0], "IB": [0.0, 1.0],
+            "IC": [0.0, 0.0], "ID": [3.0, 4.0]}
+    asins = sorted(vecs)
+    embs = np.array([vecs[a] for a in asins], dtype=np.float32)
+    index = {a: j for j, a in enumerate(asins)}
+    return embs, index
+
+
+def test_content_profile_recency_decay_and_normalization(content_embeddings):
+    embs, index = content_embeddings
+    hist = _mk([
+        ("U1", "IA", 5, day(10)),
+        ("U1", "IB", 5, day(20)),        # more recent -> recency rank 0
+        ("U1", "IA", 1, day(30)),        # hard negative: never enters
+    ])
+    prof = build_content_profiles(hist, AS_OF, embs, index,
+                                  recency_decay=0.8, max_events=30)
+    # p = normalize(1.0 * eIB + 0.8 * eIA)
+    assert np.allclose(prof["U1"], _unit([0.8, 1.0]), atol=1e-6)
+    assert np.linalg.norm(prof["U1"]) == pytest.approx(1.0)
+    # max_events window: only the most recent positive survives.
+    prof1 = build_content_profiles(hist, AS_OF, embs, index, max_events=1)
+    assert np.allclose(prof1["U1"], [0.0, 1.0], atol=1e-6)
+
+
+def test_content_profile_normalizes_item_vectors_first(content_embeddings):
+    embs, index = content_embeddings
+    hist = _mk([("U2", "ID", 5, day(10))])
+    prof = build_content_profiles(hist, AS_OF, embs, index)
+    # ID = [3, 4] must be unit-normalized before pooling.
+    assert np.allclose(prof["U2"], [0.6, 0.8], atol=1e-6)
+
+
+def test_content_profile_missing_embedding_consumes_recency_slot(
+        content_embeddings):
+    embs, index = content_embeddings
+    # Recency order: IA (r=0), IC (r=1, zero row), IB (r=2).
+    hist = _mk([
+        ("U3", "IB", 5, day(10)),
+        ("U3", "IC", 5, day(20)),
+        ("U3", "IA", 5, day(30)),
+    ])
+    prof = build_content_profiles(hist, AS_OF, embs, index,
+                                  recency_decay=0.8)
+    # IC contributes nothing but keeps its slot: 1.0*eIA + 0.8^2*eIB,
+    # NOT 1.0*eIA + 0.8*eIB.
+    assert np.allclose(prof["U3"], _unit([1.0, 0.64]), atol=1e-6)
+    assert not np.allclose(prof["U3"], _unit([1.0, 0.8]), atol=1e-3)
+    # An item absent from the index entirely behaves the same way.
+    hist2 = _mk([
+        ("U4", "IB", 5, day(10)),
+        ("U4", "IZMISSING", 5, day(20)),
+        ("U4", "IA", 5, day(30)),
+    ])
+    prof2 = build_content_profiles(hist2, AS_OF, embs, index,
+                                   recency_decay=0.8)
+    assert np.allclose(prof2["U4"], _unit([1.0, 0.64]), atol=1e-6)
+
+
+def test_content_profile_guard_no_future(content_embeddings):
+    embs, index = content_embeddings
+    hist = _mk([("U1", "IA", 5, day(100))])      # exactly at as_of -> future
+    with pytest.raises(ValueError, match="leakage"):
+        build_content_profiles(hist, AS_OF, embs, index)
+
+
+def test_content_profile_unservable_users_get_no_entry(content_embeddings):
+    embs, index = content_embeddings
+    hist = _mk([
+        ("UNEG", "IA", 1, day(10)),          # negatives only
+        ("UZERO", "IC", 5, day(10)),         # only a zero-embedding positive
+        ("UOK", "IA", 5, day(10)),
+    ])
+    prof = build_content_profiles(hist, AS_OF, embs, index)
+    assert set(prof) == {"UOK"}
+
+
+@pytest.fixture
+def content_pool():
+    items = np.array(["CA", "CB", "CC", "CD"])
+    mat = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 0.0], [0.6, 0.8]],
+                   dtype=np.float32)
+    return items, mat
+
+
+def test_content_knn_ranking_ties_seen_and_unserved(content_pool):
+    items, mat = content_pool
+    profiles = {"U1": np.array([1.0, 0.0], dtype=np.float32)}
+    out, sc = recommend_content_knn(["U1", "U9"], profiles, items, mat,
+                                    {}, k=10, return_scores=True)
+    # cos: CA=CC=1.0 (tie -> alphabetical), CD=0.6, CB=0.0; raw cosines out.
+    assert out["U1"] == ["CA", "CC", "CD", "CB"]
+    assert sc["U1"][2] == pytest.approx(0.6, rel=1e-6)
+    assert out["U9"] == [] and sc["U9"] == []        # no profile -> fallback
+    # Seen-mask contract identical to covis: seen items never emitted.
+    out2 = recommend_content_knn(["U1"], profiles, items, mat,
+                                 {"U1": {"CA"}}, k=10)
+    assert out2["U1"] == ["CC", "CD", "CB"]
+
+
+def test_content_knn_deterministic_and_partition_matches_full_sort(
+        content_pool):
+    items, mat = content_pool
+    profiles = {"U1": np.array([1.0, 0.0], dtype=np.float32)}
+    full = recommend_content_knn(["U1"], profiles, items, mat, {}, k=4,
+                                 oversample=64)
+    # Rerun -> identical (determinism); tiny oversample forces the
+    # argpartition path, whose truncation must agree with the full sort.
+    assert recommend_content_knn(["U1"], profiles, items, mat, {}, k=4,
+                                 oversample=64) == full
+    for k in (1, 2, 3):
+        part = recommend_content_knn(["U1"], profiles, items, mat, {}, k=k,
+                                     oversample=1)
+        assert part["U1"] == full["U1"][:k]
+
+
+def test_content_knn_loud_contract_asserts(content_pool):
+    items, mat = content_pool
+    profiles = {"U1": np.array([1.0, 0.0], dtype=np.float32)}
+    with pytest.raises(AssertionError, match="sorted"):
+        recommend_content_knn(["U1"], profiles, items[::-1], mat[::-1], {})
+    bad = mat.copy()
+    bad[2] = [3.0, 4.0]                              # unnormalized row
+    with pytest.raises(AssertionError, match="normalized"):
+        recommend_content_knn(["U1"], profiles, items, bad, {})
+    with pytest.raises(AssertionError, match="align"):
+        recommend_content_knn(["U1"], profiles, items, mat[:2], {})
+
+
+# ---------------------------------------------------------------------------
+# content i2i inside the candidate builder: 1+cos storage + exact fill
+# ---------------------------------------------------------------------------
+
+BUILDER_CAT = "ContentCat"
+_USER_FEATS = ["n_reviews_hist", "avg_rating_hist", "std_rating_hist",
+               "n_unique_items_hist", "active_days_hist",
+               "verified_rate_hist", "days_since_last_interaction",
+               "interactions_last_30d", "positives_last_30d"]
+_ITEM_FEATS = ["n_reviews_hist", "n_positives_hist", "avg_rating_hist",
+               "n_unique_reviewers_hist", "n_features", "n_description",
+               "n_categories"]
+
+
+def _write_builder_fixture(root: Path) -> Path:
+    """model_selection snapshot for build_snapshot_candidates + a content npz.
+
+    Universe: eligible items E1/E2/E4/Z0, non-eligible CX. Embeddings (2-d):
+    E1=[1,0], E2=[0,1], E4=[0.8,0.6], CX=[0.6,0.8], Z0 zero row (no
+    embedding), XX=[0,1] exists only in the npz. UA's only positive is E1 ->
+    profile [1,0]; UB is zero-history (no profile). Popularity: Z0 x3, E2 x2,
+    the rest x1 -> UA's popularity top-2 is [Z0, E2] (E1 seen), so E2/Z0
+    reach UA's rows through popularity, E4 through two-tower + content and CX
+    (UA's target) through content ONLY.
+    """
+    tdir = root / BUILDER_CAT / "temporal_ranker"
+    tdir.mkdir(parents=True)
+    t0, t1, t2, t3 = day(60), day(80), day(100), day(120)
+
+    hist = _mk([
+        ("P1", "E2", 5, day(10)), ("P2", "E2", 5, day(11)),
+        ("P3", "E4", 5, day(12)),
+        ("P4", "Z0", 5, day(13)), ("P5", "Z0", 5, day(14)),
+        ("P6", "Z0", 5, day(15)),
+        ("P7", "CX", 5, day(16)),
+        ("UA", "E1", 5, day(70)),
+        ("UD", "E2", 1, day(41)),          # hard negative in history
+    ])
+    hist.to_parquet(tdir / "history_model_selection.parquet", index=False)
+
+    gt = pd.DataFrame({
+        "user_id": ["UA", "UB"], "parent_asin": ["CX", "E2"],
+        "rating": [5, 4], "label": [1, 1],
+        "timestamp": [day(85), day(86)],
+        "n_history_events": [1, 0], "item_in_history": [1, 1],
+    })
+    gt.to_parquet(tdir / "groundtruth_model_selection.parquet", index=False)
+
+    users = sorted(hist["user_id"].unique())
+    uf = pd.DataFrame({"user_id": users})
+    for i, c in enumerate(_USER_FEATS):
+        uf[c] = np.linspace(0.5, 2.0, len(users)) + i
+    uf.to_parquet(tdir / "user_features_model_selection.parquet", index=False)
+
+    items = ["CX", "E1", "E2", "E4", "Z0"]
+    itf = pd.DataFrame({
+        "parent_asin": items,
+        "main_category": ["C0", "C0", "C1", "C1", "C0"],
+        "store": ["S0", "S1", "S0", "S1", np.nan],
+        "in_eligible_pool": [0, 1, 1, 1, 1],
+        "in_history_catalog": 1,
+    })
+    for i, c in enumerate(_ITEM_FEATS):
+        itf[c] = np.arange(len(items), dtype=float) + i * 0.5
+    itf.to_parquet(tdir / "item_features_model_selection.parquet", index=False)
+
+    pd.DataFrame({"user_id": ["UA"], "parent_asin": ["E4"],
+                  "score": [0.5], "rank": [1]}).to_parquet(
+        tdir / "two_tower_predictions_model_selection.parquet", index=False)
+
+    cutoffs = {"t0_ms": t0, "t1_ms": t1, "t2_ms": t2, "t3_ms": t3}
+    json.dump({"cutoffs": cutoffs,
+               "snapshots": {"model_selection": {"history_end_ms": t1}}},
+              open(tdir / "snapshot_manifest.json", "w"))
+    json.dump({"w_store": 1.0, "w_cat": 1.0, "w_pop": 1.0,
+               "tuned_on": "ranker_train (T0->T1 development labels)",
+               "cutoff_fingerprint": cutoffs},
+              open(tdir / "rule_weights.json", "w"))
+
+    # npz deliberately NOT alphabetical: the source must re-sort its pool.
+    np.savez(root / BUILDER_CAT / "item_text_embeddings.npz",
+             asins=np.array(["Z0", "E4", "CX", "E1", "E2", "XX"],
+                            dtype=object),
+             embs=np.array([[0.0, 0.0], [0.8, 0.6], [0.6, 0.8],
+                            [1.0, 0.0], [0.0, 1.0], [0.0, 1.0]],
+                           dtype=np.float32))
+    return tdir
+
+
+CONTENT_SOURCE = [{"name": "content_i2i", "type": "content_i2i",
+                   "pool": "catalog"}]
+
+
+def _build_content_candidates(root: Path, out: Path):
+    from scripts.ranker.temporal_candidate_builder import (
+        build_snapshot_candidates,
+    )
+    return build_snapshot_candidates(
+        BUILDER_CAT, "model_selection", top_k=2, seed=42,
+        processed_dir=root, require_two_tower=True,
+        extra_sources=CONTENT_SOURCE, out_dir=out,
+    )
+
+
+def test_builder_content_scores_are_one_plus_cos_and_exact_filled(tmp_path):
+    root = tmp_path / "proc"
+    _write_builder_fixture(root)
+    report = _build_content_candidates(root, tmp_path / "out")
+    c = pd.read_parquet(tmp_path / "out" / "candidates_model_selection.parquet")
+
+    ua = c[c["user_id"] == "UA"].set_index("parent_asin")
+    # Emitted by the source: stored score is 1 + cosine (shifted to [0,2] so
+    # resolve_feature_list's log1p(max(x,0)) never truncates a negative cos).
+    assert ua.loc["E4", "source_content_i2i"] == 1
+    assert ua.loc["E4", "content_i2i_rank"] == 1
+    assert ua.loc["E4", "content_i2i_score"] == pytest.approx(1.8, rel=1e-5)
+    assert ua.loc["CX", "source_content_i2i"] == 1
+    assert ua.loc["CX", "content_i2i_rank"] == 2
+    assert ua.loc["CX", "content_i2i_score"] == pytest.approx(1.6, rel=1e-5)
+    # Exact fill: E2 reached UA through popularity only, but UA holds a
+    # profile -> 1 + cos([1,0],[0,1]) = 1.0, NOT the blanket 0.0.
+    assert ua.loc["E2", "source_content_i2i"] == 0
+    assert ua.loc["E2", "content_i2i_score"] == pytest.approx(1.0, rel=1e-6)
+    # Item without an embedding row: falls through to 0.0 even for a served
+    # user.
+    assert ua.loc["Z0", "source_content_i2i"] == 0
+    assert ua.loc["Z0", "content_i2i_score"] == 0.0
+    # Unserved user (no positive history -> no profile): blanket 0.0.
+    ub = c[c["user_id"] == "UB"]
+    assert len(ub) > 0
+    assert (ub["source_content_i2i"] == 0).all()
+    assert (ub["content_i2i_score"] == 0.0).all()
+    # The shift keeps every stored value inside [0, 2].
+    assert ((c["content_i2i_score"] >= 0.0)
+            & (c["content_i2i_score"] <= 2.0)).all()
+    assert "content_i2i" in report["sources"]
+
+
+def test_builder_content_catalog_pool_reaches_non_eligible_target(tmp_path):
+    """CX is UA's target, sits OUTSIDE the eligible pool (1 history event)
+    and no base source can emit it -- the catalog-pool content source is the
+    only reach into it, which is exactly the coverage claim of the wave."""
+    root = tmp_path / "proc"
+    _write_builder_fixture(root)
+    report = _build_content_candidates(root, tmp_path / "out")
+    c = pd.read_parquet(tmp_path / "out" / "candidates_model_selection.parquet")
+    row = c[(c["user_id"] == "UA") & (c["parent_asin"] == "CX")]
+    assert len(row) == 1
+    assert row["label"].iloc[0] == 1
+    assert row["num_sources"].iloc[0] == 1           # content and nothing else
+    assert report["candidate_catalog_size"] == 4     # eligible pool untouched
+    # Without the content source the same fixture never reaches CX.
+    from scripts.ranker.temporal_candidate_builder import (
+        build_snapshot_candidates,
+    )
+    base = build_snapshot_candidates(
+        BUILDER_CAT, "model_selection", top_k=2, seed=42,
+        processed_dir=root, require_two_tower=True,
+        out_dir=tmp_path / "out_base",
+    )
+    c0 = pd.read_parquet(
+        tmp_path / "out_base" / "candidates_model_selection.parquet")
+    assert "CX" not in set(c0["parent_asin"])
+    assert base["coverage"]["retrieved_union"] < \
+        report["coverage"]["retrieved_union"]
+
+
+def test_builder_content_run_is_byte_deterministic(tmp_path):
+    """Same fixture, same seed -> byte-identical candidate parquet."""
+    root = tmp_path / "proc"
+    _write_builder_fixture(root)
+    _build_content_candidates(root, tmp_path / "out_a")
+    _build_content_candidates(root, tmp_path / "out_b")
+    a = (tmp_path / "out_a" / "candidates_model_selection.parquet").read_bytes()
+    b = (tmp_path / "out_b" / "candidates_model_selection.parquet").read_bytes()
+    assert a == b
 
 
 # ---------------------------------------------------------------------------

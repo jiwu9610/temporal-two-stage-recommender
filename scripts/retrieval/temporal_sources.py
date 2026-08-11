@@ -8,6 +8,9 @@ Additional candidate sources computed STRICTLY from snapshot-visible history
   * co-visitation           item-to-item co-occurrence within users' visible
                             positive histories; per-user retrieval seeds from
                             their most recent positives
+  * content i2i             cosine kNN of a recency-decayed, L2-normalized
+                            taste profile (positive history text embeddings)
+                            against an item-embedding candidate pool
 
 Determinism contract (same as the rest of the temporal stack):
   * item scores tie-break alphabetically by parent_asin;
@@ -212,6 +215,138 @@ def recommend_covisitation(
         ranked = sorted(scores.items(), key=lambda t: (-t[1], t[0]))[:k]
         out[u] = [it for it, _ in ranked]
         out_scores[u] = [s for _, s in ranked]
+    if return_scores:
+        return out, out_scores
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Content-based item-to-item (text-embedding kNN over user taste profiles)
+# ---------------------------------------------------------------------------
+
+def build_content_profiles(
+    history_df: pd.DataFrame,
+    as_of_ms: int,
+    item_embeddings: np.ndarray,
+    item_index: Mapping[str, int],
+    recency_decay: float = 0.8,
+    max_events: int = 30,
+    item_col: str = "parent_asin",
+    user_col: str = "user_id",
+    time_col: str = "timestamp",
+) -> Dict[str, np.ndarray]:
+    """L2-normalized per-user taste profiles from visible POSITIVE history.
+
+    Each user's most recent `max_events` positives before the cutoff (recency
+    desc, item asc -- the covis seed ordering) are pooled with recency decay:
+    the event at recency rank r contributes recency_decay**r * (e_i / ||e_i||).
+    Rank r counts EVENTS, so an item absent from `item_index` (or carrying a
+    zero embedding row) contributes nothing yet still consumes its recency
+    slot -- coverage gaps must not silently re-weight what the user bought
+    around them. Users with no embeddable positive get NO entry, and the
+    retrieval side emits an empty list for them (covis contract: the union's
+    popularity source is their fallback).
+    """
+    _guard_no_future(history_df, as_of_ms, time_col)
+    if not 0.0 < recency_decay <= 1.0:
+        raise ValueError(f"recency_decay must be in (0, 1], got {recency_decay}")
+    pos = history_df[history_df["label"] == 1][[user_col, item_col, time_col]].copy()
+    pos[user_col] = pos[user_col].astype(str)
+    pos[item_col] = pos[item_col].astype(str)
+    pos = pos.sort_values([user_col, time_col, item_col],
+                          ascending=[True, False, True], kind="mergesort")
+    recent = pos.groupby(user_col).head(max_events)
+
+    profiles: Dict[str, np.ndarray] = {}
+    for u, g in recent.groupby(user_col, sort=False):
+        acc: Optional[np.ndarray] = None
+        for r, it in enumerate(g[item_col].tolist()):
+            j = item_index.get(it)
+            if j is None:
+                continue
+            v = item_embeddings[j].astype(np.float64)
+            norm = float(np.linalg.norm(v))
+            if norm == 0.0:
+                continue
+            term = (recency_decay ** r / norm) * v
+            acc = term if acc is None else acc + term
+        if acc is None:
+            continue
+        norm = float(np.linalg.norm(acc))
+        if norm == 0.0:      # exact cancellation: no usable taste direction
+            continue
+        profiles[u] = (acc / norm).astype(np.float32)
+    return profiles
+
+
+def recommend_content_knn(
+    user_ids: Iterable[str],
+    profiles: Mapping[str, np.ndarray],
+    candidate_items: np.ndarray,
+    candidate_matrix: np.ndarray,
+    user_seen: Mapping[str, Set[str]],
+    k: int = 100,
+    oversample: int = 64,
+    return_scores: bool = False,
+):
+    """Per-user content top-K: cosine(profile, item) over the candidate pool.
+
+    `candidate_items` must be alphabetically sorted with `candidate_matrix`
+    row-aligned and row-L2-normalized (loud asserts on all three), so the dot
+    product IS the cosine and positional ties break by item id. Ranking takes
+    the top-(k + oversample) by score via argpartition, stable re-ranks that
+    slice (score desc, parent_asin asc) and truncates to k. Seen items are
+    removed exactly as in covis retrieval; users without a profile get an
+    empty list. Scores returned are RAW cosines in [-1, 1] -- storage-side
+    shifts are the caller's concern.
+    """
+    n = len(candidate_items)
+    assert candidate_matrix.ndim == 2 and candidate_matrix.shape[0] == n, (
+        f"candidate_matrix shape {candidate_matrix.shape} does not align with "
+        f"{n} candidate items")
+    if n:
+        assert bool((candidate_items[:-1] <= candidate_items[1:]).all()), (
+            "candidate_items must be alphabetically sorted -- the "
+            "deterministic tie-break contract depends on it")
+        norms = np.linalg.norm(candidate_matrix, axis=1)
+        assert float(np.abs(norms - 1.0).max()) < 1e-3, (
+            "candidate_matrix rows must be L2-normalized (a zero or "
+            "unnormalized row would silently distort the cosine ranking)")
+    index = {it: j for j, it in enumerate(candidate_items)}
+
+    out: Dict[str, List[str]] = {}
+    out_scores: Dict[str, List[float]] = {}
+    for u in user_ids:
+        p = profiles.get(u)
+        if p is None or n == 0:
+            out[u] = []
+            out_scores[u] = []
+            continue
+        scores = candidate_matrix @ p.astype(candidate_matrix.dtype, copy=False)
+        seen = user_seen.get(u, set())
+        for it in seen:
+            j = index.get(it)
+            if j is not None:
+                scores[j] = -np.inf
+        m = min(k + oversample, n)
+        if m < n:
+            top = np.sort(np.argpartition(-scores, m - 1)[:m])
+        else:
+            top = np.arange(n)
+        # `top` ascending == parent_asin ascending, so the stable argsort on
+        # -score keeps alphabetical order inside every tie group.
+        order = top[np.argsort(-scores[top], kind="stable")]
+        items: List[str] = []
+        vals: List[float] = []
+        for j in order:
+            if not np.isfinite(scores[j]):        # seen-masked entry
+                continue
+            items.append(candidate_items[j])
+            vals.append(float(scores[j]))
+            if len(items) >= k:
+                break
+        out[u] = items
+        out_scores[u] = vals
     if return_scores:
         return out, out_scores
     return out

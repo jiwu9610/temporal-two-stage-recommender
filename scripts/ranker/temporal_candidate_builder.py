@@ -156,8 +156,17 @@ def build_snapshot_candidates(
                         item_features in_eligible_pool flag, i.e. threshold 5)
       extra_sources     additional point-in-time sources, each
                         {"name": ..., "type": "windowed_pop"|"decayed_pop"|
-                         "covis", ...params}; contributes candidates plus
-                        source_{name}/{name}_rank/{name}_score columns
+                         "covis"|"content_i2i", ...params}; contributes
+                        candidates plus source_{name}/{name}_rank/
+                        {name}_score columns. content_i2i params:
+                        embeddings_path (default {processed}/{cat}/
+                        item_text_embeddings.npz), pool ("catalog"|"history"|
+                        "eligible", default catalog), min_pool_history (for
+                        pool="history", default 1), recency_decay (0.8),
+                        max_events (30). Its stored score is 1 + cosine in
+                        [0, 2] (exact-filled for profile-holding users on
+                        rows other sources contributed; users without a
+                        profile keep the blanket 0.0 fill).
       tt_k              read two_tower_predictions_{snap}_k{tt_k}.parquet
                         (generated via infer_snapshot_checkpoint if missing)
       out_dir           variant output directory (base artifacts untouched)
@@ -332,8 +341,10 @@ def build_snapshot_candidates(
     extra_prepared = []          # (name, kind, payload)
     if extra_sources:
         from scripts.retrieval.temporal_sources import (
+            build_content_profiles,
             build_covisitation,
             decayed_popularity,
+            recommend_content_knn,
             recommend_covisitation,
             windowed_popularity,
         )
@@ -360,6 +371,66 @@ def build_snapshot_candidates(
                     "seed_decay": float(src.get("seed_decay", 0.7)),
                     "max_neighbors_per_seed":
                         int(src.get("max_neighbors_per_seed", 50)),
+                }))
+            elif kind == "content_i2i":
+                emb_path = (Path(src["embeddings_path"])
+                            if src.get("embeddings_path")
+                            else Path(processed_dir) / category
+                            / "item_text_embeddings.npz")
+                if not emb_path.exists():
+                    raise FileNotFoundError(
+                        f"{emb_path} not found -- content_i2i needs the "
+                        f"aligned item text embeddings")
+                npz = np.load(emb_path, allow_pickle=True)
+                emb_asins = np.asarray(npz["asins"]).astype(str)
+                embs = np.asarray(npz["embs"], dtype=np.float32)
+                if embs.ndim != 2 or embs.shape[0] != len(emb_asins) \
+                        or not len(emb_asins):
+                    raise ValueError(
+                        f"{emb_path} unusable: asins {emb_asins.shape} vs "
+                        f"embs {embs.shape} (text_alignment 'not_present'?)")
+                norms = np.linalg.norm(embs, axis=1)
+                has_emb = norms > 0.0     # alignment zero-fills missing items
+                if not has_emb.any():
+                    raise ValueError(f"{emb_path} holds only zero embeddings")
+                embs /= np.where(has_emb, norms, 1.0)[:, None]  # unit/zero rows
+                emb_index = {a: j for j, (a, ok) in
+                             enumerate(zip(emb_asins, has_emb)) if ok}
+                assert len(emb_index) == int(has_emb.sum()), \
+                    "duplicate parent_asin keys in the embedding npz"
+                pool_mode = src.get("pool", "catalog")
+                if pool_mode == "catalog":
+                    keep = has_emb
+                elif pool_mode == "history":
+                    hc = history["parent_asin"].value_counts()
+                    min_h = int(src.get("min_pool_history", 1))
+                    ok_items = set(hc[hc >= min_h].index.astype(str))
+                    keep = has_emb & np.array(
+                        [a in ok_items for a in emb_asins])
+                elif pool_mode == "eligible":
+                    keep = has_emb & np.array([a in pool for a in emb_asins])
+                else:
+                    raise ValueError(
+                        f"unknown content_i2i pool {pool_mode!r} "
+                        f"(expected catalog|history|eligible)")
+                order = np.argsort(emb_asins[keep], kind="stable")
+                profiles = build_content_profiles(
+                    history, as_of_ms, embs, emb_index,
+                    recency_decay=float(src.get("recency_decay", 0.8)),
+                    max_events=int(src.get("max_events", 30)),
+                )
+                prof_users = sorted(profiles)
+                extra_prepared.append((name, kind, {
+                    "profiles": profiles,
+                    "candidate_items": emb_asins[keep][order],
+                    "candidate_matrix": embs[keep][order],
+                    "norm_embs": embs,
+                    "emb_index": emb_index,
+                    "prof_index": {u: j for j, u in enumerate(prof_users)},
+                    "prof_matrix": (
+                        np.stack([profiles[u] for u in prof_users])
+                        if prof_users
+                        else np.zeros((0, embs.shape[1]), dtype=np.float32)),
                 }))
             else:
                 raise ValueError(f"unknown extra source type {kind!r}")
@@ -437,7 +508,19 @@ def build_snapshot_candidates(
                 score_map = payload.to_dict()
                 scores_e = {u: [float(score_map.get(it, 0.0)) for it in items]
                             for u, items in topk_e.items()}
-            else:   # covis
+            elif kind == "content_i2i":
+                topk_e, cos_e = recommend_content_knn(
+                    chunk, payload["profiles"], payload["candidate_items"],
+                    payload["candidate_matrix"], seen, k=top_k,
+                    return_scores=True,
+                )
+                # Stored score = 1 + cosine, shifted into [0, 2]: rank-
+                # preserving and non-negative, so resolve_feature_list's
+                # log1p(max(x, 0)) never truncates negative cosines. 0.0
+                # stays the unserved-user fill (see the fill block below).
+                scores_e = {u: [1.0 + s for s in ss]
+                            for u, ss in cos_e.items()}
+            else:   # covis (the prepare loop rejected every other kind)
                 topk_e, scores_e = recommend_covisitation(
                     history, chunk, payload["neighbors"], seen,
                     max_seeds=payload["max_seeds"],
@@ -462,8 +545,40 @@ def build_snapshot_candidates(
         best = rank_masked.min(axis=1)
         best[best == np.iinfo(np.int32).max] = 0
         merged["best_rank"] = best.astype(np.int32)
-        for name in extra_names:
-            merged[f"{name}_score"] = merged[f"{name}_score"].fillna(0.0).astype(np.float32)
+        for name, kind, payload in extra_prepared:
+            if kind == "content_i2i":
+                # Exact fill for rows OTHER sources contributed: users with a
+                # profile get 1 + cos(profile, item) -- the same shifted scale
+                # the source emits, so within-user comparisons stay on one
+                # scale. Unserved users (no profile) and items without an
+                # embedding fall through to the blanket 0.0 below.
+                col = f"{name}_score"
+                miss = merged[col].isna().to_numpy()
+                if miss.any():
+                    rows = np.flatnonzero(miss)
+                    prof_index = payload["prof_index"]
+                    emb_index = payload["emb_index"]
+                    pidx = np.array(
+                        [prof_index.get(u, -1)
+                         for u in merged["user_id"].to_numpy()[rows]],
+                        dtype=np.int64)
+                    iidx = np.array(
+                        [emb_index.get(it, -1)
+                         for it in merged["parent_asin"].to_numpy()[rows]],
+                        dtype=np.int64)
+                    ok = (pidx >= 0) & (iidx >= 0)
+                    if ok.any():
+                        cos = np.einsum(
+                            "ij,ij->i",
+                            payload["prof_matrix"][pidx[ok]],
+                            payload["norm_embs"][iidx[ok]],
+                        )
+                        fill = np.full(len(merged), np.nan, dtype=np.float32)
+                        fill[rows[ok]] = 1.0 + cos
+                        merged[col] = merged[col].fillna(
+                            pd.Series(fill, index=merged.index))
+            merged[f"{name}_score"] = (
+                merged[f"{name}_score"].fillna(0.0).astype(np.float32))
 
         # Score fills (missing-source rows).
         merged["popularity_score"] = merged["popularity_score"].fillna(
