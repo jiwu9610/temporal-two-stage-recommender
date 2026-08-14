@@ -1,0 +1,214 @@
+{
+  "category": "Video_Games",
+  "snapshot": "ranker_train",
+  "training_boundary_ms": 1580172986322,
+  "training_boundary_iso": "2020-01-28T00:56:26.322000+00:00",
+  "n_training_events": 693228,
+  "dataset_composition": {
+    "n_positive": 550872,
+    "n_hard_neg": 79237,
+    "n_soft_neg": 0
+  },
+  "seed": 42,
+  "mode": "development_early_stop",
+  "epochs_trained": 2,
+  "frozen_epochs_input": null,
+  "config": {
+    "two_tower": {
+      "embedding_dim": 64,
+      "hidden_dim": 128,
+      "id_emb_dim": 32,
+      "cat_emb_dim": 16,
+      "dropout": 0.1,
+      "use_user_id_emb": true,
+      "use_item_id_emb": true,
+      "use_deeper_cat_emb": true,
+      "use_hist_pool": true,
+      "hist_pool_len": 20,
+      "hist_pool_recency_days": null
+    },
+    "pair_sampling": {
+      "n_soft_neg": 4,
+      "use_hard_negatives": true,
+      "positive_weight": 1.0,
+      "hard_negative_weight": 1.0,
+      "soft_negative_weight": 1.0,
+      "seed": 42,
+      "loss_mode": "softmax",
+      "hard_negative_lambda": 0.0,
+      "softmax_tail_size": 4096,
+      "pair_recency_decay_days": 365.0
+    },
+    "train": {
+      "batch_size": 4096,
+      "lr": 0.001,
+      "weight_decay": 1e-05,
+      "grad_clip": 5.0,
+      "optimizer": "adamw"
+    }
+  },
+  "config_hash": "6156d5f69f182eeb",
+  "vocab_sizes": {
+    "users": 312743,
+    "items": 18055
+  },
+  "label_mode": "all_positive",
+  "n_label_users": 60417,
+  "n_label_rows": 82534,
+  "n_zero_history_label_users": 41292,
+  "empty_pool_user_share": 0.68345,
+  "n_hard_neg_pool": 79237,
+  "metrics_over_sampled_users_only": false,
+  "n_users_in_metrics": 60417,
+  "metrics": {
+    "Recall@10": 0.010225979879057524,
+    "Precision@10": 0.0014913021169538374,
+    "Recall@50": 0.027043038876973336,
+    "Precision@50": 0.0008143403346740158,
+    "Recall@100": 0.03960002057608031,
+    "Precision@100": 0.0005932105202178195
+  },
+  "metrics_single_gt": {
+    "Recall@10": 0.01027856398033666,
+    "Precision@10": 0.001027856398033666,
+    "Recall@50": 0.027426055580383003,
+    "Precision@50": 0.0005485211116076601,
+    "Recall@100": 0.04000529652250195,
+    "Precision@100": 0.00040005296522501946
+  },
+  "coverage_eligible_pool": 0.6586740010177624,
+  "cohorts": {
+    "0": {
+      "n_users": 41292,
+      "Recall@10": 0.0,
+      "Precision@10": 0.0,
+      "Recall@50": 0.0,
+      "Precision@50": 0.0,
+      "Recall@100": 0.0,
+      "Precision@100": 0.0
+    },
+    "1": {
+      "n_users": 7921,
+      "Recall@10": 0.03857916831026287,
+      "Precision@10": 0.005087741446787022,
+      "Recall@50": 0.09672203920940081,
+      "Precision@50": 0.0025754323948996337,
+      "Recall@100": 0.13672253362029577,
+      "Precision@100": 0.0018103774775912133
+    },
+    "2": {
+      "n_users": 3635,
+      "Recall@10": 0.034802475531498914,
+      "Precision@10": 0.004676753782668501,
+      "Recall@50": 0.09225543904360961,
+      "Precision@50": 0.0026519944979367265,
+      "Recall@100": 0.13859349346969704,
+      "Precision@100": 0.001988995873452545
+    },
+    "3+": {
+      "n_users": 7569,
+      "Recall@10": 0.024538305669233432,
+      "Precision@10": 0.004333465451182454,
+      "Recall@50": 0.07033630417874397,
+      "Precision@50": 0.0025313779891663365,
+      "Recall@100": 0.10645368021883106,
+      "Precision@100": 0.0018853217069626108
+    }
+  },
+  "history_log": [
+    {
+      "epoch": 1,
+      "epoch_seconds": 1.83,
+      "train": {
+        "loss": 1.24819877468329,
+        "softmax_loss": 1.24819877468329,
+        "hard_neg_loss": 0.0,
+        "mean_logit_pos": -0.19604451879425086,
+        "mean_logit_neg": -0.25854203920486984,
+        "mean_valid_neg_per_row": 8181.109597147794,
+        "n_examples": 550872,
+        "n_pos": 550872,
+        "n_neg": 4506744206
+      },
+      "dev_metrics": {
+        "Recall@10": 0.009225202360775198,
+        "Precision@10": 0.0013456477481503552,
+        "Recall@50": 0.026342720058577372,
+        "Precision@50": 0.00078752668950792,
+        "Recall@100": 0.039226253051510854,
+        "Precision@100": 0.0005879139977158746
+      }
+    },
+    {
+      "epoch": 2,
+      "epoch_seconds": 1.29,
+      "train": {
+        "loss": 1.2135575037936446,
+        "softmax_loss": 1.2135575037936446,
+        "hard_neg_loss": 0.0,
+        "mean_logit_pos": -0.21136156463102299,
+        "mean_logit_neg": -0.38181814458704205,
+        "mean_valid_neg_per_row": 8181.1156548163635,
+        "n_examples": 550872,
+        "n_pos": 550872,
+        "n_neg": 4506747543
+      },
+      "dev_metrics": {
+        "Recall@10": 0.010225979879057524,
+        "Precision@10": 0.0014913021169538374,
+        "Recall@50": 0.027043038876973336,
+        "Precision@50": 0.0008143403346740158,
+        "Recall@100": 0.03960002057608031,
+        "Precision@100": 0.0005932105202178195
+      }
+    },
+    {
+      "epoch": 3,
+      "epoch_seconds": 1.29,
+      "train": {
+        "loss": 1.2005396280604608,
+        "softmax_loss": 1.2005396280604608,
+        "hard_neg_loss": 0.0,
+        "mean_logit_pos": 0.5182333947211354,
+        "mean_logit_neg": 0.2384988722086816,
+        "mean_valid_neg_per_row": 8181.109911195341,
+        "n_examples": 550872,
+        "n_pos": 550872,
+        "n_neg": 4506744379
+      },
+      "dev_metrics": {
+        "Recall@10": 0.00912480290767846,
+        "Precision@10": 0.001337371931741066,
+        "Recall@50": 0.024528834636721647,
+        "Precision@50": 0.0007534303259016502,
+        "Recall@100": 0.036352632074703406,
+        "Precision@100": 0.0005519969544995614
+      }
+    },
+    {
+      "epoch": 4,
+      "epoch_seconds": 1.29,
+      "train": {
+        "loss": 1.1912778342576396,
+        "softmax_loss": 1.1912778342576396,
+        "hard_neg_loss": 0.0,
+        "mean_logit_pos": 1.588478197071104,
+        "mean_logit_neg": 1.225857171248281,
+        "mean_valid_neg_per_row": 8181.115965233303,
+        "n_examples": 550872,
+        "n_pos": 550872,
+        "n_neg": 4506747714
+      },
+      "dev_metrics": {
+        "Recall@10": 0.008575836339007175,
+        "Precision@10": 0.0012695102371848984,
+        "Recall@50": 0.02351009673192918,
+        "Precision@50": 0.0007229753215154676,
+        "Recall@100": 0.03429019743167384,
+        "Precision@100": 0.0005271695052716951
+      }
+    }
+  ],
+  "elapsed_seconds": 3427.03,
+  "started_utc": "2026-08-12T04:24:30.483753+00:00"
+}

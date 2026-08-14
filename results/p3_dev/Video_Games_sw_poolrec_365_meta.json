@@ -1,0 +1,214 @@
+{
+  "category": "Video_Games",
+  "snapshot": "ranker_train",
+  "training_boundary_ms": 1580172986322,
+  "training_boundary_iso": "2020-01-28T00:56:26.322000+00:00",
+  "n_training_events": 693228,
+  "dataset_composition": {
+    "n_positive": 550872,
+    "n_hard_neg": 79237,
+    "n_soft_neg": 0
+  },
+  "seed": 42,
+  "mode": "development_early_stop",
+  "epochs_trained": 2,
+  "frozen_epochs_input": null,
+  "config": {
+    "two_tower": {
+      "embedding_dim": 64,
+      "hidden_dim": 128,
+      "id_emb_dim": 32,
+      "cat_emb_dim": 16,
+      "dropout": 0.1,
+      "use_user_id_emb": true,
+      "use_item_id_emb": true,
+      "use_deeper_cat_emb": true,
+      "use_hist_pool": true,
+      "hist_pool_len": 20,
+      "hist_pool_recency_days": 365.0
+    },
+    "pair_sampling": {
+      "n_soft_neg": 4,
+      "use_hard_negatives": true,
+      "positive_weight": 1.0,
+      "hard_negative_weight": 1.0,
+      "soft_negative_weight": 1.0,
+      "seed": 42,
+      "loss_mode": "softmax",
+      "hard_negative_lambda": 0.0,
+      "softmax_tail_size": 4096,
+      "pair_recency_decay_days": 90.0
+    },
+    "train": {
+      "batch_size": 4096,
+      "lr": 0.001,
+      "weight_decay": 1e-05,
+      "grad_clip": 5.0,
+      "optimizer": "adamw"
+    }
+  },
+  "config_hash": "5a9a5d31d96196ad",
+  "vocab_sizes": {
+    "users": 312743,
+    "items": 18055
+  },
+  "label_mode": "all_positive",
+  "n_label_users": 60417,
+  "n_label_rows": 82534,
+  "n_zero_history_label_users": 41292,
+  "empty_pool_user_share": 0.68345,
+  "n_hard_neg_pool": 79237,
+  "metrics_over_sampled_users_only": false,
+  "n_users_in_metrics": 60417,
+  "metrics": {
+    "Recall@10": 0.010968806482569038,
+    "Precision@10": 0.001602198056838307,
+    "Recall@50": 0.03157488499996136,
+    "Precision@50": 0.0009364913848751179,
+    "Recall@100": 0.04692651538754645,
+    "Precision@100": 0.0006953340947084429
+  },
+  "metrics_single_gt": {
+    "Recall@10": 0.010973732558716918,
+    "Precision@10": 0.001097373255871692,
+    "Recall@50": 0.031696376847576015,
+    "Precision@50": 0.0006339275369515202,
+    "Recall@100": 0.047304566595494646,
+    "Precision@100": 0.00047304566595494647
+  },
+  "coverage_eligible_pool": 0.6586740010177624,
+  "cohorts": {
+    "0": {
+      "n_users": 41292,
+      "Recall@10": 0.0,
+      "Precision@10": 0.0,
+      "Recall@50": 0.0,
+      "Precision@50": 0.0,
+      "Recall@100": 0.0,
+      "Precision@100": 0.0
+    },
+    "1": {
+      "n_users": 7921,
+      "Recall@10": 0.04223832599668984,
+      "Precision@10": 0.005479106173462947,
+      "Recall@50": 0.11226413019431578,
+      "Precision@50": 0.00294659765181164,
+      "Recall@100": 0.16236497473618938,
+      "Precision@100": 0.0021209443252114633
+    },
+    "2": {
+      "n_users": 3635,
+      "Recall@10": 0.03345905508216374,
+      "Precision@10": 0.004731774415405777,
+      "Recall@50": 0.10884846698464305,
+      "Precision@50": 0.0030646492434663,
+      "Recall@100": 0.15579346223087626,
+      "Precision@100": 0.0022145804676753783
+    },
+    "3+": {
+      "n_users": 7569,
+      "Recall@10": 0.027283516424088793,
+      "Precision@10": 0.004782666138195271,
+      "Recall@50": 0.08227658531963442,
+      "Precision@50": 0.0029198044655833004,
+      "Recall@100": 0.12983975162832637,
+      "Precision@100": 0.0022671422909235034
+    }
+  },
+  "history_log": [
+    {
+      "epoch": 1,
+      "epoch_seconds": 2.21,
+      "train": {
+        "loss": 0.35728587765052355,
+        "softmax_loss": 0.35728587765052355,
+        "hard_neg_loss": 0.0,
+        "mean_logit_pos": -0.501233328191871,
+        "mean_logit_neg": -0.5436659656919032,
+        "mean_valid_neg_per_row": 8181.109597147794,
+        "n_examples": 550872,
+        "n_pos": 550872,
+        "n_neg": 4506744206
+      },
+      "dev_metrics": {
+        "Recall@10": 0.010512281146043037,
+        "Precision@10": 0.0014929572802356954,
+        "Recall@50": 0.030319563499177346,
+        "Precision@50": 0.0009083536090835361,
+        "Recall@100": 0.045011396066588244,
+        "Precision@100": 0.0006665342536041179
+      }
+    },
+    {
+      "epoch": 2,
+      "epoch_seconds": 1.3,
+      "train": {
+        "loss": 0.3426583009218435,
+        "softmax_loss": 0.3426583009218435,
+        "hard_neg_loss": 0.0,
+        "mean_logit_pos": -1.0293611959623787,
+        "mean_logit_neg": -1.1125276161054332,
+        "mean_valid_neg_per_row": 8181.1156548163635,
+        "n_examples": 550872,
+        "n_pos": 550872,
+        "n_neg": 4506747543
+      },
+      "dev_metrics": {
+        "Recall@10": 0.010968806482569038,
+        "Precision@10": 0.001602198056838307,
+        "Recall@50": 0.03157488499996136,
+        "Precision@50": 0.0009364913848751179,
+        "Recall@100": 0.04692651538754645,
+        "Precision@100": 0.0006953340947084429
+      }
+    },
+    {
+      "epoch": 3,
+      "epoch_seconds": 1.3,
+      "train": {
+        "loss": 0.33741638869223317,
+        "softmax_loss": 0.33741638869223317,
+        "hard_neg_loss": 0.0,
+        "mean_logit_pos": -0.8777879515447498,
+        "mean_logit_neg": -0.9931122471992417,
+        "mean_valid_neg_per_row": 8181.109911195341,
+        "n_examples": 550872,
+        "n_pos": 550872,
+        "n_neg": 4506744379
+      },
+      "dev_metrics": {
+        "Recall@10": 0.010621957821504177,
+        "Precision@10": 0.0015310260357184237,
+        "Recall@50": 0.0300399984613115,
+        "Precision@50": 0.0008990846947051328,
+        "Recall@100": 0.04591802513303469,
+        "Precision@100": 0.0006792790108744228
+      }
+    },
+    {
+      "epoch": 4,
+      "epoch_seconds": 1.3,
+      "train": {
+        "loss": 0.33323908202915703,
+        "softmax_loss": 0.33323908202915703,
+        "hard_neg_loss": 0.0,
+        "mean_logit_pos": -0.36468114339636565,
+        "mean_logit_neg": -0.515476684545658,
+        "mean_valid_neg_per_row": 8181.115965233303,
+        "n_examples": 550872,
+        "n_pos": 550872,
+        "n_neg": 4506747714
+      },
+      "dev_metrics": {
+        "Recall@10": 0.010084474196892759,
+        "Precision@10": 0.0014962676067994108,
+        "Recall@50": 0.029662131265856085,
+        "Precision@50": 0.0008878295843885,
+        "Recall@100": 0.044933697278195135,
+        "Precision@100": 0.0006681894168859757
+      }
+    }
+  ],
+  "elapsed_seconds": 3403.74,
+  "started_utc": "2026-08-12T07:11:53.056052+00:00"
+}

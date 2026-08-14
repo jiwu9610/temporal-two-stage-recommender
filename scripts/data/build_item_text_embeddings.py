@@ -68,10 +68,13 @@ def build_category(category: str, batch_size: int = 1024) -> dict:
     canon = pd.read_parquet(out_dir / "canonical_item_map.parquet")
     winners = set(canon["canonical_parent_asin"].astype(str))
 
+    # `details` is a struct column with ~830 subfields; loading it for Books'
+    # 4.4M rows OOM-killed the 64G embed job. It is only needed when the
+    # author fallback actually fires, so read it in a second, projected pass.
     meta = pd.read_parquet(
         RAW_DIR / category / "metadata.parquet",
         columns=["parent_asin", "title", "store", "main_category",
-                 "categories", "rating_number", "details"])
+                 "categories", "rating_number"])
     meta["parent_asin"] = meta["parent_asin"].astype(str)
     # Mirror canonicalize's dedup so each winner contributes its winning row.
     meta = (meta.sort_values(["rating_number", "parent_asin"],
@@ -84,7 +87,16 @@ def build_category(category: str, batch_size: int = 1024) -> dict:
     missing_store_share = float((store_clean == "").mean())
     use_author = (category == "Books"
                   and missing_store_share > AUTHOR_FALLBACK_THRESHOLD)
-    middle = (meta["details"].map(_author_of) if use_author else store_clean)
+    if use_author:
+        det = pd.read_parquet(RAW_DIR / category / "metadata.parquet",
+                              columns=["parent_asin", "details"])
+        det["parent_asin"] = det["parent_asin"].astype(str)
+        det = det.drop_duplicates("parent_asin", keep="first")
+        author = det.set_index("parent_asin")["details"].map(_author_of)
+        middle = meta["parent_asin"].map(author).fillna("")
+        del det, author
+    else:
+        middle = store_clean
 
     texts = []
     for title, mid, cats, main_cat in zip(

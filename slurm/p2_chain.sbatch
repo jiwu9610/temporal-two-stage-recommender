@@ -51,7 +51,11 @@ case "$STAGE" in
     python -m scripts.data.temporal_ranker_pipeline --category "$CAT"
     ;;
   embed)
-    python -m scripts.data.build_item_text_embeddings
+    # EMBED_CATS="Books Electronics" reruns a subset (e.g. after the details-
+    # column OOM); unset = all four.
+    ARGS=""
+    for C in ${EMBED_CATS:-}; do ARGS="$ARGS --category $C"; done
+    python -m scripts.data.build_item_text_embeddings $ARGS
     ;;
   *) echo "unknown STAGE=$STAGE" >&2; exit 1;;
 esac
