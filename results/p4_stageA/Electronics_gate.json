@@ -1,0 +1,579 @@
+{
+  "category": "Electronics",
+  "configs": {
+    "A0": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.22647320511943056,
+          "union_per_positive": 0.22647320511943056,
+          "n_rows": 52263821,
+          "elapsed_seconds": 1876.77,
+          "n_label_users": 43833,
+          "n_rows_parquet": 52263821,
+          "per_source": {
+            "popularity": {
+              "R@100": 0.079415,
+              "R@500": 0.126594
+            },
+            "rule": {
+              "R@100": 0.058997,
+              "R@500": 0.093354
+            },
+            "two_tower": {
+              "R@100": 0.071202,
+              "R@500": 0.118609
+            },
+            "recent_pop": {
+              "R@100": 0.123879,
+              "R@500": 0.196222
+            }
+          },
+          "content_unique_hit_share": null,
+          "union_hits_by_item_history": {
+            "0": 0,
+            "1-2": 0,
+            "3-4": 0,
+            "5+": 9927
+          },
+          "gt_targets_by_item_history": {
+            "0": 15544,
+            "1-2": 5923,
+            "3-4": 2951,
+            "5+": 19415
+          }
+        },
+        "model_selection": {
+          "union_macro": 0.23232561429986323,
+          "union_per_positive": 0.23232561429986323,
+          "n_rows": 53241744,
+          "elapsed_seconds": 1244.98,
+          "n_label_users": 42406,
+          "n_rows_parquet": 53241744,
+          "per_source": {
+            "popularity": {
+              "R@100": 0.074329,
+              "R@500": 0.12286
+            },
+            "rule": {
+              "R@100": 0.054426,
+              "R@500": 0.089681
+            },
+            "two_tower": {
+              "R@100": 0.06683,
+              "R@500": 0.12701
+            },
+            "recent_pop": {
+              "R@100": 0.104089,
+              "R@500": 0.192544
+            }
+          },
+          "content_unique_hit_share": null,
+          "union_hits_by_item_history": {
+            "0": 0,
+            "1-2": 0,
+            "3-4": 0,
+            "5+": 9852
+          },
+          "gt_targets_by_item_history": {
+            "0": 14380,
+            "1-2": 5694,
+            "3-4": 2949,
+            "5+": 19383
+          }
+        }
+      },
+      "rows_total": 105505565,
+      "projected_stageB_maxrss_gib": 111.6,
+      "rows_ratio_vs_A0": 1.0,
+      "gate_rows": true,
+      "gate_maxrss": true,
+      "gate_pass": true
+    },
+    "A1": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.23030593388542878,
+          "union_per_positive": 0.23030593388542878,
+          "n_rows": 58080568,
+          "elapsed_seconds": 3490.1,
+          "n_label_users": 43833,
+          "n_rows_parquet": 58080568,
+          "per_source": {
+            "popularity": {
+              "R@100": 0.079415,
+              "R@500": 0.126594
+            },
+            "rule": {
+              "R@100": 0.058997,
+              "R@500": 0.093354
+            },
+            "two_tower": {
+              "R@100": 0.071202,
+              "R@500": 0.118609
+            },
+            "recent_pop": {
+              "R@100": 0.123879,
+              "R@500": 0.196222
+            },
+            "content_i2i": {
+              "R@100": 0.005567,
+              "R@500": 0.00746
+            }
+          },
+          "content_unique_hit_share": 0.01664190193164933,
+          "union_hits_by_item_history": {
+            "0": 103,
+            "1-2": 23,
+            "3-4": 22,
+            "5+": 9947
+          },
+          "gt_targets_by_item_history": {
+            "0": 15544,
+            "1-2": 5923,
+            "3-4": 2951,
+            "5+": 19415
+          }
+        },
+        "model_selection": {
+          "union_macro": 0.23671178606800924,
+          "union_per_positive": 0.23671178606800924,
+          "n_rows": 59224705,
+          "elapsed_seconds": 3533.0,
+          "n_label_users": 42406,
+          "n_rows_parquet": 59224705,
+          "per_source": {
+            "popularity": {
+              "R@100": 0.074329,
+              "R@500": 0.12286
+            },
+            "rule": {
+              "R@100": 0.054426,
+              "R@500": 0.089681
+            },
+            "two_tower": {
+              "R@100": 0.06683,
+              "R@500": 0.12701
+            },
+            "recent_pop": {
+              "R@100": 0.104089,
+              "R@500": 0.192544
+            },
+            "content_i2i": {
+              "R@100": 0.006603,
+              "R@500": 0.008442
+            }
+          },
+          "content_unique_hit_share": 0.01852958756724447,
+          "union_hits_by_item_history": {
+            "0": 119,
+            "1-2": 26,
+            "3-4": 23,
+            "5+": 9870
+          },
+          "gt_targets_by_item_history": {
+            "0": 14380,
+            "1-2": 5694,
+            "3-4": 2949,
+            "5+": 19383
+          }
+        }
+      },
+      "rows_total": 117305273,
+      "projected_stageB_maxrss_gib": 124.1,
+      "rows_ratio_vs_A0": 1.112,
+      "gate_rows": true,
+      "gate_maxrss": false,
+      "gate_pass": false
+    },
+    "A2": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.22984965665138138,
+          "union_per_positive": 0.22984965665138138,
+          "n_rows": 58940768,
+          "elapsed_seconds": 4429.93,
+          "n_label_users": 43833,
+          "n_rows_parquet": 58940768,
+          "per_source": {
+            "popularity": {
+              "R@100": 0.079415,
+              "R@500": 0.126594
+            },
+            "rule": {
+              "R@100": 0.058426,
+              "R@500": 0.089818
+            },
+            "two_tower": {
+              "R@100": 0.071202,
+              "R@500": 0.118609
+            },
+            "recent_pop": {
+              "R@100": 0.123879,
+              "R@500": 0.195652
+            },
+            "content_i2i": {
+              "R@100": 0.005567,
+              "R@500": 0.00746
+            }
+          },
+          "content_unique_hit_share": 0.01578163771712159,
+          "union_hits_by_item_history": {
+            "0": 103,
+            "1-2": 23,
+            "3-4": 85,
+            "5+": 9864
+          },
+          "gt_targets_by_item_history": {
+            "0": 15544,
+            "1-2": 5923,
+            "3-4": 2951,
+            "5+": 19415
+          }
+        },
+        "model_selection": {
+          "union_macro": 0.237254162146866,
+          "union_per_positive": 0.237254162146866,
+          "n_rows": 59997218,
+          "elapsed_seconds": 3637.12,
+          "n_label_users": 42406,
+          "n_rows_parquet": 59997218,
+          "per_source": {
+            "popularity": {
+              "R@100": 0.074329,
+              "R@500": 0.12286
+            },
+            "rule": {
+              "R@100": 0.05386,
+              "R@500": 0.085978
+            },
+            "two_tower": {
+              "R@100": 0.06683,
+              "R@500": 0.12701
+            },
+            "recent_pop": {
+              "R@100": 0.104089,
+              "R@500": 0.193109
+            },
+            "content_i2i": {
+              "R@100": 0.006603,
+              "R@500": 0.008442
+            }
+          },
+          "content_unique_hit_share": 0.017195109830036776,
+          "union_hits_by_item_history": {
+            "0": 119,
+            "1-2": 26,
+            "3-4": 80,
+            "5+": 9836
+          },
+          "gt_targets_by_item_history": {
+            "0": 14380,
+            "1-2": 5694,
+            "3-4": 2949,
+            "5+": 19383
+          }
+        }
+      },
+      "rows_total": 118937986,
+      "projected_stageB_maxrss_gib": 125.8,
+      "rows_ratio_vs_A0": 1.127,
+      "gate_rows": true,
+      "gate_maxrss": false,
+      "gate_pass": false
+    },
+    "A3": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.22962151803435768,
+          "union_per_positive": 0.22962151803435768,
+          "n_rows": 59398608,
+          "elapsed_seconds": 3704.49,
+          "n_label_users": 43833,
+          "n_rows_parquet": 59398608,
+          "per_source": {
+            "popularity": {
+              "R@100": 0.079415,
+              "R@500": 0.126594
+            },
+            "rule": {
+              "R@100": 0.057696,
+              "R@500": 0.086944
+            },
+            "two_tower": {
+              "R@100": 0.071202,
+              "R@500": 0.118609
+            },
+            "recent_pop": {
+              "R@100": 0.123879,
+              "R@500": 0.195652
+            },
+            "content_i2i": {
+              "R@100": 0.005567,
+              "R@500": 0.00746
+            }
+          },
+          "content_unique_hit_share": 0.015598609041231993,
+          "union_hits_by_item_history": {
+            "0": 103,
+            "1-2": 41,
+            "3-4": 85,
+            "5+": 9836
+          },
+          "gt_targets_by_item_history": {
+            "0": 15544,
+            "1-2": 5923,
+            "3-4": 2951,
+            "5+": 19415
+          }
+        },
+        "model_selection": {
+          "union_macro": 0.23711267273499034,
+          "union_per_positive": 0.23711267273499034,
+          "n_rows": 60468664,
+          "elapsed_seconds": 4070.82,
+          "n_label_users": 42406,
+          "n_rows_parquet": 60468664,
+          "per_source": {
+            "popularity": {
+              "R@100": 0.074329,
+              "R@500": 0.12286
+            },
+            "rule": {
+              "R@100": 0.053389,
+              "R@500": 0.082677
+            },
+            "two_tower": {
+              "R@100": 0.06683,
+              "R@500": 0.12701
+            },
+            "recent_pop": {
+              "R@100": 0.104089,
+              "R@500": 0.193109
+            },
+            "content_i2i": {
+              "R@100": 0.006603,
+              "R@500": 0.008442
+            }
+          },
+          "content_unique_hit_share": 0.016907011437095974,
+          "union_hits_by_item_history": {
+            "0": 119,
+            "1-2": 46,
+            "3-4": 75,
+            "5+": 9815
+          },
+          "gt_targets_by_item_history": {
+            "0": 14380,
+            "1-2": 5694,
+            "3-4": 2949,
+            "5+": 19383
+          }
+        }
+      },
+      "rows_total": 119867272,
+      "projected_stageB_maxrss_gib": 126.8,
+      "rows_ratio_vs_A0": 1.136,
+      "gate_rows": true,
+      "gate_maxrss": false,
+      "gate_pass": false
+    },
+    "A4": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.22991809823648848,
+          "union_per_positive": 0.22991809823648848,
+          "n_rows": 58596588,
+          "elapsed_seconds": 1889.61,
+          "n_label_users": 43833,
+          "n_rows_parquet": 58596588,
+          "per_source": {
+            "popularity": {
+              "R@100": 0.079415,
+              "R@500": 0.126594
+            },
+            "rule": {
+              "R@100": 0.058426,
+              "R@500": 0.089818
+            },
+            "two_tower": {
+              "R@100": 0.071202,
+              "R@500": 0.118609
+            },
+            "recent_pop": {
+              "R@100": 0.123879,
+              "R@500": 0.195652
+            },
+            "content_i2i": {
+              "R@100": 0.007597,
+              "R@500": 0.010814
+            }
+          },
+          "content_unique_hit_share": 0.01607461797975789,
+          "union_hits_by_item_history": {
+            "0": 0,
+            "1-2": 78,
+            "3-4": 98,
+            "5+": 9902
+          },
+          "gt_targets_by_item_history": {
+            "0": 15544,
+            "1-2": 5923,
+            "3-4": 2951,
+            "5+": 19415
+          }
+        },
+        "model_selection": {
+          "union_macro": 0.23682969391123898,
+          "union_per_positive": 0.23682969391123898,
+          "n_rows": 59688105,
+          "elapsed_seconds": 2341.15,
+          "n_label_users": 42406,
+          "n_rows_parquet": 59688105,
+          "per_source": {
+            "popularity": {
+              "R@100": 0.074329,
+              "R@500": 0.12286
+            },
+            "rule": {
+              "R@100": 0.05386,
+              "R@500": 0.085978
+            },
+            "two_tower": {
+              "R@100": 0.06683,
+              "R@500": 0.12701
+            },
+            "recent_pop": {
+              "R@100": 0.104089,
+              "R@500": 0.193109
+            },
+            "content_i2i": {
+              "R@100": 0.007994,
+              "R@500": 0.010895
+            }
+          },
+          "content_unique_hit_share": 0.015433635367917952,
+          "union_hits_by_item_history": {
+            "0": 0,
+            "1-2": 66,
+            "3-4": 94,
+            "5+": 9883
+          },
+          "gt_targets_by_item_history": {
+            "0": 14380,
+            "1-2": 5694,
+            "3-4": 2949,
+            "5+": 19383
+          }
+        }
+      },
+      "rows_total": 118284693,
+      "projected_stageB_maxrss_gib": 125.2,
+      "rows_ratio_vs_A0": 1.121,
+      "gate_rows": true,
+      "gate_maxrss": false,
+      "gate_pass": false
+    },
+    "A5": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.2262222526407045,
+          "union_per_positive": 0.2262222526407045,
+          "n_rows": 53168880,
+          "elapsed_seconds": 1603.31,
+          "n_label_users": 43833,
+          "n_rows_parquet": 53168880,
+          "per_source": {
+            "popularity": {
+              "R@100": 0.079415,
+              "R@500": 0.126594
+            },
+            "rule": {
+              "R@100": 0.058426,
+              "R@500": 0.089818
+            },
+            "two_tower": {
+              "R@100": 0.071202,
+              "R@500": 0.118609
+            },
+            "recent_pop": {
+              "R@100": 0.123879,
+              "R@500": 0.195652
+            }
+          },
+          "content_unique_hit_share": null,
+          "union_hits_by_item_history": {
+            "0": 0,
+            "1-2": 0,
+            "3-4": 73,
+            "5+": 9843
+          },
+          "gt_targets_by_item_history": {
+            "0": 15544,
+            "1-2": 5923,
+            "3-4": 2951,
+            "5+": 19415
+          }
+        },
+        "model_selection": {
+          "union_macro": 0.2331745507711173,
+          "union_per_positive": 0.2331745507711173,
+          "n_rows": 54056051,
+          "elapsed_seconds": 1774.91,
+          "n_label_users": 42406,
+          "n_rows_parquet": 54056051,
+          "per_source": {
+            "popularity": {
+              "R@100": 0.074329,
+              "R@500": 0.12286
+            },
+            "rule": {
+              "R@100": 0.05386,
+              "R@500": 0.085978
+            },
+            "two_tower": {
+              "R@100": 0.06683,
+              "R@500": 0.12701
+            },
+            "recent_pop": {
+              "R@100": 0.104089,
+              "R@500": 0.193109
+            }
+          },
+          "content_unique_hit_share": null,
+          "union_hits_by_item_history": {
+            "0": 0,
+            "1-2": 0,
+            "3-4": 70,
+            "5+": 9818
+          },
+          "gt_targets_by_item_history": {
+            "0": 14380,
+            "1-2": 5694,
+            "3-4": 2949,
+            "5+": 19383
+          }
+        }
+      },
+      "rows_total": 107224931,
+      "projected_stageB_maxrss_gib": 113.5,
+      "rows_ratio_vs_A0": 1.016,
+      "gate_rows": true,
+      "gate_maxrss": true,
+      "gate_pass": true
+    }
+  },
+  "gate": {
+    "rows_ratio_max": 1.6,
+    "maxrss_gib_max": 120.0,
+    "bytes_per_row_anchor": 1103,
+    "content_margin": 1.03
+  },
+  "shortlist_top2": [
+    "A5",
+    "A0"
+  ],
+  "ranked_passing": [
+    "A5",
+    "A0"
+  ]
+}

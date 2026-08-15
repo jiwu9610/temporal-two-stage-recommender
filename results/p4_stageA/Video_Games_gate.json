@@ -1,0 +1,145 @@
+{
+  "category": "Video_Games",
+  "configs": {
+    "A0": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.38838406408792225,
+          "union_per_positive": 0.38838406408792225,
+          "n_rows": 61431712,
+          "elapsed_seconds": 822.15
+        },
+        "model_selection": {
+          "union_macro": 0.3532359654693051,
+          "union_per_positive": 0.3532359654693051,
+          "n_rows": 61257948,
+          "elapsed_seconds": 683.18
+        }
+      },
+      "rows_total": 122689660,
+      "projected_stageB_maxrss_gib": 125.6,
+      "rows_ratio_vs_A0": 1.0,
+      "gate_rows": true,
+      "gate_maxrss": false,
+      "gate_pass": false
+    },
+    "A1": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.3926874886207524,
+          "union_per_positive": 0.3926874886207524,
+          "n_rows": 64659416,
+          "elapsed_seconds": 891.71
+        },
+        "model_selection": {
+          "union_macro": 0.35848765167247326,
+          "union_per_positive": 0.35848765167247326,
+          "n_rows": 64724601,
+          "elapsed_seconds": 1077.85
+        }
+      },
+      "rows_total": 129384017,
+      "projected_stageB_maxrss_gib": 136.4,
+      "rows_ratio_vs_A0": 1.055,
+      "gate_rows": true,
+      "gate_maxrss": false,
+      "gate_pass": false
+    },
+    "A2": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.3936143800585928,
+          "union_per_positive": 0.3936143800585928,
+          "n_rows": 64934459,
+          "elapsed_seconds": 1472.04
+        },
+        "model_selection": {
+          "union_macro": 0.3574235845332693,
+          "union_per_positive": 0.3574235845332693,
+          "n_rows": 65106907,
+          "elapsed_seconds": 1306.27
+        }
+      },
+      "rows_total": 130041366,
+      "projected_stageB_maxrss_gib": 137.1,
+      "rows_ratio_vs_A0": 1.06,
+      "gate_rows": true,
+      "gate_maxrss": false,
+      "gate_pass": false
+    },
+    "A3": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.3940281708790572,
+          "union_per_positive": 0.3940281708790572,
+          "n_rows": 65161016,
+          "elapsed_seconds": 1279.12
+        },
+        "model_selection": {
+          "union_macro": 0.35744074690648225,
+          "union_per_positive": 0.35744074690648225,
+          "n_rows": 65233807,
+          "elapsed_seconds": 1362.27
+        }
+      },
+      "rows_total": 130394823,
+      "projected_stageB_maxrss_gib": 137.5,
+      "rows_ratio_vs_A0": 1.063,
+      "gate_rows": true,
+      "gate_maxrss": false,
+      "gate_pass": false
+    },
+    "A4": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.3930681761755797,
+          "union_per_positive": 0.3930681761755797,
+          "n_rows": 64722234,
+          "elapsed_seconds": 1161.5
+        },
+        "model_selection": {
+          "union_macro": 0.3563251926476393,
+          "union_per_positive": 0.3563251926476393,
+          "n_rows": 64926078,
+          "elapsed_seconds": 1294.16
+        }
+      },
+      "rows_total": 129648312,
+      "projected_stageB_maxrss_gib": 136.7,
+      "rows_ratio_vs_A0": 1.057,
+      "gate_rows": true,
+      "gate_maxrss": false,
+      "gate_pass": false
+    },
+    "A5": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.38942681695549264,
+          "union_per_positive": 0.38942681695549264,
+          "n_rows": 61731109,
+          "elapsed_seconds": 733.17
+        },
+        "model_selection": {
+          "union_macro": 0.35224054782295294,
+          "union_per_positive": 0.35224054782295294,
+          "n_rows": 61668814,
+          "elapsed_seconds": 787.85
+        }
+      },
+      "rows_total": 123399923,
+      "projected_stageB_maxrss_gib": 126.3,
+      "rows_ratio_vs_A0": 1.006,
+      "gate_rows": true,
+      "gate_maxrss": false,
+      "gate_pass": false
+    }
+  },
+  "gate": {
+    "rows_ratio_max": 1.6,
+    "maxrss_gib_max": 120.0,
+    "bytes_per_row_anchor": 1099,
+    "content_margin": 1.03
+  },
+  "shortlist_top2": [],
+  "ranked_passing": []
+}

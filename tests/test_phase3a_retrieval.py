@@ -491,6 +491,45 @@ def test_builder_content_run_is_byte_deterministic(tmp_path):
     assert a == b
 
 
+def test_builder_content_per_source_top_k_caps_content_only(tmp_path):
+    """content_i2i honours its own top_k (the D8 memory-wall knob) while the
+    base sources keep the global K; omitting it reproduces the global-K run
+    byte-for-byte."""
+    from scripts.ranker.temporal_candidate_builder import (
+        build_snapshot_candidates,
+    )
+    root = tmp_path / "proc"
+    _write_builder_fixture(root)
+    capped = [{"name": "content_i2i", "type": "content_i2i",
+               "pool": "catalog", "top_k": 1}]
+    build_snapshot_candidates(
+        BUILDER_CAT, "model_selection", top_k=2, seed=42,
+        processed_dir=root, require_two_tower=True,
+        extra_sources=capped, out_dir=tmp_path / "out_capped",
+    )
+    c = pd.read_parquet(
+        tmp_path / "out_capped" / "candidates_model_selection.parquet")
+    ua = c[c["user_id"] == "UA"].set_index("parent_asin")
+    # K=1 keeps the top content hit and drops rank 2 (CX in the uncapped run).
+    assert ua.loc["E4", "source_content_i2i"] == 1
+    assert ua.loc["E4", "content_i2i_rank"] == 1
+    assert int(ua["source_content_i2i"].sum()) == 1
+    # Base sources still emit at the global K: popularity rank 2 survives.
+    assert int((ua["popularity_rank"] == 2).sum()) == 1
+    # Default (no per-source top_k) stays byte-identical to the global-K run.
+    _build_content_candidates(root, tmp_path / "out_a")
+    explicit = [{"name": "content_i2i", "type": "content_i2i",
+                 "pool": "catalog", "top_k": 2}]
+    build_snapshot_candidates(
+        BUILDER_CAT, "model_selection", top_k=2, seed=42,
+        processed_dir=root, require_two_tower=True,
+        extra_sources=explicit, out_dir=tmp_path / "out_c",
+    )
+    a = (tmp_path / "out_a" / "candidates_model_selection.parquet").read_bytes()
+    e = (tmp_path / "out_c" / "candidates_model_selection.parquet").read_bytes()
+    assert a == e
+
+
 # ---------------------------------------------------------------------------
 # classification: cold vs low_support vs eligible_not_retrieved vs retrieved
 # ---------------------------------------------------------------------------

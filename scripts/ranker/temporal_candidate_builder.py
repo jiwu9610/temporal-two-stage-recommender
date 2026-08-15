@@ -163,7 +163,9 @@ def build_snapshot_candidates(
                         item_text_embeddings.npz), pool ("catalog"|"history"|
                         "eligible", default catalog), min_pool_history (for
                         pool="history", default 1), recency_decay (0.8),
-                        max_events (30). Its stored score is 1 + cosine in
+                        max_events (30), top_k (per-source K override for
+                        content only, default = global top_k; the D8
+                        memory-wall knob). Its stored score is 1 + cosine in
                         [0, 2] (exact-filled for profile-holding users on
                         rows other sources contributed; users without a
                         profile keep the blanket 0.0 fill).
@@ -421,6 +423,7 @@ def build_snapshot_candidates(
                 )
                 prof_users = sorted(profiles)
                 extra_prepared.append((name, kind, {
+                    "k": int(src.get("top_k", top_k)),
                     "profiles": profiles,
                     "candidate_items": emb_asins[keep][order],
                     "candidate_matrix": embs[keep][order],
@@ -511,7 +514,7 @@ def build_snapshot_candidates(
             elif kind == "content_i2i":
                 topk_e, cos_e = recommend_content_knn(
                     chunk, payload["profiles"], payload["candidate_items"],
-                    payload["candidate_matrix"], seen, k=top_k,
+                    payload["candidate_matrix"], seen, k=payload["k"],
                     return_scores=True,
                 )
                 # Stored score = 1 + cosine, shifted into [0, 2]: rank-

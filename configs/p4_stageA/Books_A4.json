@@ -1,0 +1,20 @@
+{
+  "top_k": 500,
+  "tt_k": 500,
+  "min_item_history": 3,
+  "extra_sources": [
+    {
+      "name": "recent_pop",
+      "type": "decayed_pop",
+      "half_life_days": 90
+    },
+    {
+      "name": "content_i2i",
+      "type": "content_i2i",
+      "pool": "history",
+      "recency_decay": 0.8,
+      "max_events": 30,
+      "min_pool_history": 1
+    }
+  ]
+}
