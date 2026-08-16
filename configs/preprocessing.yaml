@@ -82,6 +82,14 @@ temporal_snapshots:
     # candidate-builder-level knob; any new value lands in the P4.4 joint
     # freeze commit together with the content-source setting, not here.
     min_item_history_interactions: 5   # candidate pool membership
+    # P4.4 JOINT FREEZE (2026-08-15, results/p4_freeze/frozen_config.json,
+    # configs/p4_frozen/{cat}.json). Builder-level per-category overrides,
+    # frozen in the same commit as the content-source setting (advisor lock):
+    #   Books        thr 3 + content_i2i(catalog, K500)   Stage B R@100 +13.7%
+    #   Electronics  thr 3, no content                    +0.7% (content > mem gate)
+    #   Video_Games  thr 5, no content (== A0)            thr3 regressed; content > 128G
+    #   All_Beauty   thr 5 + content_i2i(catalog, K500)   +0.8% (popularity-baseline cat)
+    # This value stays 5: it feeds the snapshot pipeline (data layer unchanged).
     warm_user_min_history: 3           # warm vs cold user reporting threshold
 
   features:

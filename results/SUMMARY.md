@@ -1,11 +1,30 @@
 # 实验结果汇总
 
-**当前冻结配置**：`C2_k500_recent`（Phase 3A，2026-07-26 冻结）
-**最后一次终测**：2026-07-30（Evaluation & Calibration，commit `9c970b1`）
+**当前冻结配置**：重建波 P4.4 per-category（2026-08-15，commit `ad9d7ba`）——Books thr3+content / Elec thr3 / VG thr5 / AB thr5+content
+**最后一次终测**：2026-08-15（重建波 P5，commit `eaefed8`）→ **见 §9（本文件顶部新节）**；§1–§8 为 first_positive 时代历史，保留可复现
+**上一冻结**：`C2_k500_recent`（Phase 3A，2026-07-26）
 **评估协议**：`global_temporal_snapshots` 三快照 walk-forward，T0<T1<T2<T3
 
 > 本文件是 `results/` 下 96 个 JSON 的人读汇总。每张表都标了溯源路径，数字可逐个核对。
 > 过程细节见 [MEMO.md](../MEMO.md)，协议见各模块 docstring。
+
+---
+
+## 9. 重建波终测（2026-08-15，all_positive 口径，**与 §1 不同表比较**）
+
+完整报告：[REBUILD_WAVE_REPORT.md](REBUILD_WAVE_REPORT.md)。溯源 `results/p5_locked/{cat}_{arm}/{cat}_ranker_{arm}.json`。
+
+| 类目 | A0 参照 R@10 / R@100 | 冻结胜者 R@10 / R@100 | Δ | 天花板 A0→胜者 |
+|---|---|---|---|---|
+| Books | .0256 / .0457 | **A2** .0310 / .0551 | **+21.1% / +20.4%** | .1442→.1733 |
+| Electronics | .0344 / .0944 | **A5** .0386 / .0983 | **+12.2% / +4.1%** | .2998→.2999 |
+| Video_Games | .0515 / .1429 | = A0 | — | .3708 |
+| All_Beauty | .0301 / .1203 | A1 .0274 / .1167 | −8.9% / −3.0% | .2469→.2506 |
+
+- 归因：身份修复 + 双塔 v2 终测净效应 ≈ 0（旧 C2 vs 新 A0 −0.6~−2.9%）；wave 净收益 = 内容源(Books) + thr3(Elec)。
+- 双塔 v2 dev +43~85% 被 union 吸收（与热度/规则重叠）；内容源成功机制 = 不重叠（零历史商品）。
+- 校准：raw ECE .28–.38 → Platt/prior 1e-5，四类目一致。
+- **下一步**：波次 3 序列模型放**排序位**（DIN 风格臂与 DCN 并列选型）。
 
 ---
 

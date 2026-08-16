@@ -7,13 +7,79 @@
           "union_macro": 0.19824251681114,
           "union_per_positive": 0.19824251681114,
           "n_rows": 46170202,
-          "elapsed_seconds": 595.74
+          "elapsed_seconds": 595.74,
+          "n_label_users": 50413,
+          "n_rows_parquet": 46170202,
+          "per_source": {
+            "popularity": {
+              "R@100": 0.041993,
+              "R@500": 0.108781
+            },
+            "rule": {
+              "R@100": 0.042291,
+              "R@500": 0.10892
+            },
+            "two_tower": {
+              "R@100": 0.003729,
+              "R@500": 0.007776
+            },
+            "recent_pop": {
+              "R@100": 0.085752,
+              "R@500": 0.174399
+            }
+          },
+          "content_unique_hit_share": null,
+          "union_hits_by_item_history": {
+            "0": 0,
+            "1-2": 0,
+            "3-4": 0,
+            "5+": 9994
+          },
+          "gt_targets_by_item_history": {
+            "0": 17368,
+            "1-2": 6865,
+            "3-4": 3574,
+            "5+": 22606
+          }
         },
         "model_selection": {
           "union_macro": 0.20288130551187794,
           "union_per_positive": 0.20288130551187794,
           "n_rows": 43334962,
-          "elapsed_seconds": 521.46
+          "elapsed_seconds": 521.46,
+          "n_label_users": 47062,
+          "n_rows_parquet": 43334962,
+          "per_source": {
+            "popularity": {
+              "R@100": 0.045408,
+              "R@500": 0.100293
+            },
+            "rule": {
+              "R@100": 0.046131,
+              "R@500": 0.100824
+            },
+            "two_tower": {
+              "R@100": 0.003336,
+              "R@500": 0.008691
+            },
+            "recent_pop": {
+              "R@100": 0.092771,
+              "R@500": 0.178509
+            }
+          },
+          "content_unique_hit_share": null,
+          "union_hits_by_item_history": {
+            "0": 0,
+            "1-2": 0,
+            "3-4": 0,
+            "5+": 9548
+          },
+          "gt_targets_by_item_history": {
+            "0": 15852,
+            "1-2": 5959,
+            "3-4": 3475,
+            "5+": 21776
+          }
         }
       },
       "rows_total": 89505164,
@@ -29,13 +95,87 @@
           "union_macro": 0.2023287644060064,
           "union_per_positive": 0.2023287644060064,
           "n_rows": 47690842,
-          "elapsed_seconds": 686.32
+          "elapsed_seconds": 686.32,
+          "n_label_users": 50413,
+          "n_rows_parquet": 47690842,
+          "per_source": {
+            "popularity": {
+              "R@100": 0.041993,
+              "R@500": 0.108781
+            },
+            "rule": {
+              "R@100": 0.042291,
+              "R@500": 0.10892
+            },
+            "two_tower": {
+              "R@100": 0.003729,
+              "R@500": 0.007776
+            },
+            "recent_pop": {
+              "R@100": 0.085752,
+              "R@500": 0.174399
+            },
+            "content_i2i": {
+              "R@100": 0.002638,
+              "R@500": 0.00484
+            }
+          },
+          "content_unique_hit_share": 0.020196078431372548,
+          "union_hits_by_item_history": {
+            "0": 134,
+            "1-2": 31,
+            "3-4": 18,
+            "5+": 10017
+          },
+          "gt_targets_by_item_history": {
+            "0": 17368,
+            "1-2": 6865,
+            "3-4": 3574,
+            "5+": 22606
+          }
         },
         "model_selection": {
           "union_macro": 0.20751349283923334,
           "union_per_positive": 0.20751349283923334,
           "n_rows": 45015609,
-          "elapsed_seconds": 738.7
+          "elapsed_seconds": 738.7,
+          "n_label_users": 47062,
+          "n_rows_parquet": 45015609,
+          "per_source": {
+            "popularity": {
+              "R@100": 0.045408,
+              "R@500": 0.100293
+            },
+            "rule": {
+              "R@100": 0.046131,
+              "R@500": 0.100824
+            },
+            "two_tower": {
+              "R@100": 0.003336,
+              "R@500": 0.008691
+            },
+            "recent_pop": {
+              "R@100": 0.092771,
+              "R@500": 0.178509
+            },
+            "content_i2i": {
+              "R@100": 0.00272,
+              "R@500": 0.005822
+            }
+          },
+          "content_unique_hit_share": 0.022322342822035632,
+          "union_hits_by_item_history": {
+            "0": 106,
+            "1-2": 48,
+            "3-4": 20,
+            "5+": 9592
+          },
+          "gt_targets_by_item_history": {
+            "0": 15852,
+            "1-2": 5959,
+            "3-4": 3475,
+            "5+": 21776
+          }
         }
       },
       "rows_total": 92706451,
@@ -51,13 +191,87 @@
           "union_macro": 0.20086088905639418,
           "union_per_positive": 0.20086088905639418,
           "n_rows": 48212922,
-          "elapsed_seconds": 751.24
+          "elapsed_seconds": 751.24,
+          "n_label_users": 50413,
+          "n_rows_parquet": 48212922,
+          "per_source": {
+            "popularity": {
+              "R@100": 0.041993,
+              "R@500": 0.108781
+            },
+            "rule": {
+              "R@100": 0.042509,
+              "R@500": 0.110011
+            },
+            "two_tower": {
+              "R@100": 0.003729,
+              "R@500": 0.007776
+            },
+            "recent_pop": {
+              "R@100": 0.085752,
+              "R@500": 0.170829
+            },
+            "content_i2i": {
+              "R@100": 0.002638,
+              "R@500": 0.00484
+            }
+          },
+          "content_unique_hit_share": 0.01945486865494766,
+          "union_hits_by_item_history": {
+            "0": 134,
+            "1-2": 31,
+            "3-4": 286,
+            "5+": 9675
+          },
+          "gt_targets_by_item_history": {
+            "0": 17368,
+            "1-2": 6865,
+            "3-4": 3574,
+            "5+": 22606
+          }
         },
         "model_selection": {
           "union_macro": 0.20749224427351154,
           "union_per_positive": 0.20749224427351154,
           "n_rows": 45029141,
-          "elapsed_seconds": 749.95
+          "elapsed_seconds": 749.95,
+          "n_label_users": 47062,
+          "n_rows_parquet": 45029141,
+          "per_source": {
+            "popularity": {
+              "R@100": 0.045408,
+              "R@500": 0.100293
+            },
+            "rule": {
+              "R@100": 0.046173,
+              "R@500": 0.100952
+            },
+            "two_tower": {
+              "R@100": 0.003336,
+              "R@500": 0.008691
+            },
+            "recent_pop": {
+              "R@100": 0.092771,
+              "R@500": 0.178084
+            },
+            "content_i2i": {
+              "R@100": 0.00272,
+              "R@500": 0.005822
+            }
+          },
+          "content_unique_hit_share": 0.021505376344086023,
+          "union_hits_by_item_history": {
+            "0": 106,
+            "1-2": 48,
+            "3-4": 164,
+            "5+": 9447
+          },
+          "gt_targets_by_item_history": {
+            "0": 15852,
+            "1-2": 5959,
+            "3-4": 3475,
+            "5+": 21776
+          }
         }
       },
       "rows_total": 93242063,
@@ -73,13 +287,87 @@
           "union_macro": 0.2008212167496479,
           "union_per_positive": 0.2008212167496479,
           "n_rows": 48124356,
-          "elapsed_seconds": 771.31
+          "elapsed_seconds": 771.31,
+          "n_label_users": 50413,
+          "n_rows_parquet": 48124356,
+          "per_source": {
+            "popularity": {
+              "R@100": 0.041993,
+              "R@500": 0.108781
+            },
+            "rule": {
+              "R@100": 0.042568,
+              "R@500": 0.11011
+            },
+            "two_tower": {
+              "R@100": 0.003729,
+              "R@500": 0.007776
+            },
+            "recent_pop": {
+              "R@100": 0.085752,
+              "R@500": 0.170829
+            },
+            "content_i2i": {
+              "R@100": 0.002638,
+              "R@500": 0.00484
+            }
+          },
+          "content_unique_hit_share": 0.01906361122086132,
+          "union_hits_by_item_history": {
+            "0": 134,
+            "1-2": 31,
+            "3-4": 286,
+            "5+": 9673
+          },
+          "gt_targets_by_item_history": {
+            "0": 17368,
+            "1-2": 6865,
+            "3-4": 3574,
+            "5+": 22606
+          }
         },
         "model_selection": {
           "union_macro": 0.20757723853639878,
           "union_per_positive": 0.20757723853639878,
           "n_rows": 45123993,
-          "elapsed_seconds": 669.16
+          "elapsed_seconds": 669.16,
+          "n_label_users": 47062,
+          "n_rows_parquet": 45123993,
+          "per_source": {
+            "popularity": {
+              "R@100": 0.045408,
+              "R@500": 0.100293
+            },
+            "rule": {
+              "R@100": 0.046428,
+              "R@500": 0.101143
+            },
+            "two_tower": {
+              "R@100": 0.003336,
+              "R@500": 0.008691
+            },
+            "recent_pop": {
+              "R@100": 0.092771,
+              "R@500": 0.178084
+            },
+            "content_i2i": {
+              "R@100": 0.00272,
+              "R@500": 0.005822
+            }
+          },
+          "content_unique_hit_share": 0.020677653802845735,
+          "union_hits_by_item_history": {
+            "0": 106,
+            "1-2": 52,
+            "3-4": 164,
+            "5+": 9447
+          },
+          "gt_targets_by_item_history": {
+            "0": 15852,
+            "1-2": 5959,
+            "3-4": 3475,
+            "5+": 21776
+          }
         }
       },
       "rows_total": 93248349,
@@ -95,13 +383,87 @@
           "union_macro": 0.19857973141848334,
           "union_per_positive": 0.19857973141848334,
           "n_rows": 48199880,
-          "elapsed_seconds": 632.12
+          "elapsed_seconds": 632.12,
+          "n_label_users": 50413,
+          "n_rows_parquet": 48199880,
+          "per_source": {
+            "popularity": {
+              "R@100": 0.041993,
+              "R@500": 0.108781
+            },
+            "rule": {
+              "R@100": 0.042509,
+              "R@500": 0.110011
+            },
+            "two_tower": {
+              "R@100": 0.003729,
+              "R@500": 0.007776
+            },
+            "recent_pop": {
+              "R@100": 0.085752,
+              "R@500": 0.170829
+            },
+            "content_i2i": {
+              "R@100": 0.001587,
+              "R@500": 0.002599
+            }
+          },
+          "content_unique_hit_share": 0.008190989911097792,
+          "union_hits_by_item_history": {
+            "0": 0,
+            "1-2": 41,
+            "3-4": 290,
+            "5+": 9680
+          },
+          "gt_targets_by_item_history": {
+            "0": 17368,
+            "1-2": 6865,
+            "3-4": 3574,
+            "5+": 22606
+          }
         },
         "model_selection": {
           "union_macro": 0.20568611618715738,
           "union_per_positive": 0.20568611618715738,
           "n_rows": 45021450,
-          "elapsed_seconds": 732.44
+          "elapsed_seconds": 732.44,
+          "n_label_users": 47062,
+          "n_rows_parquet": 45021450,
+          "per_source": {
+            "popularity": {
+              "R@100": 0.045408,
+              "R@500": 0.100293
+            },
+            "rule": {
+              "R@100": 0.046173,
+              "R@500": 0.100952
+            },
+            "two_tower": {
+              "R@100": 0.003336,
+              "R@500": 0.008691
+            },
+            "recent_pop": {
+              "R@100": 0.092771,
+              "R@500": 0.178084
+            },
+            "content_i2i": {
+              "R@100": 0.002274,
+              "R@500": 0.004058
+            }
+          },
+          "content_unique_hit_share": 0.012913223140495868,
+          "union_hits_by_item_history": {
+            "0": 0,
+            "1-2": 58,
+            "3-4": 167,
+            "5+": 9455
+          },
+          "gt_targets_by_item_history": {
+            "0": 15852,
+            "1-2": 5959,
+            "3-4": 3475,
+            "5+": 21776
+          }
         }
       },
       "rows_total": 93221330,
@@ -117,13 +479,79 @@
           "union_macro": 0.19695316684188602,
           "union_per_positive": 0.19695316684188602,
           "n_rows": 46698186,
-          "elapsed_seconds": 625.4
+          "elapsed_seconds": 625.4,
+          "n_label_users": 50413,
+          "n_rows_parquet": 46698186,
+          "per_source": {
+            "popularity": {
+              "R@100": 0.041993,
+              "R@500": 0.108781
+            },
+            "rule": {
+              "R@100": 0.042509,
+              "R@500": 0.110011
+            },
+            "two_tower": {
+              "R@100": 0.003729,
+              "R@500": 0.007776
+            },
+            "recent_pop": {
+              "R@100": 0.085752,
+              "R@500": 0.170829
+            }
+          },
+          "content_unique_hit_share": null,
+          "union_hits_by_item_history": {
+            "0": 0,
+            "1-2": 0,
+            "3-4": 277,
+            "5+": 9652
+          },
+          "gt_targets_by_item_history": {
+            "0": 17368,
+            "1-2": 6865,
+            "3-4": 3574,
+            "5+": 22606
+          }
         },
         "model_selection": {
           "union_macro": 0.20303004547193065,
           "union_per_positive": 0.20303004547193065,
           "n_rows": 43355896,
-          "elapsed_seconds": 668.16
+          "elapsed_seconds": 668.16,
+          "n_label_users": 47062,
+          "n_rows_parquet": 43355896,
+          "per_source": {
+            "popularity": {
+              "R@100": 0.045408,
+              "R@500": 0.100293
+            },
+            "rule": {
+              "R@100": 0.046173,
+              "R@500": 0.100952
+            },
+            "two_tower": {
+              "R@100": 0.003336,
+              "R@500": 0.008691
+            },
+            "recent_pop": {
+              "R@100": 0.092771,
+              "R@500": 0.178084
+            }
+          },
+          "content_unique_hit_share": null,
+          "union_hits_by_item_history": {
+            "0": 0,
+            "1-2": 0,
+            "3-4": 152,
+            "5+": 9403
+          },
+          "gt_targets_by_item_history": {
+            "0": 15852,
+            "1-2": 5959,
+            "3-4": 3475,
+            "5+": 21776
+          }
         }
       },
       "rows_total": 90054082,

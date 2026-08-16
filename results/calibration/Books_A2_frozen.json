@@ -1,0 +1,52 @@
+{
+  "category": "Books",
+  "variant": "A2",
+  "fitted_on": "selection_model_model_selection.parquet (out-of-sample, pre-test)",
+  "pred_subdir": "predictions",
+  "capped_run": false,
+  "dump_fingerprint": {
+    "created_utc": "2026-08-15T20:55:40.928234+00:00",
+    "n_rows": {
+      "ranker_train": 48530473,
+      "model_selection": 51484512,
+      "test": 52085959
+    },
+    "max_users_per_snapshot": 0,
+    "smoke": false,
+    "seed": 42
+  },
+  "pos_weight_selection": 10431.173903697334,
+  "pos_weight_refit": 10662.715214841668,
+  "prior_shift_rule": "logit - log(pos_weight of the scored model)",
+  "platt": {
+    "a": 1.0,
+    "b": -9.252554092351525,
+    "init_shift": -9.252554092351525,
+    "init_nll": 0.0008500593483445672,
+    "final_nll": 0.0008500593447267554,
+    "monotone": true
+  },
+  "chosen_calibrator": "platt",
+  "cohort_thresholds": {
+    "0": 0.0,
+    "1": 0.0,
+    "2": 0.0,
+    "3+": 0.0
+  },
+  "threshold_quantile_grid": [
+    0.5,
+    0.75,
+    0.9,
+    0.95,
+    0.99
+  ],
+  "prob_bins": 15,
+  "item_bucket_edges": [
+    10.0,
+    30.0,
+    100.0,
+    300.0
+  ],
+  "created_utc": "2026-08-15T21:02:16.578851+00:00",
+  "test_dump_untouched": true
+}
