@@ -395,3 +395,88 @@ def test_15_manual_popularity_targets(chain):
     cond = ft["conditional_given_retrieved"]
     if cond["n_users_retrieved"]:
         assert cond["Recall@100"] >= ft["overall"]["Recall@100"]
+
+
+# ---- 15-17. wave 3 sequence arm (DIN at the ranking position) ---------------
+
+def test_15_seq_arm_off_is_frozen_protocol(chain):
+    """Default run never builds seq tensors and never reaches arch=din: the
+    fixture report (seq_arm=False) selects from the frozen grid only."""
+    import scripts.ranker.train_temporal_ranker as trt
+    rep = chain["ranker_report"]
+    archs = {r["arch"] for r in rep["selection"]["grid"]}
+    assert not any(a.startswith("seq:") for a in archs)
+    assert trt._SEQ is None
+
+
+def test_16_seq_arm_din_runs_and_history_is_pre_cutoff(chain):
+    import scripts.ranker.train_temporal_ranker as trt
+    root = chain["root"]
+    rep = run_ranker(CAT, smoke=True, seed=7, processed_dir=root,
+                     results_dir=root / "results_seq", seq_arm=True)
+    assert rep["selection"]["chosen"]["arch"].startswith("seq:")
+    assert rep["final_test"]["overall"]["Recall@100"] >= 0.0
+    ctx = trt._SEQ
+    assert ctx is not None
+    cut = chain["manifest"]["cutoffs"]
+    hist_a = _load(chain, "history_ranker_train.parquet")
+    hist_c = _load(chain, "history_test.parquet")
+    # every item index in the ranker_train seq rows resolves to an item whose
+    # history event is < T0; test rows < T2 (history parquet is the source)
+    inv = {i: a for a, i in ctx.item_to_idx.items()}
+    for snap, hist, t in (("ranker_train", hist_a, cut["t0_ms"]),
+                          ("test", hist_c, cut["t2_ms"])):
+        assert int(hist["timestamp"].max()) < t
+        for uid, row in ctx.user_hist[snap].items():
+            items = {inv[int(i)] for i in row[:, 0] if int(i) > 0}
+            seen = set(hist.loc[hist["user_id"].astype(str) == uid,
+                                "parent_asin"].astype(str))
+            assert items <= seen, (snap, uid, items - seen)
+    trt._SEQ = None   # do not leak into later tests
+
+
+def test_17_seq_vocab_frozen_on_ranker_train_history(chain):
+    import scripts.ranker.train_temporal_ranker as trt
+    ctx = trt._SeqContext(chain["dir"], ("ranker_train", "test"))
+    hist_a = _load(chain, "history_ranker_train.parquet")
+    hist_c = _load(chain, "history_test.parquet")
+    only_later = (set(hist_c["parent_asin"].astype(str))
+                  - set(hist_a["parent_asin"].astype(str)))
+    assert set(ctx.item_to_idx) == set(hist_a["parent_asin"].astype(str))
+    # items first seen after T0 map to 0 (padding), never a fresh index
+    if only_later:
+        pa = next(iter(only_later))
+        df = pd.DataFrame({"user_id": ["u"], "parent_asin": [pa]})
+        assert int(ctx.tensors(df, "test")["seq__cand"][0, 0]) == 0
+
+
+def test_18_seq_variants_forward_shapes_and_empty_history_is_zero():
+    """All 4 variants x 3 position encodings run; a user with no history
+    yields a zero sequence vector so the head sees only DCN-side inputs."""
+    import torch
+    from scripts.ranker.ranker_features import RankerFeatureSpec
+    from scripts.ranker.seq_ranker import SeqRanker, SeqConfig
+    spec = RankerFeatureSpec(n_dense=4, dense_mean=np.zeros(4), dense_std=np.ones(4),
+                             cat_vocabs={"main_category": {"<pad>": 0, "C": 1},
+                                         "store": {"<pad>": 0, "S": 1}})
+    B, L = 6, 20
+    hist = torch.zeros((B, L, 5), dtype=torch.int64)
+    hist[0, -3:] = torch.tensor([[3, 1, 1, 100, 2], [5, 1, 1, 101, 4], [2, 1, 1, 105, 7]])
+    hist[1, -1] = torch.tensor([4, 1, 1, 120, 3])
+    cand = torch.tensor([[2, 1, 1]] * B)
+    dense = torch.randn(B, 4)
+    cats = {"cat__main_category": torch.ones(B, dtype=torch.int64),
+            "cat__store": torch.ones(B, dtype=torch.int64)}
+    for v in ("vanilla", "mh_pool", "causal", "hstu"):
+        for pos in ("abs", "delta", "both"):
+            cfg = SeqConfig.parse(f"seq:{v}:pos={pos}:d=16:L=2:H=2")
+            m = SeqRanker(spec, n_items=10, n_side={"main_category": 3, "store": 3},
+                          n_abs=400, n_delta=11, cfg=cfg, max_len=L).eval()
+            with torch.no_grad():
+                out = m(dense, seq__hist=hist, seq__cand=cand, **cats)
+                x = m.encoder(hist); valid = hist[..., 0] > 0
+                s_vec = m.seq(x, valid, m.encoder.item_vec(cand),
+                              abs_month=hist[..., 3])
+            assert out.shape == (B,) and torch.isfinite(out).all(), (v, pos)
+            assert torch.count_nonzero(s_vec[2:]) == 0, (v, pos, "empty history must be zero")
+            assert torch.count_nonzero(s_vec[0]) > 0, (v, pos)

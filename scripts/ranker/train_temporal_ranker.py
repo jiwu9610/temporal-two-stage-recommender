@@ -85,6 +85,112 @@ TEMPORAL_LOG1P = {
 }
 TEMPORAL_CATEGORICALS = ("main_category", "store")
 
+# ---------------------------------------------------------------------------
+# Wave 3 sequence arm (DIN at the ranking position). Default OFF: with
+# `seq_arm=False` every code path below is byte-identical to the frozen
+# protocol (no seq tensors built, grid unchanged, arch "din" unreachable).
+# ---------------------------------------------------------------------------
+SEQ_HIST_LEN = 20
+
+
+class _SeqContext:
+    """Wave-3 sequence feature (advisor spec, advanced_seq.pdf): per user the
+    last-L POSITIVE engagements before the snapshot cutoff, each carrying
+      item index      frozen vocab from the ranker_train HISTORY only
+                      (later-snapshot items unseen there -> 0 = pad)
+      cat / store idx sparse side ids (vocab from the ranker_train catalog)
+      abs bucket      absolute timestamp, monthly bucket since a fixed
+                      epoch (0 = pad)                      -> sin/cos or emb
+      delta bucket    log-spaced gap to the NEXT engagement (the last one
+                      measures to the cutoff), 0 = pad     -> emb
+    All from history_{snap}.parquet, strictly ts < cutoff by construction --
+    the advisor's "aggregate up to ds-1" leakage rule holds per snapshot."""
+
+    ABS_EPOCH_MS = 946684800000          # 2000-01-01
+    ABS_MONTH_MS = 30 * 86400 * 1000
+    N_ABS = 400                          # ~33 years of months
+    DELTA_EDGES_DAYS = (0, 1, 3, 7, 14, 30, 60, 90, 180, 365, 730, 1e9)
+
+    def __init__(self, tdir: Path, snapshots, hist_len: int = SEQ_HIST_LEN,
+                 positive_min_rating: float = 4.0):
+        self.hist_len = hist_len
+        h0 = pd.read_parquet(tdir / "history_ranker_train.parquet",
+                             columns=["parent_asin"])
+        items = sorted(h0["parent_asin"].astype(str).unique())
+        self.item_to_idx = {a: i + 1 for i, a in enumerate(items)}   # 0 = pad
+        self.n_items = len(items) + 1
+        # sparse side ids from the ranker_train catalog (history-only rows)
+        itf = pd.read_parquet(tdir / "item_features_ranker_train.parquet",
+                              columns=["parent_asin", "main_category", "store"])
+        itf["parent_asin"] = itf["parent_asin"].astype(str)
+        self.side_vocab = {}
+        self.item_side = {}
+        for col in ("main_category", "store"):
+            vals = sorted(v for v in itf[col].fillna("").astype(str).unique()
+                          if v not in ("", "nan", "None"))
+            self.side_vocab[col] = {v: i + 1 for i, v in enumerate(vals)}
+            m = dict(zip(itf["parent_asin"],
+                         itf[col].fillna("").astype(str).map(self.side_vocab[col]).fillna(0).astype(int)))
+            self.item_side[col] = m
+        self.n_side = {c: len(v) + 1 for c, v in self.side_vocab.items()}
+        self.n_delta = len(self.DELTA_EDGES_DAYS)   # bucket ids 1..n-1, 0 pad
+        manifest = json.loads((tdir / "snapshot_manifest.json").read_text())
+        self.user_hist: Dict[str, Dict[str, np.ndarray]] = {}
+        for snap in snapshots:
+            cutoff = int(manifest["snapshots"][snap]["history_end_ms"])
+            h = pd.read_parquet(tdir / f"history_{snap}.parquet",
+                                columns=["user_id", "parent_asin", "timestamp",
+                                         "rating"])
+            h = h[h["rating"] >= positive_min_rating]
+            h["user_id"] = h["user_id"].astype(str)
+            h["parent_asin"] = h["parent_asin"].astype(str)
+            assert int(h["timestamp"].max()) < cutoff, (snap, "history not < cutoff")
+            h = h.sort_values(["user_id", "timestamp"], kind="mergesort")
+            h = h.groupby("user_id", sort=False).tail(hist_len)
+            h["idx"] = h["parent_asin"].map(self.item_to_idx).fillna(0).astype(np.int64)
+            for col in ("main_category", "store"):
+                h[col] = h["parent_asin"].map(self.item_side[col]).fillna(0).astype(np.int64)
+            ts = h["timestamp"].to_numpy(np.int64)
+            h["abs_b"] = np.clip((ts - self.ABS_EPOCH_MS) // self.ABS_MONTH_MS + 1,
+                                 1, self.N_ABS - 1)
+            per_user: Dict[str, np.ndarray] = {}
+            edges_ms = np.asarray(self.DELTA_EDGES_DAYS[1:]) * 86400 * 1000
+            for uid, grp in h.groupby("user_id", sort=False):
+                t = grp["timestamp"].to_numpy(np.int64)
+                nxt = np.append(t[1:], cutoff)                 # gap to next / cutoff
+                gap = np.maximum(nxt - t, 0)
+                delta_b = np.searchsorted(edges_ms, gap, side="right") + 1
+                L = len(t); row = np.zeros((hist_len, 5), dtype=np.int64)
+                row[hist_len - L:, 0] = grp["idx"].to_numpy()
+                row[hist_len - L:, 1] = grp["main_category"].to_numpy()
+                row[hist_len - L:, 2] = grp["store"].to_numpy()
+                row[hist_len - L:, 3] = grp["abs_b"].to_numpy()
+                row[hist_len - L:, 4] = delta_b
+                per_user[uid] = row                             # right-aligned, oldest first
+            self.user_hist[snap] = per_user
+            print(f"[seq] {snap}: users_with_history={len(per_user):,} "
+                  f"vocab={self.n_items:,} cutoff={cutoff}", flush=True)
+
+    def tensors(self, df: pd.DataFrame, snap: str) -> Dict[str, torch.Tensor]:
+        per_user = self.user_hist[snap]
+        zero = np.zeros((self.hist_len, 5), dtype=np.int64)
+        uids = df["user_id"].to_numpy()
+        uniq, inv = np.unique(uids, return_inverse=True)
+        mat = (np.stack([per_user.get(u, zero) for u in uniq]) if len(uniq)
+               else np.zeros((0, self.hist_len, 5), dtype=np.int64))
+        hist = mat[inv]                                          # [N, L, 5]
+        pa = df["parent_asin"]
+        cand = np.stack([
+            pa.map(self.item_to_idx).fillna(0).to_numpy(np.int64),
+            pa.map(self.item_side["main_category"]).fillna(0).to_numpy(np.int64),
+            pa.map(self.item_side["store"]).fillna(0).to_numpy(np.int64),
+        ], axis=1)                                               # [N, 3]
+        return {"seq__hist": torch.from_numpy(hist),
+                "seq__cand": torch.from_numpy(cand)}
+
+
+_SEQ: Optional[_SeqContext] = None
+
 
 def resolve_feature_list(df: pd.DataFrame):
     r"""Dense feature list for a candidates table: the frozen base tuple plus
@@ -132,7 +238,8 @@ def build_temporal_feature_spec(train_df: pd.DataFrame,
 
 
 def build_temporal_tensors(df: pd.DataFrame, spec: RankerFeatureSpec,
-                           features=None, log1p=None) -> Dict[str, torch.Tensor]:
+                           features=None, log1p=None,
+                           snapshot: Optional[str] = None) -> Dict[str, torch.Tensor]:
     if features is None:
         features, log1p = TEMPORAL_DENSE_FEATURES, TEMPORAL_LOG1P
     dense = np.zeros((len(df), len(features)), dtype=np.float32)
@@ -150,6 +257,24 @@ def build_temporal_tensors(df: pd.DataFrame, spec: RankerFeatureSpec,
         out[f"cat__{c}"] = torch.from_numpy(
             df[c].astype(str).map(vocab).fillna(0).to_numpy(np.int64)
         )
+    if _SEQ is not None:
+        if snapshot is None:
+            # combined refit frame: rows are train-then-selection by concat;
+            # the caller passes the per-row snapshot column instead
+            snaps = df["snapshot"].to_numpy()
+            parts = []
+            for sn in ("ranker_train", "model_selection", "test"):
+                m = snaps == sn
+                if m.any():
+                    parts.append((np.flatnonzero(m), _SEQ.tensors(df[m], sn)))
+            n = len(df)
+            hist = torch.zeros((n, _SEQ.hist_len, 5), dtype=torch.int64)
+            cand = torch.zeros((n, 3), dtype=torch.int64)
+            for idx, t in parts:
+                hist[idx] = t["seq__hist"]; cand[idx] = t["seq__cand"]
+            out["seq__hist"], out["seq__cand"] = hist, cand
+        else:
+            out.update(_SEQ.tensors(df, snapshot))
     return out
 
 
@@ -158,6 +283,13 @@ def _make_model(arch: str, spec: RankerFeatureSpec) -> nn.Module:
         return MLPRanker(spec, MLPRankerConfig())
     if arch == "deep_cross":
         return DeepCrossRanker(spec, DeepCrossConfig())
+    if arch.startswith("seq:"):
+        # arch = "seq:<variant>[:pos=<abs|delta|both>][:d=<emb>][:L=<layers>][:H=<heads>]"
+        from scripts.ranker.seq_ranker import SeqRanker, SeqConfig
+        assert _SEQ is not None, "seq arch needs the sequence context (seq_arm)"
+        cfg = SeqConfig.parse(arch)
+        return SeqRanker(spec, _SEQ.n_items, _SEQ.n_side, _SEQ.N_ABS,
+                         _SEQ.n_delta, cfg)
     raise ValueError(f"unknown arch {arch!r}")
 
 
@@ -366,6 +498,9 @@ def run(
     stage_b_only: bool = False,
     dump_predictions: bool = False,
     label_mode: str = "first_positive",
+    seq_arm: bool = False,
+    seq_grid: Sequence[str] = ("seq:vanilla:pos=delta", "seq:mh_pool:pos=delta",
+                               "seq:causal:pos=delta", "seq:hstu:pos=delta"),
 ) -> Dict:
     """Full run: selection -> refit -> single locked test eval.
 
@@ -451,21 +586,29 @@ def run(
     # Dense feature list: frozen base + any Phase 3A extra-source columns.
     features, log1p = resolve_feature_list(cands["ranker_train"])
 
+    # Wave 3 sequence arm: build the history context ONCE (ranker_train-frozen
+    # item vocab; per-snapshot last-L positives, all ts < cutoff).
+    global _SEQ
+    _SEQ = _SeqContext(tdir, snaps_needed) if seq_arm else None
+
     # Selection grid. Architecture + learning rate; epoch count comes from
     # early stopping against model_selection. Smoke restricts to one config.
     grid: List[Tuple[str, float]] = (
+        [("seq:causal:pos=delta", 1e-3)] if (smoke and seq_arm) else
         [("mlp", 1e-3)] if smoke
         else [("mlp", 1e-3), ("mlp", 3e-4), ("deep_cross", 1e-3), ("deep_cross", 3e-4)]
     )
+    if seq_arm and not smoke:
+        grid = grid + [(a, lr) for a in seq_grid for lr in (1e-3, 3e-4)]
     if smoke:
         max_epochs = min(max_epochs, 3)
 
     # Feature spec for SELECTION runs: ranker_train rows only.
     spec_sel = build_temporal_feature_spec(cands["ranker_train"], features, log1p)
     train_inputs = build_temporal_tensors(cands["ranker_train"], spec_sel,
-                                          features, log1p)
+                                          features, log1p, snapshot="ranker_train")
     sel_inputs = build_temporal_tensors(cands["model_selection"], spec_sel,
-                                        features, log1p)
+                                        features, log1p, snapshot="model_selection")
     sel_gt = _gt_sets(gt_sel)
     sel_pool = set(cands["model_selection"]["parent_asin"])
     n_pos = int(cands["ranker_train"]["label"].sum())
@@ -533,7 +676,8 @@ def run(
         sel_df = cands["model_selection"]
         sel_eval = _eval_test(model, sel_df,
                               build_temporal_tensors(sel_df, spec_sel,
-                                                     features, log1p),
+                                                     features, log1p,
+                                                     snapshot="model_selection"),
                               gt_sel, device)
         report = {
             "category": category,
@@ -547,9 +691,20 @@ def run(
                           "metric": "model_selection Recall@100"},
             "model_selection_eval": sel_eval,
         }
-        stage_b_dir = REPO_ROOT / "results" / "phase3a"
+        # Default location keeps the Phase 3A / P4 precedent; a non-default
+        # results_dir (wave-3 seq sweeps run many specs on the SAME variant)
+        # redirects the report so parallel runs never clobber each other or
+        # the frozen Stage B verdicts.
+        if Path(results_dir).resolve() == RESULTS_DIR.resolve():
+            stage_b_dir = REPO_ROOT / "results" / "phase3a"
+        else:
+            stage_b_dir = Path(results_dir)
         stage_b_dir.mkdir(parents=True, exist_ok=True)
-        out = stage_b_dir / f"{category}_stageB_{variant or 'base'}.json"
+        seq_tag = ""
+        if seq_arm:
+            seq_tag = "_" + "+".join(a.replace(":", "_").replace("=", "_")
+                                     for a in seq_grid)
+        out = stage_b_dir / f"{category}_stageB_{variant or 'base'}{seq_tag}.json"
         with open(out, "w") as f:
             json.dump(report, f, indent=2, default=str)
         print(f"[ranker] Stage B wrote {out} | selection R@100="
@@ -603,7 +758,7 @@ def run(
     del combined_inputs
     gc.collect()
     test_inputs = build_temporal_tensors(cands["test"], spec_final,
-                                         features, log1p)
+                                         features, log1p, snapshot="test")
     test_logits = _score_df(final_model, test_inputs, device)
     test_eval = _eval_test(final_model, cands["test"], test_inputs, gt_test,
                            device, logits=test_logits)
@@ -753,6 +908,15 @@ def _parse_args(argv=None):
     p.add_argument("--dump-predictions", action="store_true",
                    help="Write per-row logits to the candidate dir's "
                         "predictions/ subdir (calibration analysis input).")
+    p.add_argument("--seq-arm", action="store_true",
+                   help="Wave 3: add the DIN sequence ranker (arch=din, two "
+                        "lrs) to the selection grid. Default off = frozen "
+                        "protocol byte-for-byte.")
+    p.add_argument("--seq-grid", default=None,
+                   help="Comma-separated seq arch specs to add to the grid "
+                        "(each at lr 1e-3 and 3e-4), e.g. "
+                        "'seq:causal:pos=delta:d=64:L=2:H=2,seq:hstu:pos=both'. "
+                        "Default: the four advisor variants at pos=delta.")
     p.add_argument("--results-dir", default=None,
                    help="Override the report output dir. REQUIRED with "
                         "--dump-predictions so the locked one-shot test "
@@ -772,6 +936,8 @@ def main(argv=None):
         seed=args.seed, smoke=args.smoke, max_users_per_snapshot=args.max_users,
         variant=args.variant, stage_b_only=args.stage_b,
         label_mode=args.label_mode,
+        seq_arm=args.seq_arm,
+        **({"seq_grid": tuple(args.seq_grid.split(","))} if args.seq_grid else {}),
         dump_predictions=args.dump_predictions, **kwargs)
 
 
