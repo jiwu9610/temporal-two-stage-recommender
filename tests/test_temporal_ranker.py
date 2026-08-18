@@ -424,11 +424,13 @@ def test_16_seq_arm_din_runs_and_history_is_pre_cutoff(chain):
     # every item index in the ranker_train seq rows resolves to an item whose
     # history event is < T0; test rows < T2 (history parquet is the source)
     inv = {i: a for a, i in ctx.item_to_idx.items()}
+    tab = ctx.table.numpy()
     for snap, hist, t in (("ranker_train", hist_a, cut["t0_ms"]),
                           ("test", hist_c, cut["t2_ms"])):
         assert int(hist["timestamp"].max()) < t
-        for uid, row in ctx.user_hist[snap].items():
-            items = {inv[int(i)] for i in row[:, 0] if int(i) > 0}
+        for uid, ri in ctx.user_row[snap].items():
+            row = tab[ri]
+            items = {inv[int(i)] for i in row[:, 0] if int(i) > 1}   # 1 = <unk>
             seen = set(hist.loc[hist["user_id"].astype(str) == uid,
                                 "parent_asin"].astype(str))
             assert items <= seen, (snap, uid, items - seen)
@@ -443,11 +445,12 @@ def test_17_seq_vocab_frozen_on_ranker_train_history(chain):
     only_later = (set(hist_c["parent_asin"].astype(str))
                   - set(hist_a["parent_asin"].astype(str)))
     assert set(ctx.item_to_idx) == set(hist_a["parent_asin"].astype(str))
-    # items first seen after T0 map to 0 (padding), never a fresh index
+    # items first seen after T0 map to <unk>=1 (never pad 0, never a fresh index)
     if only_later:
         pa = next(iter(only_later))
         df = pd.DataFrame({"user_id": ["u"], "parent_asin": [pa]})
-        assert int(ctx.tensors(df, "test")["seq__cand"][0, 0]) == 0
+        assert int(ctx.tensors(df, "test")["seq__cand"][0, 0]) == 1
+    assert min(ctx.item_to_idx.values()) == 2
 
 
 def test_18_seq_variants_forward_shapes_and_empty_history_is_zero():
@@ -460,10 +463,13 @@ def test_18_seq_variants_forward_shapes_and_empty_history_is_zero():
                              cat_vocabs={"main_category": {"<pad>": 0, "C": 1},
                                          "store": {"<pad>": 0, "S": 1}})
     B, L = 6, 20
-    hist = torch.zeros((B, L, 5), dtype=torch.int64)
-    hist[0, -3:] = torch.tensor([[3, 1, 1, 100, 2], [5, 1, 1, 101, 4], [2, 1, 1, 105, 7]])
-    hist[1, -1] = torch.tensor([4, 1, 1, 120, 3])
-    cand = torch.tensor([[2, 1, 1]] * B)
+    # history table: row 0 = no history, rows 1-2 = two users with history
+    table = torch.zeros((3, L, 6), dtype=torch.int64)
+    table[1, -3:] = torch.tensor([[3, 1, 1, 100, 2, 5], [5, 1, 1, 101, 4, 4], [2, 1, 1, 105, 7, 2]])
+    table[2, -1] = torch.tensor([4, 1, 1, 120, 3, 5])
+    uix = torch.tensor([1, 2, 0, 0, 0, 0], dtype=torch.int32)
+    hist = table[uix.long()]
+    cand = torch.tensor([[2, 1, 1]] * B, dtype=torch.int32)
     dense = torch.randn(B, 4)
     cats = {"cat__main_category": torch.ones(B, dtype=torch.int64),
             "cat__store": torch.ones(B, dtype=torch.int64)}
@@ -471,12 +477,40 @@ def test_18_seq_variants_forward_shapes_and_empty_history_is_zero():
         for pos in ("abs", "delta", "both"):
             cfg = SeqConfig.parse(f"seq:{v}:pos={pos}:d=16:L=2:H=2")
             m = SeqRanker(spec, n_items=10, n_side={"main_category": 3, "store": 3},
-                          n_abs=400, n_delta=11, cfg=cfg, max_len=L).eval()
+                          n_abs=400, n_delta=11, cfg=cfg, hist_table=table,
+                          max_len=L).eval()
             with torch.no_grad():
-                out = m(dense, seq__hist=hist, seq__cand=cand, **cats)
+                out = m(dense, seq__uix=uix, seq__cand=cand, **cats)
                 x = m.encoder(hist); valid = hist[..., 0] > 0
-                s_vec = m.seq(x, valid, m.encoder.item_vec(cand),
+                s_vec = m.seq(x, valid, m.encoder.item_vec(cand.long()),
                               abs_month=hist[..., 3])
             assert out.shape == (B,) and torch.isfinite(out).all(), (v, pos)
             assert torch.count_nonzero(s_vec[2:]) == 0, (v, pos, "empty history must be zero")
             assert torch.count_nonzero(s_vec[0]) > 0, (v, pos)
+
+
+def test_19_seq_ranker_has_parallel_dcn_branch_matching_frozen_config():
+    """Advisor diagram: pred <- overarch <- {DCN, Seq} in PARALLEL. The DCN
+    branch must be the frozen DeepCrossRanker layout (CrossNet 3 layers,
+    DeepTower (256,128), cat_emb 16) so deep_cross is the exact ablation."""
+    import torch
+    from scripts.ranker.ranker_features import RankerFeatureSpec
+    from scripts.ranker.seq_ranker import SeqRanker, SeqConfig
+    from scripts.ranker.complex_ranker import CrossNet, DeepTower, DeepCrossConfig
+    spec = RankerFeatureSpec(n_dense=4, dense_mean=np.zeros(4), dense_std=np.ones(4),
+                             cat_vocabs={"main_category": {"<pad>": 0, "C": 1},
+                                         "store": {"<pad>": 0, "S": 1}})
+    table = torch.zeros((2, 20, 6), dtype=torch.int64)
+    m = SeqRanker(spec, 10, {"main_category": 3, "store": 3}, 400, 11,
+                  SeqConfig.parse("seq:hstu:pos=both:ffn=4:L=0"), hist_table=table)
+    dc = DeepCrossConfig()
+    assert isinstance(m.cross, CrossNet) and len(m.cross.weights) == dc.n_cross_layers
+    assert isinstance(m.deep, DeepTower) and m.deep.out_dim == dc.deep_hidden_dims[-1]
+    assert m.cat_embs["store"].embedding_dim == dc.cat_emb_dim
+    # ffn option parsed; mh_pool L=0 pools raw embeddings, L=2 adds an encoder
+    assert m.cfg.ffn_mult == 4
+    m0 = SeqRanker(spec, 10, {"main_category": 3, "store": 3}, 400, 11,
+                   SeqConfig.parse("seq:mh_pool:pos=delta:L=0"), hist_table=table)
+    m2 = SeqRanker(spec, 10, {"main_category": 3, "store": 3}, 400, 11,
+                   SeqConfig.parse("seq:mh_pool:pos=delta:L=2"), hist_table=table)
+    assert m0.seq.enc is None and m2.seq.enc is not None

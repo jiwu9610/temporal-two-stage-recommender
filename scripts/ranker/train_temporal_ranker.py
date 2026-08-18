@@ -95,9 +95,12 @@ SEQ_HIST_LEN = 20
 
 class _SeqContext:
     """Wave-3 sequence feature (advisor spec, advanced_seq.pdf): per user the
-    last-L POSITIVE engagements before the snapshot cutoff, each carrying
+    last-L engagements (EVERY interaction, spec: "product ids that user
+    interacted with") before the snapshot cutoff, each carrying
       item index      frozen vocab from the ranker_train HISTORY only
-                      (later-snapshot items unseen there -> 0 = pad)
+                      (0 = pad, 1 = <unk> for items first seen later, so an
+                      OOV event still occupies a valid position)
+      rating bucket   1..5 stars (6 = unknown) as a sparse id
       cat / store idx sparse side ids (vocab from the ranker_train catalog)
       abs bucket      absolute timestamp, monthly bucket since a fixed
                       epoch (0 = pad)                      -> sin/cos or emb
@@ -112,13 +115,14 @@ class _SeqContext:
     DELTA_EDGES_DAYS = (0, 1, 3, 7, 14, 30, 60, 90, 180, 365, 730, 1e9)
 
     def __init__(self, tdir: Path, snapshots, hist_len: int = SEQ_HIST_LEN,
-                 positive_min_rating: float = 4.0):
+                 positive_min_rating: Optional[float] = None):
         self.hist_len = hist_len
         h0 = pd.read_parquet(tdir / "history_ranker_train.parquet",
                              columns=["parent_asin"])
         items = sorted(h0["parent_asin"].astype(str).unique())
-        self.item_to_idx = {a: i + 1 for i, a in enumerate(items)}   # 0 = pad
-        self.n_items = len(items) + 1
+        self.UNK = 1                                                # 0 = pad, 1 = <unk>
+        self.item_to_idx = {a: i + 2 for i, a in enumerate(items)}
+        self.n_items = len(items) + 2
         # sparse side ids from the ranker_train catalog (history-only rows)
         itf = pd.read_parquet(tdir / "item_features_ranker_train.parquet",
                               columns=["parent_asin", "main_category", "store"])
@@ -141,13 +145,16 @@ class _SeqContext:
             h = pd.read_parquet(tdir / f"history_{snap}.parquet",
                                 columns=["user_id", "parent_asin", "timestamp",
                                          "rating"])
-            h = h[h["rating"] >= positive_min_rating]
+            if positive_min_rating is not None:      # spec: EVERY interaction
+                h = h[h["rating"] >= positive_min_rating]
             h["user_id"] = h["user_id"].astype(str)
             h["parent_asin"] = h["parent_asin"].astype(str)
             assert int(h["timestamp"].max()) < cutoff, (snap, "history not < cutoff")
             h = h.sort_values(["user_id", "timestamp"], kind="mergesort")
             h = h.groupby("user_id", sort=False).tail(hist_len)
-            h["idx"] = h["parent_asin"].map(self.item_to_idx).fillna(0).astype(np.int64)
+            h["idx"] = h["parent_asin"].map(self.item_to_idx).fillna(self.UNK).astype(np.int64)
+            r = pd.to_numeric(h["rating"], errors="coerce")
+            h["rating_b"] = np.where(r.between(1, 5), r.round().clip(1, 5), 6).astype(np.int64)
             for col in ("main_category", "store"):
                 h[col] = h["parent_asin"].map(self.item_side[col]).fillna(0).astype(np.int64)
             ts = h["timestamp"].to_numpy(np.int64)
@@ -160,36 +167,63 @@ class _SeqContext:
                 nxt = np.append(t[1:], cutoff)                 # gap to next / cutoff
                 gap = np.maximum(nxt - t, 0)
                 delta_b = np.searchsorted(edges_ms, gap, side="right") + 1
-                L = len(t); row = np.zeros((hist_len, 5), dtype=np.int64)
+                L = len(t); row = np.zeros((hist_len, 6), dtype=np.int64)
                 row[hist_len - L:, 0] = grp["idx"].to_numpy()
                 row[hist_len - L:, 1] = grp["main_category"].to_numpy()
                 row[hist_len - L:, 2] = grp["store"].to_numpy()
                 row[hist_len - L:, 3] = grp["abs_b"].to_numpy()
                 row[hist_len - L:, 4] = delta_b
+                row[hist_len - L:, 5] = grp["rating_b"].to_numpy()
                 per_user[uid] = row                             # right-aligned, oldest first
             self.user_hist[snap] = per_user
             print(f"[seq] {snap}: users_with_history={len(per_user):,} "
                   f"vocab={self.n_items:,} cutoff={cutoff}", flush=True)
+        self.finalize()
+
+    def finalize(self):
+        """Stack every snapshot's per-user rows into ONE global table
+        [U_total, L, 5]; row 0 = the all-pad "no history" user. Candidate rows
+        then carry only an int32 index into it (~1000 rows/user in the
+        candidate tables -> the per-row [N, L, 5] tensor was 38 GB/snapshot on
+        GPU and OOM'd every sweep task; the table is ~100 MB)."""
+        rows = [np.zeros((self.hist_len, 6), dtype=np.int64)]
+        self.user_row: Dict[str, Dict[str, int]] = {}
+        for snap, per_user in self.user_hist.items():
+            m = {}
+            for uid, r in per_user.items():
+                m[uid] = len(rows); rows.append(r)
+            self.user_row[snap] = m
+        self.table = torch.from_numpy(np.stack(rows))          # [U,L,6] int64
+        self.user_hist = {}                                     # free
+        print(f"[seq] global history table rows={self.table.shape[0]:,} "
+              f"({self.table.numel() * 8 / 2**20:.0f} MB)", flush=True)
 
     def tensors(self, df: pd.DataFrame, snap: str) -> Dict[str, torch.Tensor]:
-        per_user = self.user_hist[snap]
-        zero = np.zeros((self.hist_len, 5), dtype=np.int64)
-        uids = df["user_id"].to_numpy()
-        uniq, inv = np.unique(uids, return_inverse=True)
-        mat = (np.stack([per_user.get(u, zero) for u in uniq]) if len(uniq)
-               else np.zeros((0, self.hist_len, 5), dtype=np.int64))
-        hist = mat[inv]                                          # [N, L, 5]
+        m = self.user_row[snap]
+        uix = df["user_id"].map(m).fillna(0).to_numpy(np.int64)
         pa = df["parent_asin"]
         cand = np.stack([
-            pa.map(self.item_to_idx).fillna(0).to_numpy(np.int64),
+            pa.map(self.item_to_idx).fillna(self.UNK).to_numpy(np.int64),
             pa.map(self.item_side["main_category"]).fillna(0).to_numpy(np.int64),
             pa.map(self.item_side["store"]).fillna(0).to_numpy(np.int64),
-        ], axis=1)                                               # [N, 3]
-        return {"seq__hist": torch.from_numpy(hist),
+        ], axis=1).astype(np.int32)                             # [N, 3]
+        return {"seq__uix": torch.from_numpy(uix.astype(np.int32)),
                 "seq__cand": torch.from_numpy(cand)}
 
 
 _SEQ: Optional[_SeqContext] = None
+
+
+def _git_head() -> Optional[str]:
+    """Resolve HEAD from .git files (compute nodes have no git binary --
+    MEMO lesson 12)."""
+    try:
+        head = (REPO_ROOT / ".git" / "HEAD").read_text().strip()
+        if head.startswith("ref: "):
+            return (REPO_ROOT / ".git" / head[5:]).read_text().strip()
+        return head
+    except Exception:
+        return None
 
 
 def resolve_feature_list(df: pd.DataFrame):
@@ -268,11 +302,11 @@ def build_temporal_tensors(df: pd.DataFrame, spec: RankerFeatureSpec,
                 if m.any():
                     parts.append((np.flatnonzero(m), _SEQ.tensors(df[m], sn)))
             n = len(df)
-            hist = torch.zeros((n, _SEQ.hist_len, 5), dtype=torch.int64)
-            cand = torch.zeros((n, 3), dtype=torch.int64)
+            uix = torch.zeros(n, dtype=torch.int32)
+            cand = torch.zeros((n, 3), dtype=torch.int32)
             for idx, t in parts:
-                hist[idx] = t["seq__hist"]; cand[idx] = t["seq__cand"]
-            out["seq__hist"], out["seq__cand"] = hist, cand
+                uix[idx] = t["seq__uix"]; cand[idx] = t["seq__cand"]
+            out["seq__uix"], out["seq__cand"] = uix, cand
         else:
             out.update(_SEQ.tensors(df, snapshot))
     return out
@@ -289,7 +323,8 @@ def _make_model(arch: str, spec: RankerFeatureSpec) -> nn.Module:
         assert _SEQ is not None, "seq arch needs the sequence context (seq_arm)"
         cfg = SeqConfig.parse(arch)
         return SeqRanker(spec, _SEQ.n_items, _SEQ.n_side, _SEQ.N_ABS,
-                         _SEQ.n_delta, cfg)
+                         _SEQ.n_delta, cfg, hist_table=_SEQ.table,
+                         max_len=_SEQ.hist_len)
     raise ValueError(f"unknown arch {arch!r}")
 
 
@@ -648,8 +683,12 @@ def run(
         hist = summary["history"]
         recalls = [h["ranker_val_metrics"]["Recall@100"] for h in hist]
         best_epoch = int(np.argmax(recalls)) + 1
+        # Persist the best epoch's full R@K/P@K (the R@10 no-regression
+        # guardrail and precision must be readable from the report, not logs).
+        best_ep_metrics = hist[best_epoch - 1].get("ranker_val_metrics")
         run_rec = {
             "arch": arch, "lr": lr,
+            "best_epoch_metrics": best_ep_metrics,
             "best_selection_recall@100": summary["best_ranker_val_recall@100"],
             "best_epoch": best_epoch,
             "n_epochs_run": len(hist),
@@ -682,7 +721,10 @@ def run(
         report = {
             "category": category,
             "variant": variant,
-        "label_mode": label_mode,
+            "label_mode": label_mode,
+            "code_commit": _git_head(),
+            "seq_arm": bool(seq_arm),
+            "seq_grid": list(seq_grid) if seq_arm else None,
             "stage": "B (model-selection confirmation; test snapshot untouched)",
             "started_utc": datetime.now(tz=timezone.utc).isoformat(),
             "elapsed_seconds": round(time.time() - t0, 2),

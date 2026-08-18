@@ -1,9 +1,21 @@
 """Wave-3 sequence module at the RANKING position (advisor spec advanced_seq.pdf).
 
-    logits = overarch( DCN-side features , SeqModule(user engagement seq, cand) )
+        pred task <- Overarch <- { DCN branch , Seq module }      (PARALLEL)
+
+    DCN branch  = CrossNet(3) + DeepTower(256,128) over x0=[dense, cat embs],
+                  configured EXACTLY like the frozen DeepCrossRanker
+                  (DeepCrossConfig) so that with the seq output zeroed the model
+                  IS the frozen DCN -- the deep_cross grid arm is the exact
+                  ablation of the sequence module.
+    Seq module  = engagement encoder + one of four sequence variants -> [B,d]
+    Overarch    = MLP over concat(cross_out, deep_out, seq_out, cand_emb,
+                  cand_emb*seq_out) -> logit
 
 Engagement encoder (per position): item_id emb + main_category emb + store emb
-+ position emb, where position emb is one of
++ rating emb (engagement = every interaction, rating kept as a sparse id per
+the spec's "minimal set of sparse ids"; item index 1 = <unk> for items first
+seen after T0 so OOV events stay valid positions) + position emb, where
+position emb is one of
     abs    monthly absolute-time bucket -> fixed sin/cos table -> linear
     delta  log-spaced gap-to-next bucket -> learned emb
     both   sum of the two
@@ -41,10 +53,15 @@ class SeqConfig:
     d: int = 32                      # engagement embedding dim
     layers: int = 1
     heads: int = 2
-    ffn_mult: int = 2
+    ffn_mult: int = 2                # transformer FFN width = ffn_mult * d
     dropout: float = 0.1
-    cat_emb_dim: int = 8             # DCN-side categorical embs (as before)
-    head_hidden_dims: List[int] = field(default_factory=lambda: [256, 128])
+    # DCN branch -- identical to the frozen DeepCrossConfig
+    cat_emb_dim: int = 16
+    n_cross_layers: int = 3
+    deep_hidden_dims: List[int] = field(default_factory=lambda: [256, 128])
+    dcn_dropout: float = 0.2
+    # overarch
+    head_hidden_dims: List[int] = field(default_factory=lambda: [64])
 
     @classmethod
     def parse(cls, spec: str) -> "SeqConfig":
@@ -58,6 +75,8 @@ class SeqConfig:
             elif k == "d": cfg.d = int(v)
             elif k == "L": cfg.layers = int(v)
             elif k == "H": cfg.heads = int(v)
+            elif k == "ffn": cfg.ffn_mult = int(v)
+            elif k == "head": cfg.head_hidden_dims = [int(t) for t in v.split("-")]
             else: raise ValueError(f"unknown seq option {kv!r} in {spec!r}")
         assert cfg.variant in ("vanilla", "mh_pool", "causal", "hstu"), spec
         assert cfg.pos in ("abs", "delta", "both"), spec
@@ -75,7 +94,7 @@ def _sincos_table(n: int, d: int) -> torch.Tensor:
 
 
 class EngagementEncoder(nn.Module):
-    """<item, cat, store, abs_b, delta_b> -> d-dim vector; index 0 = pad."""
+    """<item, cat, store, abs_b, delta_b, rating_b> -> d-dim vector; index 0 = pad."""
 
     def __init__(self, n_items: int, n_side: Dict[str, int], n_abs: int,
                  n_delta: int, cfg: SeqConfig):
@@ -84,6 +103,7 @@ class EngagementEncoder(nn.Module):
         self.item = nn.Embedding(n_items, d, padding_idx=0)
         self.cat = nn.Embedding(n_side["main_category"], d, padding_idx=0)
         self.store = nn.Embedding(n_side["store"], d, padding_idx=0)
+        self.rating = nn.Embedding(7, d, padding_idx=0)   # 0 pad, 1..5 stars, 6 unknown
         self.pos = cfg.pos
         if cfg.pos in ("abs", "both"):
             self.register_buffer("abs_table", _sincos_table(n_abs, d))
@@ -97,8 +117,8 @@ class EngagementEncoder(nn.Module):
         return (self.item(ids3[..., 0]) + self.cat(ids3[..., 1])
                 + self.store(ids3[..., 2]))
 
-    def forward(self, hist: torch.Tensor) -> torch.Tensor:        # [B, L, 5]
-        x = self.item_vec(hist[..., :3])
+    def forward(self, hist: torch.Tensor) -> torch.Tensor:        # [B, L, 6]
+        x = self.item_vec(hist[..., :3]) + self.rating(hist[..., 5])
         if self.pos in ("abs", "both"):
             x = x + self.abs_proj(self.abs_table[hist[..., 3]])
         if self.pos in ("delta", "both"):
@@ -133,6 +153,7 @@ class _HSTUBlock(nn.Module):
         self.drop = nn.Dropout(dropout)
         idx = torch.arange(max_len)
         self.register_buffer("rel_idx", (idx[None, :] - idx[:, None]) + max_len - 1)
+        self.register_buffer("causal", torch.tril(torch.ones(max_len, max_len, dtype=torch.bool)))
 
     def _ts_bucket(self, months: torch.Tensor) -> torch.Tensor:  # [B,L,L] >= 0
         # log2-spaced: 0->0, 1->1, 2->2, 3-4->3, 5-8->4, ...
@@ -142,20 +163,22 @@ class _HSTUBlock(nn.Module):
 
     def forward(self, x: torch.Tensor, valid: torch.Tensor,
                 abs_month: torch.Tensor) -> torch.Tensor:
+        # Same math as before; restructured so the two bias terms are single
+        # gathers (the [B,h,L,L] advanced-index + permute version was ~6x
+        # slower than the transformer variants and timed out at 4h).
         B, L, d = x.shape
         u, v, q, k = F.silu(self.uvqk(self.norm(x))).chunk(4, dim=-1)
         q = q.view(B, L, self.h, self.dh).transpose(1, 2)        # [B,h,L,dh]
         k = k.view(B, L, self.h, self.dh).transpose(1, 2)
         v = v.view(B, L, self.h, self.dh).transpose(1, 2)
         att = torch.matmul(q, k.transpose(-1, -2))                # [B,h,L,L]
-        att = att + self.pos_w[:, self.rel_idx[:L, :L]].unsqueeze(0)
-        # timespan(query i attends key j) = |month_i - month_j|, causal so >= 0
+        pos_b = self.pos_w[:, self.rel_idx[:L, :L]]               # [h,L,L] (tiny)
         span = (abs_month[:, :, None] - abs_month[:, None, :]).abs()   # [B,L,L]
-        tb = self._ts_bucket(span)                                # [B,L,L]
-        att = att + self.ts_w[:, tb].permute(1, 0, 2, 3)          # [B,h,L,L]
+        tb = self._ts_bucket(span)                                # [B,L,L] long
+        ts_b = F.embedding(tb, self.ts_w.t())                     # [B,L,L,h]
+        att = att + pos_b.unsqueeze(0) + ts_b.permute(0, 3, 1, 2)
         att = F.silu(att) / self.n
-        causal = torch.tril(torch.ones(L, L, dtype=torch.bool, device=x.device))
-        keep = causal[None, None] & valid[:, None, None, :]
+        keep = self.causal[:L, :L][None, None] & valid[:, None, None, :]
         att = att.masked_fill(~keep, 0.0)
         y = torch.matmul(att, v).transpose(1, 2).reshape(B, L, d)
         y = self.out(self.drop(u * self.out_norm(y)))
@@ -176,6 +199,15 @@ class SeqModule(nn.Module):
             self.blocks = nn.ModuleList(
                 [_HSTUBlock(d, cfg.heads, max_len, cfg.dropout) for _ in range(cfg.layers)])
         elif cfg.variant == "mh_pool":
+            # optional L bidirectional encoder layers before the pooling
+            # readout (L=0 -> pool the raw engagement embeddings, the DIN
+            # generalisation; L>=1 -> transformer + weighted-pooling readout)
+            self.enc = None
+            if cfg.layers > 0:
+                layer = nn.TransformerEncoderLayer(
+                    d, cfg.heads, dim_feedforward=cfg.ffn_mult * d,
+                    dropout=cfg.dropout, batch_first=True, norm_first=True)
+                self.enc = nn.TransformerEncoder(layer, cfg.layers)
             self.q_proj = nn.Linear(d, d)
             self.k_proj = nn.Linear(d, d)
             self.v_proj = nn.Linear(d, d)
@@ -215,6 +247,8 @@ class SeqModule(nn.Module):
                 h = blk(h, valid_safe, abs_month)
             out = h[:, -1]
         else:  # mh_pool: target-aware multi-head weighted pooling
+            if self.enc is not None:
+                x = self.enc(x, src_key_padding_mask=~valid_safe)
             H, dh = self.cfg.heads, d // self.cfg.heads
             q = self.q_proj(cand).view(B, H, 1, dh)
             k = self.k_proj(x).view(B, L, H, dh).transpose(1, 2)
@@ -228,35 +262,66 @@ class SeqModule(nn.Module):
 
 
 class SeqRanker(nn.Module):
-    """overarch( dense, cat embs, cand_emb, seq_out, cand_emb*seq_out )."""
+    """pred <- overarch( DCN(x0) , SeqModule(history, cand) )  -- parallel."""
 
     def __init__(self, spec: RankerFeatureSpec, n_items: int,
                  n_side: Dict[str, int], n_abs: int, n_delta: int,
-                 cfg: SeqConfig, max_len: int = 20):
+                 cfg: SeqConfig, hist_table: torch.Tensor, max_len: int = 20):
         super().__init__()
+        from scripts.ranker.complex_ranker import CrossNet, DeepTower
         self.spec, self.cfg = spec, cfg
-        self.encoder = EngagementEncoder(n_items, n_side, n_abs, n_delta, cfg)
-        self.seq = SeqModule(cfg, max_len)
+        # [U, L, 6] per-(snapshot,user) history rows, row 0 = no history.
+        # Buffer (not a parameter): moves with .to(device), excluded from
+        # the optimizer, gathered per batch by seq__uix.
+        self.register_buffer("hist_table", hist_table.to(torch.int32),
+                             persistent=False)
+        # ---- DCN branch: byte-for-byte the frozen DeepCrossRanker layout ----
         self.cat_embs = nn.ModuleDict({
             name: nn.Embedding(spec.cat_vocab_size(name), cfg.cat_emb_dim, padding_idx=0)
             for name in spec.cat_vocabs})
-        in_dim = spec.n_dense + cfg.cat_emb_dim * spec.n_cat + 3 * cfg.d
+        x0_dim = spec.n_dense + cfg.cat_emb_dim * spec.n_cat
+        self.cross = CrossNet(x0_dim, cfg.n_cross_layers)
+        self.deep = DeepTower(x0_dim, tuple(cfg.deep_hidden_dims), cfg.dcn_dropout)
+        # ---- Seq branch ----
+        self.encoder = EngagementEncoder(n_items, n_side, n_abs, n_delta, cfg)
+        self.seq = SeqModule(cfg, max_len)
+        # ---- Overarch ----
+        in_dim = x0_dim + self.deep.out_dim + 3 * cfg.d
         layers: List[nn.Module] = []
         prev = in_dim
         for h in cfg.head_hidden_dims:
-            layers += [nn.Linear(prev, h), nn.ReLU(), nn.Dropout(cfg.dropout)]
+            layers += [nn.Linear(prev, h), nn.ReLU(), nn.Dropout(cfg.dcn_dropout)]
             prev = h
         layers.append(nn.Linear(prev, 1))
         self.head = nn.Sequential(*layers)
 
-    def forward(self, dense: torch.Tensor, *, seq__hist: torch.Tensor,
+    def forward(self, dense: torch.Tensor, *, seq__uix: torch.Tensor,
                 seq__cand: torch.Tensor, **kwargs) -> torch.Tensor:
-        cand = self.encoder.item_vec(seq__cand)                   # [B,d]
-        x = self.encoder(seq__hist)                               # [B,L,d]
-        valid = seq__hist[..., 0] > 0
-        s = self.seq(x, valid, cand, abs_month=seq__hist[..., 3])
+        # DCN branch
         feats = [dense]
         for name in self.spec.cat_vocabs:
             feats.append(self.cat_embs[name](kwargs[f"cat__{name}"]))
-        feats += [cand, s, cand * s]
-        return self.head(torch.cat(feats, dim=-1)).squeeze(-1)
+        x0 = torch.cat(feats, dim=-1)
+        cross_out = self.cross(x0)
+        deep_out = self.deep(x0)
+        # Seq branch. Candidate rows come ~1000 per user, so a batch holds
+        # only a handful of distinct users: run the (candidate-independent)
+        # history encoder + sequence module once per distinct user and
+        # scatter back. mh_pool is target-aware (query = candidate) so it
+        # keeps the per-row path. Numerically identical either way.
+        cand = self.encoder.item_vec(seq__cand.long())            # [B,d]
+        if self.cfg.variant == "mh_pool":
+            seq__hist = self.hist_table.index_select(0, seq__uix.long()).long()
+            x = self.encoder(seq__hist)
+            valid = seq__hist[..., 0] > 0
+            s = self.seq(x, valid, cand, abs_month=seq__hist[..., 3])
+        else:
+            uniq, inv = torch.unique(seq__uix, return_inverse=True)
+            hist_u = self.hist_table.index_select(0, uniq.long()).long()   # [U,L,6]
+            x_u = self.encoder(hist_u)
+            valid_u = hist_u[..., 0] > 0
+            s_u = self.seq(x_u, valid_u, None, abs_month=hist_u[..., 3])   # [U,d]
+            s = s_u.index_select(0, inv)                                    # [B,d]
+        # Overarch
+        return self.head(torch.cat([cross_out, deep_out, cand, s, cand * s],
+                                   dim=-1)).squeeze(-1)

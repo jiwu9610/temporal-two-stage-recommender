@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --account=PROJECT_ALLOC
 #SBATCH --partition=gengpu
-#SBATCH --gres=gpu:a100:1
+#SBATCH --gres=gpu:1
 #SBATCH --job-name=w3_seq
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
