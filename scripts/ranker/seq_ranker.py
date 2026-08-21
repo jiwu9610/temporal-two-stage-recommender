@@ -1,15 +1,12 @@
 """Wave-3 sequence module at the RANKING position (advisor spec advanced_seq.pdf).
 
-        pred task <- Overarch <- { DCN branch , Seq module }      (PARALLEL)
+        logit = DCN(x0) + alpha * g(cand_emb, seq_out)        (RESIDUAL)
 
-    DCN branch  = CrossNet(3) + DeepTower(256,128) over x0=[dense, cat embs],
-                  configured EXACTLY like the frozen DeepCrossRanker
-                  (DeepCrossConfig) so that with the seq output zeroed the model
-                  IS the frozen DCN -- the deep_cross grid arm is the exact
-                  ablation of the sequence module.
+    DCN         = the frozen DeepCrossRanker, unchanged (CrossNet(3) +
+                  DeepTower(256,128) + head 64 over x0=[dense, cat embs])
     Seq module  = engagement encoder + one of four sequence variants -> [B,d]
-    Overarch    = MLP over concat(cross_out, deep_out, seq_out, cand_emb,
-                  cand_emb*seq_out) -> logit
+    g           = small MLP over [cand_emb, seq_out, cand_emb*seq_out]
+    alpha       = learnable scalar, init 0  =>  alpha=0 IS the DCN baseline
 
 Engagement encoder (per position): item_id emb + main_category emb + store emb
 + rating emb (engagement = every interaction, rating kept as a sparse id per
@@ -262,53 +259,40 @@ class SeqModule(nn.Module):
 
 
 class SeqRanker(nn.Module):
-    """pred <- overarch( DCN(x0) , SeqModule(history, cand) )  -- parallel."""
+    """RESIDUAL design (external review 2026-08-21, adopted):
+
+        logit = DCN(x0)  +  alpha * g([cand_emb, seq_out, cand_emb*seq_out])
+
+    DCN is the frozen DeepCrossRanker layout (same config, same head); alpha
+    is a learnable scalar initialised at 0, so at initialisation the model IS
+    the DCN baseline exactly (structural test 19) and the sequence branch can
+    only learn a residual correction. The previous design fed candidate-id
+    embedding + sequence + a NEW head into one MLP, which changed three things
+    at once and made the seq-vs-DCN comparison unattributable.
+    """
 
     def __init__(self, spec: RankerFeatureSpec, n_items: int,
                  n_side: Dict[str, int], n_abs: int, n_delta: int,
                  cfg: SeqConfig, hist_table: torch.Tensor, max_len: int = 20):
         super().__init__()
-        from scripts.ranker.complex_ranker import CrossNet, DeepTower
+        from scripts.ranker.complex_ranker import DeepCrossRanker, DeepCrossConfig
         self.spec, self.cfg = spec, cfg
-        # [U, L, 6] per-(snapshot,user) history rows, row 0 = no history.
-        # Buffer (not a parameter): moves with .to(device), excluded from
-        # the optimizer, gathered per batch by seq__uix.
         self.register_buffer("hist_table", hist_table.to(torch.int32),
                              persistent=False)
-        # ---- DCN branch: byte-for-byte the frozen DeepCrossRanker layout ----
-        self.cat_embs = nn.ModuleDict({
-            name: nn.Embedding(spec.cat_vocab_size(name), cfg.cat_emb_dim, padding_idx=0)
-            for name in spec.cat_vocabs})
-        x0_dim = spec.n_dense + cfg.cat_emb_dim * spec.n_cat
-        self.cross = CrossNet(x0_dim, cfg.n_cross_layers)
-        self.deep = DeepTower(x0_dim, tuple(cfg.deep_hidden_dims), cfg.dcn_dropout)
-        # ---- Seq branch ----
+        self.dcn = DeepCrossRanker(spec, DeepCrossConfig())      # exact baseline
         self.encoder = EngagementEncoder(n_items, n_side, n_abs, n_delta, cfg)
         self.seq = SeqModule(cfg, max_len)
-        # ---- Overarch ----
-        in_dim = x0_dim + self.deep.out_dim + 3 * cfg.d
+        d = cfg.d
         layers: List[nn.Module] = []
-        prev = in_dim
+        prev = 3 * d
         for h in cfg.head_hidden_dims:
-            layers += [nn.Linear(prev, h), nn.ReLU(), nn.Dropout(cfg.dcn_dropout)]
+            layers += [nn.Linear(prev, h), nn.ReLU(), nn.Dropout(cfg.dropout)]
             prev = h
         layers.append(nn.Linear(prev, 1))
-        self.head = nn.Sequential(*layers)
+        self.residual = nn.Sequential(*layers)
+        self.alpha = nn.Parameter(torch.zeros(()))
 
-    def forward(self, dense: torch.Tensor, *, seq__uix: torch.Tensor,
-                seq__cand: torch.Tensor, **kwargs) -> torch.Tensor:
-        # DCN branch
-        feats = [dense]
-        for name in self.spec.cat_vocabs:
-            feats.append(self.cat_embs[name](kwargs[f"cat__{name}"]))
-        x0 = torch.cat(feats, dim=-1)
-        cross_out = self.cross(x0)
-        deep_out = self.deep(x0)
-        # Seq branch. Candidate rows come ~1000 per user, so a batch holds
-        # only a handful of distinct users: run the (candidate-independent)
-        # history encoder + sequence module once per distinct user and
-        # scatter back. mh_pool is target-aware (query = candidate) so it
-        # keeps the per-row path. Numerically identical either way.
+    def seq_vector(self, seq__uix: torch.Tensor, seq__cand: torch.Tensor):
         cand = self.encoder.item_vec(seq__cand.long())            # [B,d]
         if self.cfg.variant == "mh_pool":
             seq__hist = self.hist_table.index_select(0, seq__uix.long()).long()
@@ -317,11 +301,16 @@ class SeqRanker(nn.Module):
             s = self.seq(x, valid, cand, abs_month=seq__hist[..., 3])
         else:
             uniq, inv = torch.unique(seq__uix, return_inverse=True)
-            hist_u = self.hist_table.index_select(0, uniq.long()).long()   # [U,L,6]
+            hist_u = self.hist_table.index_select(0, uniq.long()).long()
             x_u = self.encoder(hist_u)
             valid_u = hist_u[..., 0] > 0
-            s_u = self.seq(x_u, valid_u, None, abs_month=hist_u[..., 3])   # [U,d]
-            s = s_u.index_select(0, inv)                                    # [B,d]
-        # Overarch
-        return self.head(torch.cat([cross_out, deep_out, cand, s, cand * s],
-                                   dim=-1)).squeeze(-1)
+            s_u = self.seq(x_u, valid_u, None, abs_month=hist_u[..., 3])
+            s = s_u.index_select(0, inv)
+        return cand, s
+
+    def forward(self, dense: torch.Tensor, *, seq__uix: torch.Tensor,
+                seq__cand: torch.Tensor, **kwargs) -> torch.Tensor:
+        base = self.dcn(dense, **kwargs)                          # [B]
+        cand, s = self.seq_vector(seq__uix, seq__cand)
+        r = self.residual(torch.cat([cand, s, cand * s], dim=-1)).squeeze(-1)
+        return base + self.alpha * r

@@ -16,8 +16,10 @@
 # Each array task = one (category, seq spec); the grid inside = the 4 frozen
 # archs (mlp/deep_cross x 2 lr) + the seq spec x 2 lr, so every report shows
 # whether the seq arm beats the frozen ranker on the SAME candidates.
-# Candidates = P4.4 frozen per-category retrieval config
-# (Books A2 / Electronics A5 / Video_Games A0). AB stays popularity baseline.
+# v2 (2026-08-21, PREREGISTRATION_v2.md): residual seq ranker on the
+# ALL-POSITIVE P4.4 winners ({V}_ap; the VARS defaults are placeholders until
+# the all-positive gate/Stage B re-select them -- pass W3_VAR_<cat>=...).
+# 3 preregistered specs/category; AB stays popularity baseline.
 # Index = cat_idx * N_SPECS + spec_idx; specs in configs/wave3_seq_grid.txt.
 # Model = DCN branch (frozen DeepCrossConfig) || seq module -> overarch, so
 # the in-run deep_cross arm is the exact seq-off ablation.
@@ -28,13 +30,13 @@ mkdir -p logs
 set +e; source ~/.bashrc; set -e
 conda activate "${CONDA_ENV:-tae}"
 
-mapfile -t SPECS < configs/wave3_seq_grid.txt
+mapfile -t SPECS < "${SEQ_GRID:-configs/wave3_seq_grid_v2.txt}"
 N=${#SPECS[@]}
-CATS=(Books Electronics Video_Games); VARS=(A2 A5 A0)
+CATS=(Books Electronics Video_Games); VARS=("${W3_VAR_Books:-A2_ap}" "${W3_VAR_Electronics:-A5_ap}" "${W3_VAR_Video_Games:-A0_ap}")
 CI=$(( SLURM_ARRAY_TASK_ID / N )); SI=$(( SLURM_ARRAY_TASK_ID % N ))
 CAT=${CATS[$CI]}; VAR=${VARS[$CI]}; SPEC=${SPECS[$SI]}
 TAG=$(echo "$SPEC" | tr ':=' '__')
-RD="results/wave3_seq/${CAT}"
+RD="results/wave3_seq_v2/${CAT}"
 mkdir -p "$RD"
 # Two sibling arrays (a100-only + any-gpu) race the same index space; the
 # report file is the lock -- if it exists (or another task claimed it) skip.

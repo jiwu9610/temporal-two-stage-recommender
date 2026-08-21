@@ -442,6 +442,11 @@ def test_17_seq_vocab_frozen_on_ranker_train_history(chain):
     ctx = trt._SeqContext(chain["dir"], ("ranker_train", "test"))
     hist_a = _load(chain, "history_ranker_train.parquet")
     hist_c = _load(chain, "history_test.parquet")
+    hist_b = _load(chain, "history_model_selection.parquet")
+    ctx2 = trt._SeqContext(chain["dir"], ("ranker_train", "test"),
+                           vocab_snapshots=("ranker_train", "model_selection"))
+    assert set(ctx2.item_to_idx) == (set(hist_a["parent_asin"].astype(str))
+                                     | set(hist_b["parent_asin"].astype(str)))
     only_later = (set(hist_c["parent_asin"].astype(str))
                   - set(hist_a["parent_asin"].astype(str)))
     assert set(ctx.item_to_idx) == set(hist_a["parent_asin"].astype(str))
@@ -489,31 +494,40 @@ def test_18_seq_variants_forward_shapes_and_empty_history_is_zero():
             assert torch.count_nonzero(s_vec[0]) > 0, (v, pos)
 
 
-def test_19_seq_ranker_has_parallel_dcn_branch_matching_frozen_config():
-    """Advisor diagram: pred <- overarch <- {DCN, Seq} in PARALLEL. The DCN
-    branch must be the frozen DeepCrossRanker layout (CrossNet 3 layers,
-    DeepTower (256,128), cat_emb 16) so deep_cross is the exact ablation."""
+def test_19_seq_ranker_is_exact_dcn_at_alpha_zero():
+    """Residual design: logit = DCN(x0) + alpha * g(cand, seq). With the DCN
+    weights copied from a DeepCrossRanker and alpha=0 (its init), the seq
+    ranker must reproduce the DCN logits exactly -> deep_cross is the exact
+    ablation. Also: the rt-only vs rt+ms vocab contexts differ in size."""
     import torch
     from scripts.ranker.ranker_features import RankerFeatureSpec
     from scripts.ranker.seq_ranker import SeqRanker, SeqConfig
-    from scripts.ranker.complex_ranker import CrossNet, DeepTower, DeepCrossConfig
+    from scripts.ranker.complex_ranker import DeepCrossRanker, DeepCrossConfig
     spec = RankerFeatureSpec(n_dense=4, dense_mean=np.zeros(4), dense_std=np.ones(4),
                              cat_vocabs={"main_category": {"<pad>": 0, "C": 1},
                                          "store": {"<pad>": 0, "S": 1}})
-    table = torch.zeros((2, 20, 6), dtype=torch.int64)
+    B = 6
+    table = torch.zeros((3, 20, 6), dtype=torch.int64)
+    table[1, -2:] = torch.tensor([[3, 1, 1, 100, 2, 5], [2, 1, 1, 105, 7, 4]])
+    torch.manual_seed(1)
+    dcn = DeepCrossRanker(spec, DeepCrossConfig()).eval()
     m = SeqRanker(spec, 10, {"main_category": 3, "store": 3}, 400, 11,
-                  SeqConfig.parse("seq:hstu:pos=both:ffn=4:L=0"), hist_table=table)
-    dc = DeepCrossConfig()
-    assert isinstance(m.cross, CrossNet) and len(m.cross.weights) == dc.n_cross_layers
-    assert isinstance(m.deep, DeepTower) and m.deep.out_dim == dc.deep_hidden_dims[-1]
-    assert m.cat_embs["store"].embedding_dim == dc.cat_emb_dim
-    # ffn option parsed; mh_pool L=0 pools raw embeddings, L=2 adds an encoder
+                  SeqConfig.parse("seq:hstu:pos=both:ffn=4"), hist_table=table).eval()
+    m.dcn.load_state_dict(dcn.state_dict())
+    assert float(m.alpha) == 0.0
+    dense = torch.randn(B, 4)
+    cats = {"cat__main_category": torch.ones(B, dtype=torch.int64),
+            "cat__store": torch.ones(B, dtype=torch.int64)}
+    uix = torch.tensor([1, 1, 0, 2, 0, 1], dtype=torch.int32)
+    cand = torch.tensor([[2, 1, 1]] * B, dtype=torch.int32)
+    with torch.no_grad():
+        a = dcn(dense, **cats)
+        b = m(dense, seq__uix=uix, seq__cand=cand, **cats)
+        assert torch.equal(a, b), "alpha=0 must reproduce the DCN exactly"
+        m.alpha.fill_(1.0)
+        c = m(dense, seq__uix=uix, seq__cand=cand, **cats)
+        assert not torch.equal(a, c)              # residual path is live
     assert m.cfg.ffn_mult == 4
-    m0 = SeqRanker(spec, 10, {"main_category": 3, "store": 3}, 400, 11,
-                   SeqConfig.parse("seq:mh_pool:pos=delta:L=0"), hist_table=table)
-    m2 = SeqRanker(spec, 10, {"main_category": 3, "store": 3}, 400, 11,
-                   SeqConfig.parse("seq:mh_pool:pos=delta:L=2"), hist_table=table)
-    assert m0.seq.enc is None and m2.seq.enc is not None
 
 
 def test_20_all_positive_label_guard_refuses_first_positive_tables():

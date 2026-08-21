@@ -115,11 +115,21 @@ class _SeqContext:
     DELTA_EDGES_DAYS = (0, 1, 3, 7, 14, 30, 60, 90, 180, 365, 730, 1e9)
 
     def __init__(self, tdir: Path, snapshots, hist_len: int = SEQ_HIST_LEN,
-                 positive_min_rating: Optional[float] = None):
+                 positive_min_rating: Optional[float] = None,
+                 vocab_snapshots: Sequence[str] = ("ranker_train",)):
+        """`vocab_snapshots`: the histories the item vocabulary is built from
+        = the snapshots whose rows the model is TRAINED on (selection phase:
+        ranker_train; refit: ranker_train + model_selection), exactly like the
+        categorical vocabs. Items first seen later map to <unk>. Freezing the
+        vocab at T0 for the refit too (the first wave-3 design) left 48-69% of
+        VG candidates as <unk> and was a likely cause of the test reversal."""
         self.hist_len = hist_len
-        h0 = pd.read_parquet(tdir / "history_ranker_train.parquet",
-                             columns=["parent_asin"])
-        items = sorted(h0["parent_asin"].astype(str).unique())
+        self.vocab_snapshots = tuple(vocab_snapshots)
+        items = set()
+        for vs in self.vocab_snapshots:
+            h0 = pd.read_parquet(tdir / f"history_{vs}.parquet", columns=["parent_asin"])
+            items |= set(h0["parent_asin"].astype(str).unique())
+        items = sorted(items)
         self.UNK = 1                                                # 0 = pad, 1 = <unk>
         self.item_to_idx = {a: i + 2 for i, a in enumerate(items)}
         self.n_items = len(items) + 2
@@ -176,8 +186,10 @@ class _SeqContext:
                 row[hist_len - L:, 5] = grp["rating_b"].to_numpy()
                 per_user[uid] = row                             # right-aligned, oldest first
             self.user_hist[snap] = per_user
+            oov = float((h["idx"] == self.UNK).mean()) if len(h) else 0.0
             print(f"[seq] {snap}: users_with_history={len(per_user):,} "
-                  f"vocab={self.n_items:,} cutoff={cutoff}", flush=True)
+                  f"vocab={self.n_items:,} (from {','.join(self.vocab_snapshots)}) "
+                  f"history-event OOV={oov:.1%} cutoff={cutoff}", flush=True)
         self.finalize()
 
     def finalize(self):
@@ -414,6 +426,16 @@ def _cohort_of(n: int) -> str:
     return "0" if n == 0 else "1" if n == 1 else "2" if n == 2 else "3+"
 
 
+def _cohort_fine_of(n: int) -> str:
+    """External review 2026-08-21: sequence lift must be visible on users
+    with enough history -- add 5-9 / 10+ on top of the frozen 0/1/2/3+."""
+    if n == 0: return "0"
+    if n <= 2: return "1-2"
+    if n <= 4: return "3-4"
+    if n <= 9: return "5-9"
+    return "10+"
+
+
 def _gt_sets(gt_df: pd.DataFrame) -> Dict[str, Set[str]]:
     """gt[u] = the SET of that user's target items.
 
@@ -508,6 +530,16 @@ def _eval_test(
             rep[f"Recall@{k}"] = r
             rep[f"Precision@{k}"] = p
         cohorts[name] = {"n_users": len(users), **rep}
+    cohorts_fine = {}
+    for name in ("0", "1-2", "3-4", "5-9", "10+"):
+        users = {u for u in gt if _cohort_fine_of(n_hist.get(u, 0)) == name}
+        sub_gt = {u: g for u, g in gt.items() if u in users}
+        rep = {}
+        for k in KS:
+            r, p, n = recall_precision_at_k(topk, sub_gt, k)
+            rep[f"Recall@{k}"] = r
+            rep[f"Precision@{k}"] = p
+        cohorts_fine[name] = {"n_users": len(users), **rep}
     # warm/cold is a property of the TARGET ITEM, not of the user, so the split
     # has to be per (user, item). Keying it off a per-user dict assigned every
     # user with mixed warm/cold targets wholly to whichever row came last.
@@ -535,6 +567,7 @@ def _eval_test(
             "n_users_retrieved": len(retrieved_users), **conditional,
         },
         "history_cohorts": cohorts,
+        "history_cohorts_fine": cohorts_fine,
         "target_item_cohorts": item_cohorts,
     }
 
@@ -659,7 +692,13 @@ def run(
     # Wave 3 sequence arm: build the history context ONCE (ranker_train-frozen
     # item vocab; per-snapshot last-L positives, all ts < cutoff).
     global _SEQ
-    _SEQ = _SeqContext(tdir, snaps_needed) if seq_arm else None
+    _SEQ_SEL = _SEQ_FINAL = None
+    if seq_arm:
+        _SEQ_SEL = _SeqContext(tdir, ("ranker_train", "model_selection"),
+                               vocab_snapshots=("ranker_train",))
+        _SEQ_FINAL = _SeqContext(tdir, snaps_needed,
+                                 vocab_snapshots=("ranker_train", "model_selection"))
+    _SEQ = _SEQ_SEL
 
     # Selection grid. Architecture + learning rate; epoch count comes from
     # early stopping against model_selection. Smoke restricts to one config.
@@ -814,6 +853,7 @@ def run(
     # ---- refit on train + selection rows, fixed epochs, no early stopping ----
     combined = pd.concat([cands["ranker_train"], cands["model_selection"]],
                          ignore_index=True)
+    _SEQ = _SEQ_FINAL          # refit/test: vocab from rt+ms histories
     spec_final = build_temporal_feature_spec(combined, features, log1p)
     combined_inputs = build_temporal_tensors(combined, spec_final,
                                              features, log1p)
