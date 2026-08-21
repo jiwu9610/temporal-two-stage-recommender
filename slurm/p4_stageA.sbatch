@@ -41,12 +41,19 @@ for s in ranker_train model_selection; do
     test -f "$f" || { echo "FATAL: missing $f (run p4_k500_emit first)"; exit 1; }
 done
 
+# 2026-08-21 REBUILD on the ALL-POSITIVE frame (project objective). The
+# first run of this sweep (Aug 14) used the builder default = first-positive
+# frame: labels, coverage ceilings and rule-weight tuning all answered the
+# next-item question. Variants are written as {V}_ap so nothing is shared
+# with the first-positive artifacts; rule weights go to
+# rule_weights_all_positive.json.
+LM="${LABEL_MODE:-all_positive}"; SUF="${VARIANT_SUFFIX:-_ap}"
 for V in A0 A1 A2 A3 A4 A5; do
-    echo "=== CHECKPOINT: stageA ${CAT} ${V} start $(date) ==="
+    echo "=== CHECKPOINT: stageA ${CAT} ${V}${SUF} (${LM}) start $(date) ==="
     python -u -m scripts.ranker.temporal_candidate_builder \
-        --category "$CAT" --variant "$V" \
+        --category "$CAT" --variant "${V}${SUF}" --label-mode "$LM" \
         --config-json "configs/p4_stageA/${CAT}_${V}.json" \
         --snapshots ranker_train,model_selection
-    echo "=== CHECKPOINT: stageA ${CAT} ${V} done $(date) ==="
+    echo "=== CHECKPOINT: stageA ${CAT} ${V}${SUF} done $(date) ==="
 done
 echo "=== Job finished: $(date) ==="

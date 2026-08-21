@@ -147,8 +147,18 @@ def build_snapshot_candidates(
     extra_sources: Optional[List[dict]] = None,
     tt_k: Optional[int] = None,
     out_dir: Optional[Path] = None,
+    label_mode: str = "first_positive",
 ) -> Dict:
     """Build candidates_{snapshot}.parquet + per-source metrics for ONE snapshot.
+
+    label_mode  "first_positive": groundtruth_{snap} (each user's FIRST window
+                positive; the frozen Phase 0-3A frame, kept so those numbers
+                stay byte-reproducible). "all_positive": groundtruth_all_{snap}
+                (every distinct window positive -- the project objective).
+                Drives the label column, every coverage/union number AND the
+                rule-weight tuning targets. Rule weights are stored per frame
+                (rule_weights.json vs rule_weights_all_positive.json) so the
+                two objectives never silently share T0-tuned weights.
 
     Phase 3A extensions (all default-off; defaults reproduce the frozen
     baseline byte-for-byte):
@@ -177,7 +187,10 @@ def build_snapshot_candidates(
     tdir = Path(processed_dir) / category / "temporal_ranker"
     extra_sources = extra_sources or []
     history = pd.read_parquet(tdir / f"history_{snapshot}.parquet")
-    gt_df = pd.read_parquet(tdir / f"groundtruth_{snapshot}.parquet")
+    if label_mode not in ("first_positive", "all_positive"):
+        raise ValueError(f"unknown label_mode {label_mode!r}")
+    gt_prefix = "groundtruth_" if label_mode == "first_positive" else "groundtruth_all_"
+    gt_df = pd.read_parquet(tdir / f"{gt_prefix}{snapshot}.parquet")
     user_features = pd.read_parquet(tdir / f"user_features_{snapshot}.parquet")
     item_features = pd.read_parquet(tdir / f"item_features_{snapshot}.parquet")
 
@@ -226,7 +239,8 @@ def build_snapshot_candidates(
         "t2_ms": manifest["cutoffs"]["t2_ms"],
         "t3_ms": manifest["cutoffs"]["t3_ms"],
     }
-    weights_path = tdir / "rule_weights.json"
+    weights_path = tdir / ("rule_weights.json" if label_mode == "first_positive"
+                           else "rule_weights_all_positive.json")
     tuning_payload = None
     stale_weights = False
     if weights_path.exists():
@@ -767,7 +781,8 @@ def build_all(category: str, top_k: int = 100, seed: int = 42,
               require_two_tower: bool = True,
               retrieval_config: Optional[dict] = None,
               variant: Optional[str] = None,
-              snapshots: Sequence[str] = SNAPSHOT_NAMES) -> Dict:
+              snapshots: Sequence[str] = SNAPSHOT_NAMES,
+              label_mode: str = "first_positive") -> Dict:
     """ranker_train first (tunes + freezes rule weights), then the rest.
 
     `retrieval_config` (Phase 3A): {top_k, min_item_history, tt_k,
@@ -793,10 +808,12 @@ def build_all(category: str, top_k: int = 100, seed: int = 42,
             extra_sources=rc.get("extra_sources"),
             tt_k=rc.get("tt_k"),
             out_dir=out_dir,
+            label_mode=label_mode,
         )
     payload = {
         "category": category,
         "variant": variant,
+        "label_mode": label_mode,
         "retrieval_config": rc or None,
         "built_utc": datetime.now(tz=timezone.utc).isoformat(),
         "elapsed_seconds": round(time.time() - t0, 2),
@@ -822,6 +839,12 @@ def _parse_args(argv=None):
     p.add_argument("--config-json", default=None,
                    help="Path to a retrieval-config JSON: {top_k, "
                         "min_item_history, tt_k, extra_sources}.")
+    p.add_argument("--label-mode", default="first_positive",
+                   choices=["first_positive", "all_positive"],
+                   help="Ground-truth frame for labels / coverage / rule tuning. "
+                        "all_positive = the project objective (every window "
+                        "positive); first_positive only for reproducing frozen "
+                        "Phase 0-3A numbers.")
     p.add_argument("--snapshots", default=None,
                    help="Comma-separated subset, e.g. "
                         "'ranker_train,model_selection' for Stage B.")
@@ -834,7 +857,8 @@ def main(argv=None):
     snaps = tuple(args.snapshots.split(",")) if args.snapshots else SNAPSHOT_NAMES
     if args.snapshot == "all":
         build_all(args.category, top_k=args.top_k, seed=args.seed,
-                  retrieval_config=rc, variant=args.variant, snapshots=snaps)
+                  retrieval_config=rc, variant=args.variant, snapshots=snaps,
+                  label_mode=args.label_mode)
     else:
         build_snapshot_candidates(args.category, args.snapshot,
                                   top_k=args.top_k, seed=args.seed)

@@ -36,13 +36,14 @@ mkdir -p logs
 set +e; source ~/.bashrc; set -e
 conda activate "${CONDA_ENV:-tae}"
 
-test -f results/p4_freeze/frozen_config.json || { echo "FATAL: P4.4 freeze missing"; exit 1; }
+test -f results/p4_freeze/frozen_config_ap.json || { echo "FATAL: P4.4 (all-positive) freeze missing"; exit 1; }
 PAIRS=("Books A2" "Books A0" "Electronics A5" "Electronics A0" \
        "Video_Games A0" "All_Beauty A1" "All_Beauty A0")
 read -r CAT V <<< "${PAIRS[$SLURM_ARRAY_TASK_ID]}"
 CFG="configs/p4_stageA/${CAT}_${V}.json"
+V="${V}${VARIANT_SUFFIX:-_ap}"               # 2026-08-21: all-positive rebuild
 test -f "$CFG" || { echo "FATAL: $CFG missing"; exit 1; }
-RD="results/p5_locked/${CAT}_${V}"
+RD="results/p5_locked_ap/${CAT}_${V}"
 mkdir -p "$RD"
 
 echo "=== CHECKPOINT: [0] test k500 emit ${CAT} $(date) ==="
@@ -60,7 +61,7 @@ PY
 
 echo "=== CHECKPOINT: [1] test candidates ${CAT} ${V} $(date) ==="
 python -u -m scripts.ranker.temporal_candidate_builder --category "$CAT" \
-    --variant "$V" --config-json "$CFG" --snapshots test
+    --variant "$V" --config-json "$CFG" --snapshots test --label-mode all_positive
 
 echo "=== CHECKPOINT: [2] full ranker + dump ${CAT} ${V} $(date) ==="
 python -u -m scripts.ranker.train_temporal_ranker --category "$CAT" \

@@ -214,6 +214,29 @@ class _SeqContext:
 _SEQ: Optional[_SeqContext] = None
 
 
+def assert_all_positive_labels(cands_df: pd.DataFrame, gt_all_df: pd.DataFrame) -> Dict:
+    """Every (user, item) of the all-positive frame that is present in the
+    candidate table must carry label 1. Returns the counts; raises otherwise."""
+    gt = gt_all_df[["user_id", "parent_asin"]].astype(str)
+    key = pd.MultiIndex.from_frame(gt)
+    in_cands = pd.MultiIndex.from_frame(cands_df[["user_id", "parent_asin"]].astype(str))
+    is_fp = in_cands.isin(key)
+    n_fp = int(is_fp.sum())
+    n_fp_labelled = int(cands_df.loc[is_fp, "label"].sum())
+    pos = cands_df.loc[cands_df["label"] == 1].groupby("user_id").size()
+    ppu = float(pos.mean()) if len(pos) else 0.0
+    print(f"[ranker] label-frame check: future positives in table={n_fp:,} "
+          f"labelled 1={n_fp_labelled:,}; positives/user={ppu:.3f}", flush=True)
+    if n_fp_labelled < n_fp:
+        raise RuntimeError(
+            f"label_mode=all_positive but the candidate table labels only "
+            f"{n_fp_labelled:,} of {n_fp:,} future positives -- it was built on "
+            f"the first-positive frame. Rebuild with temporal_candidate_builder "
+            f"--label-mode all_positive (or run relabel_candidates_all_positive).")
+    return {"future_positives_in_table": n_fp, "labelled": n_fp_labelled,
+            "positives_per_user": ppu}
+
+
 def _git_head() -> Optional[str]:
     """Resolve HEAD from .git files (compute nodes have no git binary --
     MEMO lesson 12)."""
@@ -610,6 +633,17 @@ def run(
     gt_sel = pd.read_parquet(tdir / f"{gt_prefix}model_selection.parquet")
     gt_test = (None if stage_b_only
                else pd.read_parquet(tdir / f"{gt_prefix}test.parquet"))
+    # HARD GUARD (2026-08-21): the label column is written by the candidate
+    # builder, not here. Under all_positive the training table MUST carry the
+    # all-positive frame -- otherwise every later window positive is trained
+    # as a negative while the evaluator counts it as a miss (the rebuild-wave
+    # bug: Books 807/985 future-positive rows labelled 0). Check it on disk.
+    if label_mode == "all_positive":
+        gt_tr = pd.read_parquet(tdir / "groundtruth_all_ranker_train.parquet",
+                                columns=["user_id", "parent_asin"])
+        if "ranker_train" in kept_users:
+            gt_tr = gt_tr[gt_tr["user_id"].astype(str).isin(kept_users["ranker_train"])]
+        assert_all_positive_labels(cands["ranker_train"], gt_tr)
     if "model_selection" in kept_users:
         gt_sel = gt_sel[gt_sel["user_id"].astype(str).isin(
             kept_users["model_selection"])]

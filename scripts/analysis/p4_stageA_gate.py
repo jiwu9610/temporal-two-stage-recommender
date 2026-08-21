@@ -47,6 +47,8 @@ RESULTS = REPO / "results"
 REPORTS = RESULTS / "phase2_temporal"     # builder RESULTS_DIR
 
 CONFIGS = ["A0", "A1", "A2", "A3", "A4", "A5"]
+VARIANT_SUFFIX = "_ap"            # 2026-08-21: all-positive rebuild variants
+GT_PREFIX = "groundtruth_all_"    # the project objective frame
 SNAPSHOTS = ["ranker_train", "model_selection"]
 BYTES_PER_ROW = {"All_Beauty": 1112, "Video_Games": 1099,
                  "Books": 1231, "Electronics": 1103}
@@ -66,9 +68,9 @@ def _bucket(n: int) -> str:
 
 def analyze_snapshot(cat: str, variant: str, snapshot: str) -> dict:
     tdir = PROCESSED / cat / "temporal_ranker"
-    cdir = tdir / "variants" / variant
+    cdir = tdir / "variants" / (variant + VARIANT_SUFFIX)
     cand = pd.read_parquet(cdir / f"candidates_{snapshot}.parquet")
-    gt = pd.read_parquet(tdir / f"groundtruth_{snapshot}.parquet",
+    gt = pd.read_parquet(tdir / f"{GT_PREFIX}{snapshot}.parquet",
                          columns=["user_id", "parent_asin"])
     hist = pd.read_parquet(tdir / f"history_{snapshot}.parquet",
                            columns=["parent_asin"])
@@ -132,7 +134,7 @@ def analyze_snapshot(cat: str, variant: str, snapshot: str) -> dict:
 def run(cat: str, skip_parquet: bool = False) -> dict:
     per_cfg = {}
     for v in CONFIGS:
-        rp = REPORTS / f"{cat}_candidates_report_{v}.json"
+        rp = REPORTS / f"{cat}_candidates_report_{v}{VARIANT_SUFFIX}.json"
         if not rp.exists():
             print(f"[gate] {cat} {v}: report missing, skip")
             continue
@@ -178,7 +180,7 @@ def run(cat: str, skip_parquet: bool = False) -> dict:
                         "content_margin": CONTENT_MARGIN},
                "shortlist_top2": ranked[:2],
                "ranked_passing": ranked}
-    out = RESULTS / "p4_stageA"
+    out = RESULTS / "p4_stageA_ap"
     out.mkdir(parents=True, exist_ok=True)
     (out / f"{cat}_gate.json").write_text(json.dumps(payload, indent=2))
 

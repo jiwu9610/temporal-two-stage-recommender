@@ -514,3 +514,20 @@ def test_19_seq_ranker_has_parallel_dcn_branch_matching_frozen_config():
     m2 = SeqRanker(spec, 10, {"main_category": 3, "store": 3}, 400, 11,
                    SeqConfig.parse("seq:mh_pool:pos=delta:L=2"), hist_table=table)
     assert m0.seq.enc is None and m2.seq.enc is not None
+
+
+def test_20_all_positive_label_guard_refuses_first_positive_tables():
+    """Regression for the rebuild-wave bug: a table whose label column came
+    from the first-positive frame must be refused under all_positive."""
+    from scripts.ranker.train_temporal_ranker import assert_all_positive_labels
+    gt_all = pd.DataFrame({"user_id": ["u1", "u1", "u2"],
+                           "parent_asin": ["A", "B", "C"]})
+    cands_first = pd.DataFrame({"user_id": ["u1", "u1", "u1", "u2", "u2"],
+                                "parent_asin": ["A", "B", "X", "C", "Y"],
+                                "label": [1, 0, 0, 1, 0]})       # B labelled 0
+    with pytest.raises(RuntimeError, match="first-positive frame"):
+        assert_all_positive_labels(cands_first, gt_all)
+    cands_all = cands_first.assign(label=[1, 1, 0, 1, 0])
+    out = assert_all_positive_labels(cands_all, gt_all)
+    assert out["future_positives_in_table"] == 3 and out["labelled"] == 3
+    assert out["positives_per_user"] == pytest.approx(1.5)

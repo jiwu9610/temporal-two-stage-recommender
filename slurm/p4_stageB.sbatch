@@ -36,6 +36,7 @@ PAIRS=("Books A3" "Books A2" "Books A0" "Electronics A5" "Electronics A0" \
        "Video_Games A5" "Video_Games unused" "Video_Games A0" \
        "All_Beauty A3" "All_Beauty A1" "All_Beauty A0")
 read -r CAT VARIANT <<< "${PAIRS[$SLURM_ARRAY_TASK_ID]}"
+VARIANT="${VARIANT}${VARIANT_SUFFIX:-_ap}"   # 2026-08-21: all-positive rebuild
 case "$VARIANT" in __*__) echo "placeholder $VARIANT not resolved"; exit 1;; esac
 
 echo "=== CHECKPOINT: stageB ${CAT} ${VARIANT} start $(date) ==="

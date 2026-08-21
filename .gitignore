@@ -44,3 +44,8 @@ STORY.md
 
 # Large per-user retrieval predictions (regenerable via train_two_tower.py)
 results/**/*.parquet
+
+# RecBole checkpoints and >100MB anchor dumps (GitHub hard limit); regenerable
+results/anchor/*/_ckpt/
+results/anchor/Video_Games/official_sasrec_top101.csv.gz
+results/anchor/Video_Games/official_sasrec_len20_top101.csv.gz
