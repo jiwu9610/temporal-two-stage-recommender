@@ -1,0 +1,97 @@
+{
+  "category": "All_Beauty",
+  "variant": "A0",
+  "retrieval_config": {
+    "top_k": 500,
+    "tt_k": 500,
+    "min_item_history": null,
+    "extra_sources": [
+      {
+        "name": "recent_pop",
+        "type": "windowed_pop",
+        "window_days": 30
+      }
+    ]
+  },
+  "built_utc": "2026-08-15T22:02:44.305865+00:00",
+  "elapsed_seconds": 405.53,
+  "snapshots": {
+    "test": {
+      "snapshot": "test",
+      "n_positive_eval_users": 45579,
+      "candidate_catalog_size": 24646,
+      "coverage": {
+        "historical_catalog": 0.664253274534325,
+        "eligible_pool": 0.48792206937405386,
+        "retrieved_union": 0.24438886329230566,
+        "retrieved_union_any_hit": 0.24438886329230566,
+        "retrieved_union_per_positive": 0.24438886329230566
+      },
+      "cold_users": 42060,
+      "n_positives": 45579,
+      "cold_items_not_in_history": 15303,
+      "history_cohorts": {
+        "0": 42060,
+        "1": 2557,
+        "2": 446,
+        "3+": 516
+      },
+      "sources": {
+        "popularity": {
+          "Recall@10": 0.015994207858882382,
+          "Precision@10": 0.001599420785888238,
+          "Recall@50": 0.04739024550779965,
+          "Precision@50": 0.0009478049101559929,
+          "Recall@100": 0.06373549222229535,
+          "Precision@100": 0.0006373549222229535
+        },
+        "rule": {
+          "Recall@10": 0.01627942692906821,
+          "Precision@10": 0.0016279426929068212,
+          "Recall@50": 0.047741284363412975,
+          "Precision@50": 0.0009548256872682595,
+          "Recall@100": 0.06404265122095702,
+          "Precision@100": 0.0006404265122095702
+        },
+        "two_tower": {
+          "Recall@10": 0.0009653568529366595,
+          "Precision@10": 9.653568529366594e-05,
+          "Recall@50": 0.0035981482700366395,
+          "Precision@50": 7.19629654007328e-05,
+          "Recall@100": 0.00526558283419996,
+          "Precision@100": 5.26558283419996e-05
+        },
+        "recent_pop": {
+          "Recall@10": 0.02277364575791483,
+          "Precision@10": 0.002277364575791483,
+          "Recall@50": 0.08133131485991356,
+          "Precision@50": 0.0016266262971982711,
+          "Recall@100": 0.11018232080563417,
+          "Precision@100": 0.0011018232080563417
+        }
+      },
+      "retrieval_config": {
+        "top_k": 500,
+        "min_item_history": null,
+        "tt_k": 500,
+        "extra_sources": [
+          {
+            "name": "recent_pop",
+            "type": "windowed_pop",
+            "window_days": 30
+          }
+        ]
+      },
+      "rule_weights": {
+        "w_store": 0.5,
+        "w_cat": 0.5,
+        "w_pop": 0.5
+      },
+      "rule_tuning": null,
+      "n_rows": 41522974,
+      "n_positive_rows": 11139,
+      "top_k": 500,
+      "elapsed_seconds": 404.85
+    }
+  }
+}

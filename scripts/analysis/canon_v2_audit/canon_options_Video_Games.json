@@ -1,0 +1,52 @@
+{
+  "category": "Video_Games",
+  "generated_utc": "2026-08-11T18:13:12+00:00",
+  "repo_commit": "unknown",
+  "predicate": {
+    "title": "shipped scripts.data.canonicalize.normalize_title (lowercase/strip/whitespace-collapse; empty never merges; FROZEN in tests)",
+    "store": "shipped scripts.data.canonicalize.store_merge_key (verbatim; null/whitespace-only never merges)",
+    "winner": "highest rating_number, ties by parent_asin ascending (deterministic; historical v1 runs used an unstable sort, so tie winners -- and remapped-row counts on tie groups -- could differ)"
+  },
+  "totals": {
+    "n_meta_rows_after_parent_dedup": 137269,
+    "n_review_rows": 1000000
+  },
+  "options": {
+    "current_v1_exact_title": {
+      "n_multi_asin_groups": 4769,
+      "n_parent_asins_folded": 6557,
+      "n_canonical_items": 130712,
+      "n_review_rows_remapped": 46140,
+      "pct_review_rows_remapped_of_catalog_rows": 4.614,
+      "pct_review_rows_remapped_of_all_rows": 4.614,
+      "n_review_rows_on_catalog": 1000000
+    },
+    "a_norm_title_only": {
+      "n_multi_asin_groups": 4975,
+      "n_parent_asins_folded": 6848,
+      "n_canonical_items": 130421,
+      "n_review_rows_remapped": 46739,
+      "pct_review_rows_remapped_of_catalog_rows": 4.6739,
+      "pct_review_rows_remapped_of_all_rows": 4.6739,
+      "n_review_rows_on_catalog": 1000000
+    },
+    "b_norm_title_store": {
+      "n_multi_asin_groups": 3804,
+      "n_parent_asins_folded": 5142,
+      "n_canonical_items": 132127,
+      "n_review_rows_remapped": 42512,
+      "pct_review_rows_remapped_of_catalog_rows": 4.2512,
+      "pct_review_rows_remapped_of_all_rows": 4.2512,
+      "n_review_rows_on_catalog": 1000000
+    },
+    "c_no_merge": {
+      "n_multi_asin_groups": 0,
+      "n_parent_asins_folded": 0,
+      "n_canonical_items": 137269,
+      "n_review_rows_remapped": 0,
+      "pct_review_rows_remapped_of_catalog_rows": 0.0,
+      "pct_review_rows_remapped_of_all_rows": 0.0,
+      "n_review_rows_on_catalog": 1000000
+    }
+  }
+}

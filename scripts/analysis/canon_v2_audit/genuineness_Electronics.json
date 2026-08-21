@@ -1,0 +1,35 @@
+{
+  "category": "Electronics",
+  "generated_utc": "2026-08-11T18:14:38+00:00",
+  "repo_commit": "unknown",
+  "totals": {
+    "n_meta_rows_after_parent_dedup": 1610012,
+    "n_review_rows": 1000000,
+    "n_v1_multi_asin_title_groups": 36805
+  },
+  "classes": {
+    "cross_store": {
+      "n_groups": 4109,
+      "n_parent_asins_folded": 10838,
+      "n_member_review_rows": 6401,
+      "pct_of_groups": 11.16
+    },
+    "single_store": {
+      "n_groups": 32455,
+      "n_parent_asins_folded": 47407,
+      "n_member_review_rows": 76986,
+      "pct_of_groups": 88.18
+    },
+    "store_incomplete": {
+      "n_groups": 241,
+      "n_parent_asins_folded": 417,
+      "n_member_review_rows": 179,
+      "pct_of_groups": 0.65
+    }
+  },
+  "v2_verification": {
+    "global_no_canonical_id_unites_two_known_stores": true,
+    "all_single_store_groups_with_nonempty_norm_title_still_merge": true,
+    "note": "both enforced by hard asserts above; this report only exists if they passed"
+  }
+}

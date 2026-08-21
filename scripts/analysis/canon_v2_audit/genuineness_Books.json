@@ -1,0 +1,35 @@
+{
+  "category": "Books",
+  "generated_utc": "2026-08-11T18:21:02+00:00",
+  "repo_commit": "unknown",
+  "totals": {
+    "n_meta_rows_after_parent_dedup": 4448181,
+    "n_review_rows": 1000000,
+    "n_v1_multi_asin_title_groups": 348580
+  },
+  "classes": {
+    "cross_store": {
+      "n_groups": 206005,
+      "n_parent_asins_folded": 418478,
+      "n_member_review_rows": 270933,
+      "pct_of_groups": 59.1
+    },
+    "single_store": {
+      "n_groups": 132285,
+      "n_parent_asins_folded": 151655,
+      "n_member_review_rows": 92269,
+      "pct_of_groups": 37.95
+    },
+    "store_incomplete": {
+      "n_groups": 10290,
+      "n_parent_asins_folded": 13081,
+      "n_member_review_rows": 9143,
+      "pct_of_groups": 2.95
+    }
+  },
+  "v2_verification": {
+    "global_no_canonical_id_unites_two_known_stores": true,
+    "all_single_store_groups_with_nonempty_norm_title_still_merge": true,
+    "note": "both enforced by hard asserts above; this report only exists if they passed"
+  }
+}

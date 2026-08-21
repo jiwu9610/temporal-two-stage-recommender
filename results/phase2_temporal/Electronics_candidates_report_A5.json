@@ -13,61 +13,61 @@
       }
     ]
   },
-  "built_utc": "2026-08-14T15:49:22.879552+00:00",
-  "elapsed_seconds": 3381.48,
+  "built_utc": "2026-08-15T20:08:00.079992+00:00",
+  "elapsed_seconds": 1005.28,
   "snapshots": {
-    "ranker_train": {
-      "snapshot": "ranker_train",
-      "n_positive_eval_users": 43833,
-      "candidate_catalog_size": 47844,
+    "test": {
+      "snapshot": "test",
+      "n_positive_eval_users": 37721,
+      "candidate_catalog_size": 60441,
       "coverage": {
-        "historical_catalog": 0.6453813336983552,
-        "eligible_pool": 0.5102548308352155,
-        "retrieved_union": 0.2262222526407045,
-        "retrieved_union_any_hit": 0.2262222526407045,
-        "retrieved_union_per_positive": 0.2262222526407045
+        "historical_catalog": 0.6475968293523502,
+        "eligible_pool": 0.5059781023832878,
+        "retrieved_union": 0.20503167996606664,
+        "retrieved_union_any_hit": 0.20503167996606664,
+        "retrieved_union_per_positive": 0.20503167996606664
       },
-      "cold_users": 12536,
-      "n_positives": 43833,
-      "cold_items_not_in_history": 15544,
+      "cold_users": 7354,
+      "n_positives": 37721,
+      "cold_items_not_in_history": 13293,
       "history_cohorts": {
-        "0": 12536,
-        "1": 6768,
-        "2": 4559,
-        "3+": 19970
+        "0": 7354,
+        "1": 5208,
+        "2": 3815,
+        "3+": 21344
       },
       "sources": {
         "popularity": {
-          "Recall@10": 0.01961992106403851,
-          "Precision@10": 0.001961992106403851,
-          "Recall@50": 0.04257066593662309,
-          "Precision@50": 0.0008514133187324618,
-          "Recall@100": 0.07941505258595122,
-          "Precision@100": 0.0007941505258595123
+          "Recall@10": 0.006627607963733729,
+          "Precision@10": 0.0006627607963733729,
+          "Recall@50": 0.03912939741788394,
+          "Precision@50": 0.0007825879483576788,
+          "Recall@100": 0.04994565361469738,
+          "Precision@100": 0.0004994565361469738
         },
         "rule": {
-          "Recall@10": 0.015034334861862068,
-          "Precision@10": 0.0015034334861862067,
-          "Recall@50": 0.033171354915246504,
-          "Precision@50": 0.00066342709830493,
-          "Recall@100": 0.058426299819770496,
-          "Precision@100": 0.0005842629981977049
+          "Recall@10": 0.006017868031070226,
+          "Precision@10": 0.0006017868031070226,
+          "Recall@50": 0.027358765674292834,
+          "Precision@50": 0.0005471753134858566,
+          "Recall@100": 0.03557699954932266,
+          "Precision@100": 0.00035576999549322656
         },
         "two_tower": {
-          "Recall@10": 0.030684643989688135,
-          "Precision@10": 0.0030684643989688136,
-          "Recall@50": 0.05653274929847375,
-          "Precision@50": 0.0011306549859694752,
-          "Recall@100": 0.0712020623730979,
-          "Precision@100": 0.0007120206237309789
+          "Recall@10": 0.021791574984756503,
+          "Precision@10": 0.0021791574984756502,
+          "Recall@50": 0.04875268418122531,
+          "Precision@50": 0.0009750536836245062,
+          "Recall@100": 0.0652156623631399,
+          "Precision@100": 0.000652156623631399
         },
         "recent_pop": {
-          "Recall@10": 0.0635822325645062,
-          "Precision@10": 0.006358223256450619,
-          "Recall@50": 0.10131635982022677,
-          "Precision@50": 0.0020263271964045355,
-          "Recall@100": 0.12387926904387106,
-          "Precision@100": 0.0012387926904387106
+          "Recall@10": 0.0374327297791681,
+          "Precision@10": 0.00374327297791681,
+          "Recall@50": 0.07931921210996527,
+          "Precision@50": 0.0015863842421993055,
+          "Recall@100": 0.0991490151374566,
+          "Precision@100": 0.000991490151374566
         }
       },
       "retrieval_config": {
@@ -88,87 +88,10 @@
         "w_pop": 1.0
       },
       "rule_tuning": null,
-      "n_rows": 53168880,
-      "n_positive_rows": 9916,
+      "n_rows": 50206940,
+      "n_positive_rows": 7734,
       "top_k": 500,
-      "elapsed_seconds": 1603.31
-    },
-    "model_selection": {
-      "snapshot": "model_selection",
-      "n_positive_eval_users": 42406,
-      "candidate_catalog_size": 54284,
-      "coverage": {
-        "historical_catalog": 0.6608970428712918,
-        "eligible_pool": 0.5266235910012734,
-        "retrieved_union": 0.2331745507711173,
-        "retrieved_union_any_hit": 0.2331745507711173,
-        "retrieved_union_per_positive": 0.2331745507711173
-      },
-      "cold_users": 10392,
-      "n_positives": 42406,
-      "cold_items_not_in_history": 14380,
-      "history_cohorts": {
-        "0": 10392,
-        "1": 6109,
-        "2": 4550,
-        "3+": 21355
-      },
-      "sources": {
-        "popularity": {
-          "Recall@10": 0.011484223930575861,
-          "Precision@10": 0.0011484223930575861,
-          "Recall@50": 0.05713814082912795,
-          "Precision@50": 0.001142762816582559,
-          "Recall@100": 0.07432910437202282,
-          "Precision@100": 0.0007432910437202283
-        },
-        "rule": {
-          "Recall@10": 0.01065886902796774,
-          "Precision@10": 0.001065886902796774,
-          "Recall@50": 0.041314908267697965,
-          "Precision@50": 0.0008262981653539593,
-          "Recall@100": 0.05386030278734141,
-          "Precision@100": 0.0005386030278734141
-        },
-        "two_tower": {
-          "Recall@10": 0.025727491392727446,
-          "Precision@10": 0.0025727491392727444,
-          "Recall@50": 0.052610479649106257,
-          "Precision@50": 0.0010522095929821251,
-          "Recall@100": 0.0668301655426119,
-          "Precision@100": 0.0006683016554261189
-        },
-        "recent_pop": {
-          "Recall@10": 0.04317785219072773,
-          "Precision@10": 0.004317785219072773,
-          "Recall@50": 0.0841862000660284,
-          "Precision@50": 0.001683724001320568,
-          "Recall@100": 0.10408904400320709,
-          "Precision@100": 0.001040890440032071
-        }
-      },
-      "retrieval_config": {
-        "top_k": 500,
-        "min_item_history": 3,
-        "tt_k": 500,
-        "extra_sources": [
-          {
-            "name": "recent_pop",
-            "type": "decayed_pop",
-            "half_life_days": 30
-          }
-        ]
-      },
-      "rule_weights": {
-        "w_store": 0.5,
-        "w_cat": 0.5,
-        "w_pop": 1.0
-      },
-      "rule_tuning": null,
-      "n_rows": 54056051,
-      "n_positive_rows": 9888,
-      "top_k": 500,
-      "elapsed_seconds": 1774.91
+      "elapsed_seconds": 1004.08
     }
   }
 }

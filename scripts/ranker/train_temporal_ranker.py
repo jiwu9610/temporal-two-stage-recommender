@@ -536,6 +536,7 @@ def run(
     seq_arm: bool = False,
     seq_grid: Sequence[str] = ("seq:vanilla:pos=delta", "seq:mh_pool:pos=delta",
                                "seq:causal:pos=delta", "seq:hstu:pos=delta"),
+    seq_only: bool = False,
 ) -> Dict:
     """Full run: selection -> refit -> single locked test eval.
 
@@ -634,7 +635,12 @@ def run(
         else [("mlp", 1e-3), ("mlp", 3e-4), ("deep_cross", 1e-3), ("deep_cross", 3e-4)]
     )
     if seq_arm and not smoke:
-        grid = grid + [(a, lr) for a in seq_grid for lr in (1e-3, 3e-4)]
+        # seq_only: the wave-3 LOCKED TEST path -- the arch was frozen on
+        # selection-snapshot evidence (results/wave3_seq/frozen_winners.json);
+        # the grid holds only the frozen spec so lr/epoch are still chosen on
+        # model_selection and the test read happens once, for that arch.
+        seq_entries = [(a, lr) for a in seq_grid for lr in (1e-3, 3e-4)]
+        grid = seq_entries if seq_only else grid + seq_entries
     if smoke:
         max_epochs = min(max_epochs, 3)
 
@@ -954,6 +960,10 @@ def _parse_args(argv=None):
                    help="Wave 3: add the DIN sequence ranker (arch=din, two "
                         "lrs) to the selection grid. Default off = frozen "
                         "protocol byte-for-byte.")
+    p.add_argument("--seq-only", action="store_true",
+                   help="Grid = only the --seq-grid specs (wave-3 locked test "
+                        "of a frozen winner; lr/epoch still selected on "
+                        "model_selection).")
     p.add_argument("--seq-grid", default=None,
                    help="Comma-separated seq arch specs to add to the grid "
                         "(each at lr 1e-3 and 3e-4), e.g. "
@@ -978,7 +988,7 @@ def main(argv=None):
         seed=args.seed, smoke=args.smoke, max_users_per_snapshot=args.max_users,
         variant=args.variant, stage_b_only=args.stage_b,
         label_mode=args.label_mode,
-        seq_arm=args.seq_arm,
+        seq_arm=args.seq_arm, seq_only=args.seq_only,
         **({"seq_grid": tuple(args.seq_grid.split(","))} if args.seq_grid else {}),
         dump_predictions=args.dump_predictions, **kwargs)
 

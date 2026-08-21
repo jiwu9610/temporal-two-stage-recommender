@@ -1,0 +1,97 @@
+{
+  "category": "Video_Games",
+  "variant": "A0",
+  "retrieval_config": {
+    "top_k": 500,
+    "tt_k": 500,
+    "min_item_history": null,
+    "extra_sources": [
+      {
+        "name": "recent_pop",
+        "type": "decayed_pop",
+        "half_life_days": 7
+      }
+    ]
+  },
+  "built_utc": "2026-08-15T20:35:30.959029+00:00",
+  "elapsed_seconds": 688.32,
+  "snapshots": {
+    "test": {
+      "snapshot": "test",
+      "n_positive_eval_users": 53434,
+      "candidate_catalog_size": 23123,
+      "coverage": {
+        "historical_catalog": 0.7085189205374854,
+        "eligible_pool": 0.5827937268405884,
+        "retrieved_union": 0.30982146199049293,
+        "retrieved_union_any_hit": 0.30982146199049293,
+        "retrieved_union_per_positive": 0.30982146199049293
+      },
+      "cold_users": 32575,
+      "n_positives": 53434,
+      "cold_items_not_in_history": 15575,
+      "history_cohorts": {
+        "0": 32575,
+        "1": 8251,
+        "2": 3923,
+        "3+": 8685
+      },
+      "sources": {
+        "popularity": {
+          "Recall@10": 0.02457236965228132,
+          "Precision@10": 0.002457236965228132,
+          "Recall@50": 0.049275742036905344,
+          "Precision@50": 0.0009855148407381068,
+          "Recall@100": 0.06995545907100348,
+          "Precision@100": 0.0006995545907100348
+        },
+        "rule": {
+          "Recall@10": 0.023823782610323016,
+          "Precision@10": 0.0023823782610323013,
+          "Recall@50": 0.048770445783583485,
+          "Precision@50": 0.0009754089156716698,
+          "Recall@100": 0.06843957031103792,
+          "Precision@100": 0.0006843957031103791
+        },
+        "two_tower": {
+          "Recall@10": 0.01111651757308081,
+          "Precision@10": 0.001111651757308081,
+          "Recall@50": 0.031066362241269605,
+          "Precision@50": 0.000621327244825392,
+          "Recall@100": 0.046468540629561704,
+          "Precision@100": 0.000464685406295617
+        },
+        "recent_pop": {
+          "Recall@10": 0.051652505895122956,
+          "Precision@10": 0.0051652505895122955,
+          "Recall@50": 0.10296814762136468,
+          "Precision@50": 0.0020593629524272936,
+          "Recall@100": 0.1360931242280196,
+          "Precision@100": 0.001360931242280196
+        }
+      },
+      "retrieval_config": {
+        "top_k": 500,
+        "min_item_history": null,
+        "tt_k": 500,
+        "extra_sources": [
+          {
+            "name": "recent_pop",
+            "type": "decayed_pop",
+            "half_life_days": 7
+          }
+        ]
+      },
+      "rule_weights": {
+        "w_store": 0.5,
+        "w_cat": 0.5,
+        "w_pop": 1.0
+      },
+      "rule_tuning": null,
+      "n_rows": 57611185,
+      "n_positive_rows": 16555,
+      "top_k": 500,
+      "elapsed_seconds": 687.36
+    }
+  }
+}
