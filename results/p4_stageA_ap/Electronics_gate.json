@@ -1,0 +1,151 @@
+{
+  "category": "Electronics",
+  "configs": {
+    "A0": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.22549662513078286,
+          "union_per_positive": 0.20021386855309697,
+          "n_rows": 52263821,
+          "elapsed_seconds": 1234.75
+        },
+        "model_selection": {
+          "union_macro": 0.23042660607888776,
+          "union_per_positive": 0.20054941715591534,
+          "n_rows": 53241744,
+          "elapsed_seconds": 828.84
+        }
+      },
+      "rows_total": 105505565,
+      "projected_stageB_maxrss_gib": 108.4,
+      "rows_ratio_vs_A0": 1.0,
+      "gate_rows": true,
+      "gate_maxrss": true,
+      "gate_pass": true
+    },
+    "A1": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.2293146306707643,
+          "union_per_positive": 0.2038801866061881,
+          "n_rows": 58080568,
+          "elapsed_seconds": 2442.59
+        },
+        "model_selection": {
+          "union_macro": 0.23475591996303902,
+          "union_per_positive": 0.20491315076152622,
+          "n_rows": 59224705,
+          "elapsed_seconds": 2605.12
+        }
+      },
+      "rows_total": 117305273,
+      "projected_stageB_maxrss_gib": 124.1,
+      "rows_ratio_vs_A0": 1.112,
+      "gate_rows": true,
+      "gate_maxrss": false,
+      "gate_pass": false
+    },
+    "A2": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.22891397715085307,
+          "union_per_positive": 0.20346890092715544,
+          "n_rows": 58940768,
+          "elapsed_seconds": 2646.23
+        },
+        "model_selection": {
+          "union_macro": 0.23517331942395603,
+          "union_per_positive": 0.20516841094458424,
+          "n_rows": 59997218,
+          "elapsed_seconds": 2737.22
+        }
+      },
+      "rows_total": 118937986,
+      "projected_stageB_maxrss_gib": 125.8,
+      "rows_ratio_vs_A0": 1.127,
+      "gate_rows": true,
+      "gate_maxrss": false,
+      "gate_pass": false
+    },
+    "A3": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.22867216436085028,
+          "union_per_positive": 0.2030693662675237,
+          "n_rows": 59398608,
+          "elapsed_seconds": 2855.99
+        },
+        "model_selection": {
+          "union_macro": 0.2350216664929107,
+          "union_per_positive": 0.20498608224239992,
+          "n_rows": 60468664,
+          "elapsed_seconds": 3041.01
+        }
+      },
+      "rows_total": 119867272,
+      "projected_stageB_maxrss_gib": 126.8,
+      "rows_ratio_vs_A0": 1.136,
+      "gate_rows": true,
+      "gate_maxrss": false,
+      "gate_pass": false
+    },
+    "A4": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.2286934403814067,
+          "union_per_positive": 0.20339839481074984,
+          "n_rows": 58596588,
+          "elapsed_seconds": 1377.87
+        },
+        "model_selection": {
+          "union_macro": 0.23464863257159393,
+          "union_per_positive": 0.20477944304659107,
+          "n_rows": 59688105,
+          "elapsed_seconds": 1555.52
+        }
+      },
+      "rows_total": 118284693,
+      "projected_stageB_maxrss_gib": 125.2,
+      "rows_ratio_vs_A0": 1.121,
+      "gate_rows": true,
+      "gate_maxrss": false,
+      "gate_pass": false
+    },
+    "A5": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.2252644682751591,
+          "union_per_positive": 0.19993184408747458,
+          "n_rows": 53168880,
+          "elapsed_seconds": 1045.52
+        },
+        "model_selection": {
+          "union_macro": 0.2310678994332266,
+          "union_per_positive": 0.20102347178159452,
+          "n_rows": 54056051,
+          "elapsed_seconds": 1121.27
+        }
+      },
+      "rows_total": 107224931,
+      "projected_stageB_maxrss_gib": 110.1,
+      "rows_ratio_vs_A0": 1.016,
+      "gate_rows": true,
+      "gate_maxrss": true,
+      "gate_pass": true
+    }
+  },
+  "gate": {
+    "rows_ratio_max": 1.6,
+    "maxrss_gib_max": 120.0,
+    "bytes_per_row_anchor": 1103,
+    "content_margin": 1.03
+  },
+  "shortlist_top2": [
+    "A5",
+    "A0"
+  ],
+  "ranked_passing": [
+    "A5",
+    "A0"
+  ]
+}

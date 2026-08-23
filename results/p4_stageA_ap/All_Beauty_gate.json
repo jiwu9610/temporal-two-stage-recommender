@@ -1,0 +1,155 @@
+{
+  "category": "All_Beauty",
+  "configs": {
+    "A0": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.1979607388881539,
+          "union_per_positive": 0.19285245286558483,
+          "n_rows": 46170202,
+          "elapsed_seconds": 666.41
+        },
+        "model_selection": {
+          "union_macro": 0.202553874126879,
+          "union_per_positive": 0.19621487902495927,
+          "n_rows": 43334962,
+          "elapsed_seconds": 588.02
+        }
+      },
+      "rows_total": 89505164,
+      "projected_stageB_maxrss_gib": 92.7,
+      "rows_ratio_vs_A0": 1.0,
+      "gate_rows": true,
+      "gate_maxrss": true,
+      "gate_pass": true
+    },
+    "A1": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.2021145643486193,
+          "union_per_positive": 0.19872432229621986,
+          "n_rows": 47690842,
+          "elapsed_seconds": 770.34
+        },
+        "model_selection": {
+          "union_macro": 0.20720910395194364,
+          "union_per_positive": 0.2019267512720983,
+          "n_rows": 45015609,
+          "elapsed_seconds": 764.17
+        }
+      },
+      "rows_total": 92706451,
+      "projected_stageB_maxrss_gib": 98.9,
+      "rows_ratio_vs_A0": 1.036,
+      "gate_rows": true,
+      "gate_maxrss": true,
+      "gate_pass": true
+    },
+    "A2": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.20041750149615012,
+          "union_per_positive": 0.19748616452490386,
+          "n_rows": 48212922,
+          "elapsed_seconds": 703.17
+        },
+        "model_selection": {
+          "union_macro": 0.2070512367670695,
+          "union_per_positive": 0.20202731240320992,
+          "n_rows": 45029141,
+          "elapsed_seconds": 721.94
+        }
+      },
+      "rows_total": 93242063,
+      "projected_stageB_maxrss_gib": 99.5,
+      "rows_ratio_vs_A0": 1.042,
+      "gate_rows": true,
+      "gate_maxrss": true,
+      "gate_pass": true
+    },
+    "A3": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.20037849039451627,
+          "union_per_positive": 0.1974674045586718,
+          "n_rows": 48124356,
+          "elapsed_seconds": 641.35
+        },
+        "model_selection": {
+          "union_macro": 0.20712560674709585,
+          "union_per_positive": 0.20210776130809918,
+          "n_rows": 45123993,
+          "elapsed_seconds": 688.93
+        }
+      },
+      "rows_total": 93248349,
+      "projected_stageB_maxrss_gib": 99.5,
+      "rows_ratio_vs_A0": 1.042,
+      "gate_rows": true,
+      "gate_maxrss": true,
+      "gate_pass": true
+    },
+    "A4": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.1980125564792471,
+          "union_per_positive": 0.19386549104211612,
+          "n_rows": 48199880,
+          "elapsed_seconds": 671.08
+        },
+        "model_selection": {
+          "union_macro": 0.20520543599715907,
+          "union_per_positive": 0.19949317189919752,
+          "n_rows": 45021450,
+          "elapsed_seconds": 669.31
+        }
+      },
+      "rows_total": 93221330,
+      "projected_stageB_maxrss_gib": 99.4,
+      "rows_ratio_vs_A0": 1.042,
+      "gate_rows": true,
+      "gate_maxrss": true,
+      "gate_pass": true
+    },
+    "A5": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.19645873154385393,
+          "union_per_positive": 0.1918206547228215,
+          "n_rows": 46698186,
+          "elapsed_seconds": 529.36
+        },
+        "model_selection": {
+          "union_macro": 0.20259736239813064,
+          "union_per_positive": 0.19659701132318336,
+          "n_rows": 43355896,
+          "elapsed_seconds": 522.5
+        }
+      },
+      "rows_total": 90054082,
+      "projected_stageB_maxrss_gib": 93.3,
+      "rows_ratio_vs_A0": 1.006,
+      "gate_rows": true,
+      "gate_maxrss": true,
+      "gate_pass": true
+    }
+  },
+  "gate": {
+    "rows_ratio_max": 1.6,
+    "maxrss_gib_max": 120.0,
+    "bytes_per_row_anchor": 1112,
+    "content_margin": 1.03
+  },
+  "shortlist_top2": [
+    "A1",
+    "A3"
+  ],
+  "ranked_passing": [
+    "A1",
+    "A3",
+    "A2",
+    "A4",
+    "A5",
+    "A0"
+  ]
+}

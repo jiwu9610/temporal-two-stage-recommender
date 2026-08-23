@@ -1,0 +1,183 @@
+{
+  "category": "Video_Games",
+  "variant": "A0_ap",
+  "label_mode": "all_positive",
+  "retrieval_config": {
+    "top_k": 500,
+    "tt_k": 500,
+    "min_item_history": null,
+    "extra_sources": [
+      {
+        "name": "recent_pop",
+        "type": "decayed_pop",
+        "half_life_days": 7
+      }
+    ]
+  },
+  "built_utc": "2026-08-21T17:51:28.459001+00:00",
+  "elapsed_seconds": 1637.99,
+  "snapshots": {
+    "ranker_train": {
+      "snapshot": "ranker_train",
+      "n_positive_eval_users": 60417,
+      "candidate_catalog_size": 18054,
+      "coverage": {
+        "historical_catalog": 0.7802032465816932,
+        "eligible_pool": 0.6643524418010949,
+        "retrieved_union": 0.3893468167908109,
+        "retrieved_union_any_hit": 0.44192859625602066,
+        "retrieved_union_per_positive": 0.3765478469479245
+      },
+      "cold_users": 41292,
+      "n_positives": 82534,
+      "cold_items_not_in_history": 18560,
+      "history_cohorts": {
+        "0": 41292,
+        "1": 7921,
+        "2": 3635,
+        "3+": 7569
+      },
+      "sources": {
+        "popularity": {
+          "Recall@10": 0.03004857079038149,
+          "Precision@10": 0.003004857079038149,
+          "Recall@50": 0.0596355169453581,
+          "Precision@50": 0.001192710338907162,
+          "Recall@100": 0.08821272722438321,
+          "Precision@100": 0.0008821272722438321
+        },
+        "rule": {
+          "Recall@10": 0.02937266475145857,
+          "Precision@10": 0.0029372664751458567,
+          "Recall@50": 0.05846970972640556,
+          "Precision@50": 0.0011693941945281113,
+          "Recall@100": 0.0855489382889869,
+          "Precision@100": 0.000855489382889869
+        },
+        "two_tower": {
+          "Recall@10": 0.010896534303315386,
+          "Precision@10": 0.0010896534303315387,
+          "Recall@50": 0.03156331240658227,
+          "Precision@50": 0.0006312662481316454,
+          "Recall@100": 0.04684155185479504,
+          "Precision@100": 0.0004684155185479504
+        },
+        "recent_pop": {
+          "Recall@10": 0.04562448281882512,
+          "Precision@10": 0.004562448281882512,
+          "Recall@50": 0.11145041132233768,
+          "Precision@50": 0.002229008226446754,
+          "Recall@100": 0.1739981605835939,
+          "Precision@100": 0.0017399816058359392
+        }
+      },
+      "retrieval_config": {
+        "top_k": 500,
+        "min_item_history": null,
+        "tt_k": 500,
+        "extra_sources": [
+          {
+            "name": "recent_pop",
+            "type": "decayed_pop",
+            "half_life_days": 7
+          }
+        ]
+      },
+      "rule_weights": {
+        "w_store": 0.5,
+        "w_cat": 0.5,
+        "w_pop": 1.0
+      },
+      "rule_tuning": {
+        "best_weights": {
+          "w_store": 0.5,
+          "w_cat": 0.5,
+          "w_pop": 1.0
+        },
+        "best_recall": 0.08677036075036075,
+        "n_tuning_users": 5000
+      },
+      "n_rows": 61431712,
+      "n_positive_rows": 31078,
+      "top_k": 500,
+      "elapsed_seconds": 916.24
+    },
+    "model_selection": {
+      "snapshot": "model_selection",
+      "n_positive_eval_users": 58267,
+      "candidate_catalog_size": 20431,
+      "coverage": {
+        "historical_catalog": 0.7592697864372774,
+        "eligible_pool": 0.6337626677006487,
+        "retrieved_union": 0.3547141023860364,
+        "retrieved_union_any_hit": 0.40911665265072855,
+        "retrieved_union_per_positive": 0.339844228367092
+      },
+      "cold_users": 37748,
+      "n_positives": 81658,
+      "cold_items_not_in_history": 20425,
+      "history_cohorts": {
+        "0": 37748,
+        "1": 8330,
+        "2": 3920,
+        "3+": 8269
+      },
+      "sources": {
+        "popularity": {
+          "Recall@10": 0.028670670952861892,
+          "Precision@10": 0.002867067095286189,
+          "Recall@50": 0.059613104765833924,
+          "Precision@50": 0.0011922620953166785,
+          "Recall@100": 0.08264661965765303,
+          "Precision@100": 0.0008264661965765304
+        },
+        "rule": {
+          "Recall@10": 0.028314654301774985,
+          "Precision@10": 0.0028314654301774987,
+          "Recall@50": 0.05844706608442326,
+          "Precision@50": 0.0011689413216884653,
+          "Recall@100": 0.07928475987749996,
+          "Precision@100": 0.0007928475987749996
+        },
+        "two_tower": {
+          "Recall@10": 0.009441139223682499,
+          "Precision@10": 0.0009441139223682498,
+          "Recall@50": 0.02924663884714417,
+          "Precision@50": 0.0005849327769428834,
+          "Recall@100": 0.04606422591634423,
+          "Precision@100": 0.0004606422591634423
+        },
+        "recent_pop": {
+          "Recall@10": 0.04234335524469411,
+          "Precision@10": 0.004234335524469411,
+          "Recall@50": 0.1114846318749176,
+          "Precision@50": 0.002229692637498352,
+          "Recall@100": 0.15593022800937864,
+          "Precision@100": 0.0015593022800937863
+        }
+      },
+      "retrieval_config": {
+        "top_k": 500,
+        "min_item_history": null,
+        "tt_k": 500,
+        "extra_sources": [
+          {
+            "name": "recent_pop",
+            "type": "decayed_pop",
+            "half_life_days": 7
+          }
+        ]
+      },
+      "rule_weights": {
+        "w_store": 0.5,
+        "w_cat": 0.5,
+        "w_pop": 1.0
+      },
+      "rule_tuning": null,
+      "n_rows": 61257948,
+      "n_positive_rows": 27751,
+      "top_k": 500,
+      "elapsed_seconds": 720.53
+    }
+  }
+}

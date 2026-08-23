@@ -1,0 +1,256 @@
+{
+  "category": "All_Beauty",
+  "variant": "A1_ap",
+  "label_mode": "all_positive",
+  "code_commit": "75062e3ef3327aaab5b08f437fb39f4ad57daade",
+  "seq_arm": false,
+  "seq_grid": null,
+  "stage": "B (model-selection confirmation; test snapshot untouched)",
+  "started_utc": "2026-08-22T19:41:23.620534+00:00",
+  "elapsed_seconds": 845.56,
+  "features": [
+    "popularity_score",
+    "rule_score",
+    "two_tower_score",
+    "popularity_rank",
+    "rule_rank",
+    "two_tower_rank",
+    "best_rank",
+    "num_sources",
+    "source_popularity",
+    "source_rule",
+    "source_two_tower",
+    "user_n_reviews_hist",
+    "user_avg_rating_hist",
+    "user_std_rating_hist",
+    "user_n_unique_items_hist",
+    "user_active_days_hist",
+    "user_verified_rate_hist",
+    "days_since_last_interaction",
+    "interactions_last_30d",
+    "positives_last_30d",
+    "n_history_events",
+    "user_has_history",
+    "item_n_reviews_hist",
+    "item_n_positives_hist",
+    "item_avg_rating_hist",
+    "item_n_unique_reviewers_hist",
+    "n_features",
+    "n_description",
+    "n_categories",
+    "user_store_affinity",
+    "user_category_affinity",
+    "same_top_store",
+    "same_top_category",
+    "content_i2i_rank",
+    "content_i2i_score",
+    "recent_pop_rank",
+    "recent_pop_score",
+    "source_content_i2i",
+    "source_recent_pop"
+  ],
+  "selection": {
+    "grid": [
+      {
+        "arch": "mlp",
+        "lr": 0.001,
+        "best_epoch_metrics": {
+          "Recall@10": 0.028899217592855773,
+          "Precision@10": 0.002923802643321576,
+          "Recall@50": 0.06244692227863364,
+          "Precision@50": 0.001269389316221155,
+          "Recall@100": 0.09199275967185992,
+          "Precision@100": 0.0009376992053036421
+        },
+        "best_selection_recall@100": 0.09199275967185992,
+        "best_epoch": 3,
+        "n_epochs_run": 6
+      },
+      {
+        "arch": "mlp",
+        "lr": 0.0003,
+        "best_epoch_metrics": {
+          "Recall@10": 0.02522275579731701,
+          "Precision@10": 0.0025455781734732906,
+          "Recall@50": 0.06491542764225608,
+          "Precision@50": 0.0013174110747524541,
+          "Recall@100": 0.09200654061821245,
+          "Precision@100": 0.0009366367770175512
+        },
+        "best_selection_recall@100": 0.09200654061821245,
+        "best_epoch": 3,
+        "n_epochs_run": 6
+      },
+      {
+        "arch": "deep_cross",
+        "lr": 0.001,
+        "best_epoch_metrics": {
+          "Recall@10": 0.02819330528522658,
+          "Precision@10": 0.002845182950150865,
+          "Recall@50": 0.06430924408273438,
+          "Precision@50": 0.0013059368492626747,
+          "Recall@100": 0.09657863674108204,
+          "Precision@100": 0.0009835961072627596
+        },
+        "best_selection_recall@100": 0.09657863674108204,
+        "best_epoch": 2,
+        "n_epochs_run": 5
+      },
+      {
+        "arch": "deep_cross",
+        "lr": 0.0003,
+        "best_epoch_metrics": {
+          "Recall@10": 0.029702944591283375,
+          "Precision@10": 0.0030109217627810126,
+          "Recall@50": 0.07030993788624819,
+          "Precision@50": 0.0014300284730780675,
+          "Recall@100": 0.09495791150847528,
+          "Precision@100": 0.0009693595682291447
+        },
+        "best_selection_recall@100": 0.09495791150847528,
+        "best_epoch": 4,
+        "n_epochs_run": 7
+      }
+    ],
+    "chosen": {
+      "arch": "deep_cross",
+      "lr": 0.001,
+      "best_epoch_metrics": {
+        "Recall@10": 0.02819330528522658,
+        "Precision@10": 0.002845182950150865,
+        "Recall@50": 0.06430924408273438,
+        "Precision@50": 0.0013059368492626747,
+        "Recall@100": 0.09657863674108204,
+        "Precision@100": 0.0009835961072627596
+      },
+      "best_selection_recall@100": 0.09657863674108204,
+      "best_epoch": 2,
+      "n_epochs_run": 5
+    },
+    "metric": "model_selection Recall@100"
+  },
+  "model_selection_eval": {
+    "n_groundtruth_users": 47062,
+    "n_groundtruth_positives": 49721,
+    "overall": {
+      "Recall@10": 0.02819330528522658,
+      "Precision@10": 0.002845182950150865,
+      "Recall@50": 0.06430924408273438,
+      "Precision@50": 0.0013059368492626747,
+      "Recall@100": 0.09657863674108204,
+      "Precision@100": 0.0009835961072627596
+    },
+    "candidate_ceiling_retrieved_coverage": 0.21121074327482894,
+    "candidate_ceiling_positive_coverage": 0.2019267512720983,
+    "conditional_given_retrieved": {
+      "n_users_retrieved": 9940,
+      "Recall@10": 0.1334842387659289,
+      "Precision@10": 0.01347082494969819,
+      "Recall@50": 0.30447903873457194,
+      "Precision@50": 0.006183098591549296,
+      "Recall@100": 0.45726195194253544,
+      "Precision@100": 0.004656941649899396
+    },
+    "history_cohorts": {
+      "0": {
+        "n_users": 43165,
+        "Recall@10": 0.028371751805088996,
+        "Precision@10": 0.0028611143287385617,
+        "Recall@50": 0.06548129271400441,
+        "Precision@50": 0.0013232943356886366,
+        "Recall@100": 0.0986524576238465,
+        "Precision@100": 0.0009973358044712151
+      },
+      "1": {
+        "n_users": 2746,
+        "Recall@10": 0.031318281136198105,
+        "Precision@10": 0.003131828113619811,
+        "Recall@50": 0.06124059237679048,
+        "Precision@50": 0.001260014566642389,
+        "Recall@100": 0.08691429958727846,
+        "Precision@100": 0.0009031318281136198
+      },
+      "2": {
+        "n_users": 533,
+        "Recall@10": 0.022201375859912442,
+        "Precision@10": 0.002439024390243903,
+        "Recall@50": 0.03971232020012507,
+        "Precision@50": 0.000900562851782364,
+        "Recall@100": 0.05472170106316447,
+        "Precision@100": 0.0006191369606003751
+      },
+      "3+": {
+        "n_users": 618,
+        "Recall@10": 0.007011866235167205,
+        "Precision@10": 0.0008090614886731392,
+        "Recall@50": 0.017295002731895937,
+        "Precision@50": 0.0006472491909385113,
+        "Recall@100": 0.030772064145850552,
+        "Precision@100": 0.0006957928802588997
+      }
+    },
+    "history_cohorts_fine": {
+      "0": {
+        "n_users": 43165,
+        "Recall@10": 0.028371751805088996,
+        "Precision@10": 0.0028611143287385617,
+        "Recall@50": 0.06548129271400441,
+        "Precision@50": 0.0013232943356886366,
+        "Recall@100": 0.0986524576238465,
+        "Precision@100": 0.0009973358044712151
+      },
+      "1-2": {
+        "n_users": 3279,
+        "Recall@10": 0.02983633221510623,
+        "Precision@10": 0.0030192131747483995,
+        "Recall@50": 0.057741181254447486,
+        "Precision@50": 0.0012015858493443124,
+        "Recall@100": 0.08168140693300803,
+        "Precision@100": 0.0008569685879841417
+      },
+      "3-4": {
+        "n_users": 291,
+        "Recall@10": 0.013745704467353952,
+        "Precision@10": 0.0013745704467353953,
+        "Recall@50": 0.029209621993127148,
+        "Precision@50": 0.0006185567010309278,
+        "Recall@100": 0.03467666354264292,
+        "Precision@100": 0.0004123711340206185
+      },
+      "5-9": {
+        "n_users": 181,
+        "Recall@10": 0.0018416206261510127,
+        "Precision@10": 0.0005524861878453039,
+        "Recall@50": 0.009162062615101288,
+        "Precision@50": 0.0004419889502762431,
+        "Recall@100": 0.03169779882487065,
+        "Precision@100": 0.000718232044198895
+      },
+      "10+": {
+        "n_users": 146,
+        "Recall@10": 0.0,
+        "Precision@10": 0.0,
+        "Recall@50": 0.003629988732728459,
+        "Precision@50": 0.0009589041095890412,
+        "Recall@100": 0.02184195180770523,
+        "Precision@100": 0.001232876712328767
+      }
+    },
+    "target_item_cohorts": {
+      "warm_target_item": {
+        "n_users": 31456,
+        "n_targets": 32208,
+        "Recall@10": 0.04200046625974906,
+        "Recall@50": 0.09603688043969708,
+        "Recall@100": 0.1444468287272522
+      },
+      "cold_target_item": {
+        "n_users": 16224,
+        "n_targets": 17513,
+        "Recall@10": 0.0006060979618671926,
+        "Recall@50": 0.0011424441571500393,
+        "Recall@100": 0.001394988848217181
+      }
+    }
+  }
+}

@@ -1,0 +1,183 @@
+{
+  "category": "Electronics",
+  "variant": "A0_ap",
+  "label_mode": "all_positive",
+  "retrieval_config": {
+    "top_k": 500,
+    "tt_k": 500,
+    "min_item_history": null,
+    "extra_sources": [
+      {
+        "name": "recent_pop",
+        "type": "decayed_pop",
+        "half_life_days": 30
+      }
+    ]
+  },
+  "built_utc": "2026-08-21T17:58:35.832475+00:00",
+  "elapsed_seconds": 2065.37,
+  "snapshots": {
+    "ranker_train": {
+      "snapshot": "ranker_train",
+      "n_positive_eval_users": 43833,
+      "candidate_catalog_size": 25790,
+      "coverage": {
+        "historical_catalog": 0.6384624194274022,
+        "eligible_pool": 0.4415407591668999,
+        "retrieved_union": 0.22549662513078286,
+        "retrieved_union_any_hit": 0.3160176123012342,
+        "retrieved_union_per_positive": 0.20021386855309697
+      },
+      "cold_users": 12536,
+      "n_positives": 85099,
+      "cold_items_not_in_history": 32998,
+      "history_cohorts": {
+        "0": 12536,
+        "1": 6768,
+        "2": 4559,
+        "3+": 19970
+      },
+      "sources": {
+        "popularity": {
+          "Recall@10": 0.019267264592895343,
+          "Precision@10": 0.0019267264592895343,
+          "Recall@50": 0.042189154327187825,
+          "Precision@50": 0.0008437830865437565,
+          "Recall@100": 0.07996064956418583,
+          "Precision@100": 0.0007996064956418583
+        },
+        "rule": {
+          "Recall@10": 0.015102847329618339,
+          "Precision@10": 0.001510284732961834,
+          "Recall@50": 0.03362003847830473,
+          "Precision@50": 0.0006724007695660946,
+          "Recall@100": 0.059155532643285234,
+          "Precision@100": 0.0005915553264328523
+        },
+        "two_tower": {
+          "Recall@10": 0.03082802127205953,
+          "Precision@10": 0.0030828021272059527,
+          "Recall@50": 0.056489284581543286,
+          "Precision@50": 0.0011297856916308658,
+          "Recall@100": 0.07104378443497648,
+          "Precision@100": 0.0007104378443497648
+        },
+        "recent_pop": {
+          "Recall@10": 0.06408194099118074,
+          "Precision@10": 0.006408194099118074,
+          "Recall@50": 0.10144478841832005,
+          "Precision@50": 0.002028895768366401,
+          "Recall@100": 0.12368611126380646,
+          "Precision@100": 0.0012368611126380646
+        }
+      },
+      "retrieval_config": {
+        "top_k": 500,
+        "min_item_history": null,
+        "tt_k": 500,
+        "extra_sources": [
+          {
+            "name": "recent_pop",
+            "type": "decayed_pop",
+            "half_life_days": 30
+          }
+        ]
+      },
+      "rule_weights": {
+        "w_store": 0.5,
+        "w_cat": 0.5,
+        "w_pop": 1.0
+      },
+      "rule_tuning": {
+        "best_weights": {
+          "w_store": 0.5,
+          "w_cat": 0.5,
+          "w_pop": 1.0
+        },
+        "best_recall": 0.060320528801264095,
+        "n_tuning_users": 5000
+      },
+      "n_rows": 52263821,
+      "n_positive_rows": 17038,
+      "top_k": 500,
+      "elapsed_seconds": 1234.75
+    },
+    "model_selection": {
+      "snapshot": "model_selection",
+      "n_positive_eval_users": 42406,
+      "candidate_catalog_size": 29292,
+      "coverage": {
+        "historical_catalog": 0.6535664797596131,
+        "eligible_pool": 0.45390409987166885,
+        "retrieved_union": 0.23042660607888776,
+        "retrieved_union_any_hit": 0.32214780927227277,
+        "retrieved_union_per_positive": 0.20054941715591534
+      },
+      "cold_users": 10392,
+      "n_positives": 82269,
+      "cold_items_not_in_history": 31252,
+      "history_cohorts": {
+        "0": 10392,
+        "1": 6109,
+        "2": 4550,
+        "3+": 21355
+      },
+      "sources": {
+        "popularity": {
+          "Recall@10": 0.010702177088570405,
+          "Precision@10": 0.0010702177088570404,
+          "Recall@50": 0.05616155701528556,
+          "Precision@50": 0.0011232311403057112,
+          "Recall@100": 0.0736841307777273,
+          "Precision@100": 0.000736841307777273
+        },
+        "rule": {
+          "Recall@10": 0.010468897203826105,
+          "Precision@10": 0.0010468897203826106,
+          "Recall@50": 0.041116233531331675,
+          "Precision@50": 0.0008223246706266336,
+          "Recall@100": 0.053754964287405615,
+          "Precision@100": 0.0005375496428740561
+        },
+        "two_tower": {
+          "Recall@10": 0.02433487701438172,
+          "Precision@10": 0.002433487701438172,
+          "Recall@50": 0.05082264742215403,
+          "Precision@50": 0.0010164529484430807,
+          "Recall@100": 0.06513979373948924,
+          "Precision@100": 0.0006513979373948924
+        },
+        "recent_pop": {
+          "Recall@10": 0.04143125487005815,
+          "Precision@10": 0.004143125487005815,
+          "Recall@50": 0.08204372803559797,
+          "Precision@50": 0.0016408745607119591,
+          "Recall@100": 0.10196584025516717,
+          "Precision@100": 0.0010196584025516716
+        }
+      },
+      "retrieval_config": {
+        "top_k": 500,
+        "min_item_history": null,
+        "tt_k": 500,
+        "extra_sources": [
+          {
+            "name": "recent_pop",
+            "type": "decayed_pop",
+            "half_life_days": 30
+          }
+        ]
+      },
+      "rule_weights": {
+        "w_store": 0.5,
+        "w_cat": 0.5,
+        "w_pop": 1.0
+      },
+      "rule_tuning": null,
+      "n_rows": 53241744,
+      "n_positive_rows": 16499,
+      "top_k": 500,
+      "elapsed_seconds": 828.84
+    }
+  }
+}

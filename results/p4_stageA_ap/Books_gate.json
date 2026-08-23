@@ -1,0 +1,155 @@
+{
+  "category": "Books",
+  "configs": {
+    "A0": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.11006990574261455,
+          "union_per_positive": 0.09202723714546136,
+          "n_rows": 37040842,
+          "elapsed_seconds": 949.36
+        },
+        "model_selection": {
+          "union_macro": 0.11225825656377779,
+          "union_per_positive": 0.09542333101529903,
+          "n_rows": 39616471,
+          "elapsed_seconds": 619.89
+        }
+      },
+      "rows_total": 76657313,
+      "projected_stageB_maxrss_gib": 87.9,
+      "rows_ratio_vs_A0": 1.0,
+      "gate_rows": true,
+      "gate_maxrss": true,
+      "gate_pass": true
+    },
+    "A1": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.12652996535993305,
+          "union_per_positive": 0.1093346201276071,
+          "n_rows": 47975729,
+          "elapsed_seconds": 3501.73
+        },
+        "model_selection": {
+          "union_macro": 0.12798196374882534,
+          "union_per_positive": 0.11297157510431155,
+          "n_rows": 50928295,
+          "elapsed_seconds": 3825.31
+        }
+      },
+      "rows_total": 98904024,
+      "projected_stageB_maxrss_gib": 116.8,
+      "rows_ratio_vs_A0": 1.29,
+      "gate_rows": true,
+      "gate_maxrss": true,
+      "gate_pass": true
+    },
+    "A2": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.1280965589223588,
+          "union_per_positive": 0.11150072382177899,
+          "n_rows": 48536621,
+          "elapsed_seconds": 3691.46
+        },
+        "model_selection": {
+          "union_macro": 0.1284427246211211,
+          "union_per_positive": 0.11457971140472879,
+          "n_rows": 51491780,
+          "elapsed_seconds": 3908.85
+        }
+      },
+      "rows_total": 100028401,
+      "projected_stageB_maxrss_gib": 118.1,
+      "rows_ratio_vs_A0": 1.305,
+      "gate_rows": true,
+      "gate_maxrss": true,
+      "gate_pass": true
+    },
+    "A3": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.12876238918425548,
+          "union_per_positive": 0.11253015924079138,
+          "n_rows": 48890323,
+          "elapsed_seconds": 3871.73
+        },
+        "model_selection": {
+          "union_macro": 0.1287972933015186,
+          "union_per_positive": 0.11550330319888734,
+          "n_rows": 51836122,
+          "elapsed_seconds": 4235.59
+        }
+      },
+      "rows_total": 100726445,
+      "projected_stageB_maxrss_gib": 118.9,
+      "rows_ratio_vs_A0": 1.314,
+      "gate_rows": true,
+      "gate_maxrss": true,
+      "gate_pass": true
+    },
+    "A4": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.12019942320256972,
+          "union_per_positive": 0.10439118545922471,
+          "n_rows": 48386609,
+          "elapsed_seconds": 1419.75
+        },
+        "model_selection": {
+          "union_macro": 0.12028129750171926,
+          "union_per_positive": 0.106408640472879,
+          "n_rows": 51343435,
+          "elapsed_seconds": 2083.88
+        }
+      },
+      "rows_total": 99730044,
+      "projected_stageB_maxrss_gib": 117.8,
+      "rows_ratio_vs_A0": 1.301,
+      "gate_rows": true,
+      "gate_maxrss": true,
+      "gate_pass": true
+    },
+    "A5": {
+      "snapshots": {
+        "ranker_train": {
+          "union_macro": 0.1123620986602007,
+          "union_per_positive": 0.0949225242614337,
+          "n_rows": 37623137,
+          "elapsed_seconds": 1153.04
+        },
+        "model_selection": {
+          "union_macro": 0.11330167303392903,
+          "union_per_positive": 0.09763995132127956,
+          "n_rows": 40203042,
+          "elapsed_seconds": 1296.45
+        }
+      },
+      "rows_total": 77826179,
+      "projected_stageB_maxrss_gib": 89.2,
+      "rows_ratio_vs_A0": 1.015,
+      "gate_rows": true,
+      "gate_maxrss": true,
+      "gate_pass": true
+    }
+  },
+  "gate": {
+    "rows_ratio_max": 1.6,
+    "maxrss_gib_max": 120.0,
+    "bytes_per_row_anchor": 1231,
+    "content_margin": 1.03
+  },
+  "shortlist_top2": [
+    "A3",
+    "A2"
+  ],
+  "ranked_passing": [
+    "A3",
+    "A2",
+    "A1",
+    "A4",
+    "A5",
+    "A0"
+  ]
+}

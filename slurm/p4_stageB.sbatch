@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --account=PROJECT_ALLOC
 #SBATCH --partition=gengpu
-#SBATCH --gres=gpu:a100:1
+#SBATCH --gres=gpu:1
 #SBATCH --job-name=p4_stageB
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -39,6 +39,12 @@ read -r CAT VARIANT <<< "${PAIRS[$SLURM_ARRAY_TASK_ID]}"
 VARIANT="${VARIANT}${VARIANT_SUFFIX:-_ap}"   # 2026-08-21: all-positive rebuild
 case "$VARIANT" in __*__) echo "placeholder $VARIANT not resolved"; exit 1;; esac
 
+# sibling arrays on gengpu / gengpu-long race the same arms; mkdir = atomic claim
+CLAIM="results/phase3a/.claim_stageB_${CAT}_${VARIANT}"
+if ls results/phase3a/${CAT}_stageB_${VARIANT}.json >/dev/null 2>&1 || ! mkdir "$CLAIM" 2>/dev/null; then
+    echo "=== ${CAT} ${VARIANT}: done/claimed elsewhere -- skip ==="; exit 0
+fi
+trap 'rmdir "$CLAIM" 2>/dev/null' EXIT
 echo "=== CHECKPOINT: stageB ${CAT} ${VARIANT} start $(date) ==="
 python -u -m scripts.ranker.train_temporal_ranker \
     --category "$CAT" --variant "$VARIANT" \
