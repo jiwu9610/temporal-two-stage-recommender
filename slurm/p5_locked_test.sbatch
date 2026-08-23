@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --account=PROJECT_ALLOC
 #SBATCH --partition=gengpu
-#SBATCH --gres=gpu:a100:1
+#SBATCH --gres=gpu:1
 #SBATCH --job-name=p5_locked
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -37,8 +37,11 @@ set +e; source ~/.bashrc; set -e
 conda activate "${CONDA_ENV:-tae}"
 
 test -f results/p4_freeze/frozen_config_ap.json || { echo "FATAL: P4.4 (all-positive) freeze missing"; exit 1; }
-PAIRS=("Books A2" "Books A0" "Electronics A5" "Electronics A0" \
-       "Video_Games A0" "All_Beauty A1" "All_Beauty A0")
+# arms from results/p4_freeze/frozen_config_ap.json (2026-08-22):
+#   0 Books A3 | 1 Books A0 | 2 Electronics A0 (winner == reference) |
+#   3 Video_Games A5 | 4 Video_Games A0 | 5 All_Beauty A1 | 6 All_Beauty A0
+PAIRS=("Books A3" "Books A0" "Electronics A0" \
+       "Video_Games A5" "Video_Games A0" "All_Beauty A1" "All_Beauty A0")
 read -r CAT V <<< "${PAIRS[$SLURM_ARRAY_TASK_ID]}"
 CFG="configs/p4_stageA/${CAT}_${V}.json"
 V="${V}${VARIANT_SUFFIX:-_ap}"               # 2026-08-21: all-positive rebuild

@@ -1,0 +1,563 @@
+{
+  "phase": "P4.4 joint freeze -- ALL-POSITIVE rebuild (supersedes results/p4_freeze/frozen_config.json, which froze the first-positive-trained Stage B of 2026-08-15)",
+  "frozen_utc": "2026-08-23T01:42:18.982501+00:00",
+  "decision_rule": "primary = model_selection Recall@100 macro (all_positive frame); guardrail = Recall@10 >= A0 (zero tolerance); winner must beat A0 on Recall@100 else A0; ties within tie_tol on R@100 -> higher R@10 -> fewer rows",
+  "tie_tol": 0.0005,
+  "inputs_frame": "model_selection snapshot only; groundtruth_test never read",
+  "categories": {
+    "Books": {
+      "winner": "A3",
+      "winner_variant": "A3_ap",
+      "retrieval_config_source": "configs/p4_stageA/Books_A3.json",
+      "retrieval_config": {
+        "top_k": 500,
+        "tt_k": 500,
+        "min_item_history": 2,
+        "extra_sources": [
+          {
+            "name": "recent_pop",
+            "type": "decayed_pop",
+            "half_life_days": 90
+          },
+          {
+            "name": "content_i2i",
+            "type": "content_i2i",
+            "pool": "catalog",
+            "recency_decay": 0.8,
+            "max_events": 30
+          }
+        ]
+      },
+      "min_item_history": 2,
+      "content_i2i": true,
+      "reference": {
+        "source": "results/phase3a/Books_stageB_A0_ap.json",
+        "sha256": "1846f782a462ebe33d2ebd48bf48164396b98e40d00d55fb2887feddd1a5c444",
+        "code_commit": "75062e3ef3327aaab5b08f437fb39f4ad57daade",
+        "label_mode": "all_positive",
+        "stage": "B (model-selection confirmation; test snapshot untouched)",
+        "chosen": {
+          "arch": "deep_cross",
+          "lr": 0.0003,
+          "best_epoch_metrics": {
+            "Recall@10": 0.028711495546629336,
+            "Precision@10": 0.0046316141063823865,
+            "Recall@50": 0.044131312067908636,
+            "Precision@50": 0.0016505692097865115,
+            "Recall@100": 0.057219855858830125,
+            "Precision@100": 0.0011136471177665822
+          },
+          "best_selection_recall@100": 0.057219855858830125,
+          "best_epoch": 1,
+          "n_epochs_run": 4
+        },
+        "R@10": 0.028711495546629336,
+        "R@50": 0.044131312067908636,
+        "R@100": 0.057219855858830125,
+        "ceiling_retrieved": 0.17780499345895845,
+        "n_rows": 76657313
+      },
+      "arms": {
+        "A0": {
+          "source": "results/phase3a/Books_stageB_A0_ap.json",
+          "sha256": "1846f782a462ebe33d2ebd48bf48164396b98e40d00d55fb2887feddd1a5c444",
+          "code_commit": "75062e3ef3327aaab5b08f437fb39f4ad57daade",
+          "label_mode": "all_positive",
+          "stage": "B (model-selection confirmation; test snapshot untouched)",
+          "chosen": {
+            "arch": "deep_cross",
+            "lr": 0.0003,
+            "best_epoch_metrics": {
+              "Recall@10": 0.028711495546629336,
+              "Precision@10": 0.0046316141063823865,
+              "Recall@50": 0.044131312067908636,
+              "Precision@50": 0.0016505692097865115,
+              "Recall@100": 0.057219855858830125,
+              "Precision@100": 0.0011136471177665822
+            },
+            "best_selection_recall@100": 0.057219855858830125,
+            "best_epoch": 1,
+            "n_epochs_run": 4
+          },
+          "R@10": 0.028711495546629336,
+          "R@50": 0.044131312067908636,
+          "R@100": 0.057219855858830125,
+          "ceiling_retrieved": 0.17780499345895845,
+          "n_rows": 76657313
+        },
+        "A2": {
+          "source": "results/phase3a/Books_stageB_A2_ap.json",
+          "sha256": "21d8837ac949d9c35e5b333c5e5675cf330202b9fc44a1b5e2e94fd6062bf442",
+          "code_commit": "75062e3ef3327aaab5b08f437fb39f4ad57daade",
+          "label_mode": "all_positive",
+          "stage": "B (model-selection confirmation; test snapshot untouched)",
+          "chosen": {
+            "arch": "deep_cross",
+            "lr": 0.0003,
+            "best_epoch_metrics": {
+              "Recall@10": 0.030428319212801837,
+              "Precision@10": 0.005269017730397751,
+              "Recall@50": 0.051733065618928126,
+              "Precision@50": 0.0020675258162384837,
+              "Recall@100": 0.06548458388607267,
+              "Precision@100": 0.0013499596403818853
+            },
+            "best_selection_recall@100": 0.06548458388607267,
+            "best_epoch": 8,
+            "n_epochs_run": 11
+          },
+          "R@10": 0.030428319212801837,
+          "R@50": 0.051733065618928126,
+          "R@100": 0.06548458388607267,
+          "ceiling_retrieved": 0.2031341331032371,
+          "n_rows": 100028401
+        },
+        "A3": {
+          "source": "results/phase3a/Books_stageB_A3_ap.json",
+          "sha256": "a753cb90eca138c43f46044dfe78545d5f5ab644b38759bf0316bcc1dca0a808",
+          "code_commit": "75062e3ef3327aaab5b08f437fb39f4ad57daade",
+          "label_mode": "all_positive",
+          "stage": "B (model-selection confirmation; test snapshot untouched)",
+          "chosen": {
+            "arch": "mlp",
+            "lr": 0.0003,
+            "best_epoch_metrics": {
+              "Recall@10": 0.03049435874259231,
+              "Precision@10": 0.005299635371726,
+              "Recall@50": 0.05251453031300991,
+              "Precision@50": 0.0020914632449132967,
+              "Recall@100": 0.06623039580824244,
+              "Precision@100": 0.0013794639129345615
+            },
+            "best_selection_recall@100": 0.06623039580824244,
+            "best_epoch": 9,
+            "n_epochs_run": 12
+          },
+          "R@10": 0.03049435874259231,
+          "R@50": 0.05251453031300991,
+          "R@100": 0.06623039580824244,
+          "ceiling_retrieved": 0.20366298327163415,
+          "n_rows": 100726445
+        }
+      },
+      "decision_table": [
+        {
+          "config": "A2",
+          "R@10": 0.030428319212801837,
+          "R@100": 0.06548458388607267,
+          "n_rows": 100028401,
+          "dR@10_vs_A0": 0.059795689269626084,
+          "dR@100_vs_A0": 0.14443811336457846,
+          "guardrail_pass": true,
+          "beats_A0_R@100": true,
+          "eligible": true
+        },
+        {
+          "config": "A3",
+          "R@10": 0.03049435874259231,
+          "R@100": 0.06623039580824244,
+          "n_rows": 100726445,
+          "dR@10_vs_A0": 0.06209579689318123,
+          "dR@100_vs_A0": 0.15747225878447968,
+          "guardrail_pass": true,
+          "beats_A0_R@100": true,
+          "eligible": true
+        }
+      ],
+      "tie_note": null
+    },
+    "Electronics": {
+      "winner": "A0",
+      "winner_variant": "A0_ap",
+      "retrieval_config_source": "configs/p4_stageA/Electronics_A0.json",
+      "retrieval_config": {
+        "top_k": 500,
+        "tt_k": 500,
+        "min_item_history": null,
+        "extra_sources": [
+          {
+            "name": "recent_pop",
+            "type": "decayed_pop",
+            "half_life_days": 30
+          }
+        ]
+      },
+      "min_item_history": 5,
+      "content_i2i": false,
+      "reference": {
+        "source": "results/phase3a/Electronics_stageB_A0_ap.json",
+        "sha256": "7404672d1754364d0fa5cd934f66b9af2a97d0e87293d79d0e18cd9ec00b4a1e",
+        "code_commit": "75062e3ef3327aaab5b08f437fb39f4ad57daade",
+        "label_mode": "all_positive",
+        "stage": "B (model-selection confirmation; test snapshot untouched)",
+        "chosen": {
+          "arch": "mlp",
+          "lr": 0.001,
+          "best_epoch_metrics": {
+            "Recall@10": 0.04379408475995617,
+            "Precision@10": 0.006142998632269019,
+            "Recall@50": 0.08245746897374741,
+            "Precision@50": 0.0025175682686412303,
+            "Recall@100": 0.1035340772657468,
+            "Precision@100": 0.0016358534169692968
+          },
+          "best_selection_recall@100": 0.1035340772657468,
+          "best_epoch": 3,
+          "n_epochs_run": 6
+        },
+        "R@10": 0.04379408475995617,
+        "R@50": 0.08245746897374741,
+        "R@100": 0.1035340772657468,
+        "ceiling_retrieved": 0.32214780927227277,
+        "n_rows": 105505565
+      },
+      "arms": {
+        "A0": {
+          "source": "results/phase3a/Electronics_stageB_A0_ap.json",
+          "sha256": "7404672d1754364d0fa5cd934f66b9af2a97d0e87293d79d0e18cd9ec00b4a1e",
+          "code_commit": "75062e3ef3327aaab5b08f437fb39f4ad57daade",
+          "label_mode": "all_positive",
+          "stage": "B (model-selection confirmation; test snapshot untouched)",
+          "chosen": {
+            "arch": "mlp",
+            "lr": 0.001,
+            "best_epoch_metrics": {
+              "Recall@10": 0.04379408475995617,
+              "Precision@10": 0.006142998632269019,
+              "Recall@50": 0.08245746897374741,
+              "Precision@50": 0.0025175682686412303,
+              "Recall@100": 0.1035340772657468,
+              "Precision@100": 0.0016358534169692968
+            },
+            "best_selection_recall@100": 0.1035340772657468,
+            "best_epoch": 3,
+            "n_epochs_run": 6
+          },
+          "R@10": 0.04379408475995617,
+          "R@50": 0.08245746897374741,
+          "R@100": 0.1035340772657468,
+          "ceiling_retrieved": 0.32214780927227277,
+          "n_rows": 105505565
+        },
+        "A5": {
+          "source": "results/phase3a/Electronics_stageB_A5_ap.json",
+          "sha256": "8b4fbf1801eb926e381fabe5aa9b45efbab66aa1f4844b93e8c33947771b6984",
+          "code_commit": "75062e3ef3327aaab5b08f437fb39f4ad57daade",
+          "label_mode": "all_positive",
+          "stage": "B (model-selection confirmation; test snapshot untouched)",
+          "chosen": {
+            "arch": "mlp",
+            "lr": 0.001,
+            "best_epoch_metrics": {
+              "Recall@10": 0.04212746562982696,
+              "Precision@10": 0.005973211338018205,
+              "Recall@50": 0.08320833130081655,
+              "Precision@50": 0.002555770409847663,
+              "Recall@100": 0.10382284532798176,
+              "Precision@100": 0.0016370324954015942
+            },
+            "best_selection_recall@100": 0.10382284532798176,
+            "best_epoch": 6,
+            "n_epochs_run": 9
+          },
+          "R@10": 0.04212746562982696,
+          "R@50": 0.08320833130081655,
+          "R@100": 0.10382284532798176,
+          "ceiling_retrieved": 0.32318539829269444,
+          "n_rows": 107224931
+        }
+      },
+      "decision_table": [
+        {
+          "config": "A5",
+          "R@10": 0.04212746562982696,
+          "R@100": 0.10382284532798176,
+          "n_rows": 107224931,
+          "dR@10_vs_A0": -0.03805580455132873,
+          "dR@100_vs_A0": 0.002789111274868139,
+          "guardrail_pass": false,
+          "beats_A0_R@100": true,
+          "eligible": false
+        }
+      ],
+      "tie_note": null
+    },
+    "Video_Games": {
+      "winner": "A5",
+      "winner_variant": "A5_ap",
+      "retrieval_config_source": "configs/p4_stageA/Video_Games_A5.json",
+      "retrieval_config": {
+        "top_k": 500,
+        "tt_k": 500,
+        "min_item_history": 3,
+        "extra_sources": [
+          {
+            "name": "recent_pop",
+            "type": "decayed_pop",
+            "half_life_days": 7
+          }
+        ]
+      },
+      "min_item_history": 3,
+      "content_i2i": false,
+      "reference": {
+        "source": "results/phase3a/Video_Games_stageB_A0_ap.json",
+        "sha256": "66a43f53c10eacd1172712a4e2024d90d0ff24e1c2e0c614d1659675b532a934",
+        "code_commit": "75062e3ef3327aaab5b08f437fb39f4ad57daade",
+        "label_mode": "all_positive",
+        "stage": "B (model-selection confirmation; test snapshot untouched)",
+        "chosen": {
+          "arch": "deep_cross",
+          "lr": 0.0003,
+          "best_epoch_metrics": {
+            "Recall@10": 0.04425060099420297,
+            "Precision@10": 0.005455918444402493,
+            "Recall@50": 0.11374773733776597,
+            "Precision@50": 0.002866116326565637,
+            "Recall@100": 0.16163259297707175,
+            "Precision@100": 0.0020802512571438383
+          },
+          "best_selection_recall@100": 0.16163259297707175,
+          "best_epoch": 5,
+          "n_epochs_run": 8
+        },
+        "R@10": 0.04425060099420297,
+        "R@50": 0.11374773733776597,
+        "R@100": 0.16163259297707175,
+        "ceiling_retrieved": 0.40911665265072855,
+        "n_rows": 122689660
+      },
+      "arms": {
+        "A0": {
+          "source": "results/phase3a/Video_Games_stageB_A0_ap.json",
+          "sha256": "66a43f53c10eacd1172712a4e2024d90d0ff24e1c2e0c614d1659675b532a934",
+          "code_commit": "75062e3ef3327aaab5b08f437fb39f4ad57daade",
+          "label_mode": "all_positive",
+          "stage": "B (model-selection confirmation; test snapshot untouched)",
+          "chosen": {
+            "arch": "deep_cross",
+            "lr": 0.0003,
+            "best_epoch_metrics": {
+              "Recall@10": 0.04425060099420297,
+              "Precision@10": 0.005455918444402493,
+              "Recall@50": 0.11374773733776597,
+              "Precision@50": 0.002866116326565637,
+              "Recall@100": 0.16163259297707175,
+              "Precision@100": 0.0020802512571438383
+            },
+            "best_selection_recall@100": 0.16163259297707175,
+            "best_epoch": 5,
+            "n_epochs_run": 8
+          },
+          "R@10": 0.04425060099420297,
+          "R@50": 0.11374773733776597,
+          "R@100": 0.16163259297707175,
+          "ceiling_retrieved": 0.40911665265072855,
+          "n_rows": 122689660
+        },
+        "A5": {
+          "source": "results/phase3a/Video_Games_stageB_A5_ap.json",
+          "sha256": "7377171cc7f5b770defd82206908ec18fe1cbbca1e113836b533caa184d78222",
+          "code_commit": "75062e3ef3327aaab5b08f437fb39f4ad57daade",
+          "label_mode": "all_positive",
+          "stage": "B (model-selection confirmation; test snapshot untouched)",
+          "chosen": {
+            "arch": "mlp",
+            "lr": 0.001,
+            "best_epoch_metrics": {
+              "Recall@10": 0.05136553399554685,
+              "Precision@10": 0.006199049204524002,
+              "Recall@50": 0.11542827655408935,
+              "Precision@50": 0.0029210359208471344,
+              "Recall@100": 0.16207583375508522,
+              "Precision@100": 0.002092608165857175
+            },
+            "best_selection_recall@100": 0.16207583375508522,
+            "best_epoch": 8,
+            "n_epochs_run": 11
+          },
+          "R@10": 0.05136553399554685,
+          "R@50": 0.11542827655408935,
+          "R@100": 0.16207583375508522,
+          "ceiling_retrieved": 0.40818988449722826,
+          "n_rows": 123399923
+        }
+      },
+      "decision_table": [
+        {
+          "config": "A5",
+          "R@10": 0.05136553399554685,
+          "R@100": 0.16207583375508522,
+          "n_rows": 123399923,
+          "dR@10_vs_A0": 0.16078726257923526,
+          "dR@100_vs_A0": 0.002742273509627857,
+          "guardrail_pass": true,
+          "beats_A0_R@100": true,
+          "eligible": true
+        }
+      ],
+      "tie_note": null
+    },
+    "All_Beauty": {
+      "winner": "A1",
+      "winner_variant": "A1_ap",
+      "retrieval_config_source": "configs/p4_stageA/All_Beauty_A1.json",
+      "retrieval_config": {
+        "top_k": 500,
+        "tt_k": 500,
+        "min_item_history": null,
+        "extra_sources": [
+          {
+            "name": "recent_pop",
+            "type": "windowed_pop",
+            "window_days": 30
+          },
+          {
+            "name": "content_i2i",
+            "type": "content_i2i",
+            "pool": "catalog",
+            "recency_decay": 0.8,
+            "max_events": 30
+          }
+        ]
+      },
+      "min_item_history": 5,
+      "content_i2i": true,
+      "reference": {
+        "source": "results/phase3a/All_Beauty_stageB_A0_ap.json",
+        "sha256": "c995ca3a24d05b51043d80ebadc24da26fcecd3a0778aa09117115a9f877e295",
+        "code_commit": "75062e3ef3327aaab5b08f437fb39f4ad57daade",
+        "label_mode": "all_positive",
+        "stage": "B (model-selection confirmation; test snapshot untouched)",
+        "chosen": {
+          "arch": "deep_cross",
+          "lr": 0.0003,
+          "best_epoch_metrics": {
+            "Recall@10": 0.026617369994192057,
+            "Precision@10": 0.0026815689940928983,
+            "Recall@50": 0.06521396769101923,
+            "Precision@50": 0.0013216607878968171,
+            "Recall@100": 0.0941292704174647,
+            "Precision@100": 0.0009572478857677107
+          },
+          "best_selection_recall@100": 0.0941292704174647,
+          "best_epoch": 1,
+          "n_epochs_run": 4
+        },
+        "R@10": 0.026617369994192057,
+        "R@50": 0.06521396769101923,
+        "R@100": 0.0941292704174647,
+        "ceiling_retrieved": 0.20608983893587182,
+        "n_rows": 89505164
+      },
+      "arms": {
+        "A0": {
+          "source": "results/phase3a/All_Beauty_stageB_A0_ap.json",
+          "sha256": "c995ca3a24d05b51043d80ebadc24da26fcecd3a0778aa09117115a9f877e295",
+          "code_commit": "75062e3ef3327aaab5b08f437fb39f4ad57daade",
+          "label_mode": "all_positive",
+          "stage": "B (model-selection confirmation; test snapshot untouched)",
+          "chosen": {
+            "arch": "deep_cross",
+            "lr": 0.0003,
+            "best_epoch_metrics": {
+              "Recall@10": 0.026617369994192057,
+              "Precision@10": 0.0026815689940928983,
+              "Recall@50": 0.06521396769101923,
+              "Precision@50": 0.0013216607878968171,
+              "Recall@100": 0.0941292704174647,
+              "Precision@100": 0.0009572478857677107
+            },
+            "best_selection_recall@100": 0.0941292704174647,
+            "best_epoch": 1,
+            "n_epochs_run": 4
+          },
+          "R@10": 0.026617369994192057,
+          "R@50": 0.06521396769101923,
+          "R@100": 0.0941292704174647,
+          "ceiling_retrieved": 0.20608983893587182,
+          "n_rows": 89505164
+        },
+        "A1": {
+          "source": "results/phase3a/All_Beauty_stageB_A1_ap.json",
+          "sha256": "adfb2069c953a660c5924a41e3ffda9cee46b17ca958edfab0cf7d99d81ebd76",
+          "code_commit": "75062e3ef3327aaab5b08f437fb39f4ad57daade",
+          "label_mode": "all_positive",
+          "stage": "B (model-selection confirmation; test snapshot untouched)",
+          "chosen": {
+            "arch": "deep_cross",
+            "lr": 0.001,
+            "best_epoch_metrics": {
+              "Recall@10": 0.02819330528522658,
+              "Precision@10": 0.002845182950150865,
+              "Recall@50": 0.06430924408273438,
+              "Precision@50": 0.0013059368492626747,
+              "Recall@100": 0.09657863674108204,
+              "Precision@100": 0.0009835961072627596
+            },
+            "best_selection_recall@100": 0.09657863674108204,
+            "best_epoch": 2,
+            "n_epochs_run": 5
+          },
+          "R@10": 0.02819330528522658,
+          "R@50": 0.06430924408273438,
+          "R@100": 0.09657863674108204,
+          "ceiling_retrieved": 0.21121074327482894,
+          "n_rows": 92706451
+        },
+        "A3": {
+          "source": "results/phase3a/All_Beauty_stageB_A3_ap.json",
+          "sha256": "9185886b6d82c64cf6728a72eb4b9e9eb304286af6f74bce12fe4cecf39a253c",
+          "code_commit": "75062e3ef3327aaab5b08f437fb39f4ad57daade",
+          "label_mode": "all_positive",
+          "stage": "B (model-selection confirmation; test snapshot untouched)",
+          "chosen": {
+            "arch": "deep_cross",
+            "lr": 0.0003,
+            "best_epoch_metrics": {
+              "Recall@10": 0.023859210305309405,
+              "Precision@10": 0.002411712209425864,
+              "Recall@50": 0.06877760542426582,
+              "Precision@50": 0.001397305681866474,
+              "Recall@100": 0.09545591326943866,
+              "Precision@100": 0.0009727593387446346
+            },
+            "best_selection_recall@100": 0.09545591326943866,
+            "best_epoch": 4,
+            "n_epochs_run": 7
+          },
+          "R@10": 0.023859210305309405,
+          "R@50": 0.06877760542426582,
+          "R@100": 0.09545591326943866,
+          "ceiling_retrieved": 0.21121074327482894,
+          "n_rows": 93248349
+        }
+      },
+      "decision_table": [
+        {
+          "config": "A1",
+          "R@10": 0.02819330528522658,
+          "R@100": 0.09657863674108204,
+          "n_rows": 92706451,
+          "dR@10_vs_A0": 0.05920702501330499,
+          "dR@100_vs_A0": 0.026021303604653045,
+          "guardrail_pass": true,
+          "beats_A0_R@100": true,
+          "eligible": true
+        },
+        {
+          "config": "A3",
+          "R@10": 0.023859210305309405,
+          "R@100": 0.09545591326943866,
+          "n_rows": 93248349,
+          "dR@10_vs_A0": -0.10362254758770251,
+          "dR@100_vs_A0": 0.01409383973858791,
+          "guardrail_pass": false,
+          "beats_A0_R@100": true,
+          "eligible": false
+        }
+      ],
+      "tie_note": null
+    }
+  }
+}

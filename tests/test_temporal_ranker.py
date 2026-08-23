@@ -545,3 +545,25 @@ def test_20_all_positive_label_guard_refuses_first_positive_tables():
     out = assert_all_positive_labels(cands_all, gt_all)
     assert out["future_positives_in_table"] == 3 and out["labelled"] == 3
     assert out["positives_per_user"] == pytest.approx(1.5)
+
+
+def test_21_freeze_rule_guardrail_and_tiebreak():
+    from scripts.analysis.p4_freeze_ap import decide
+    a0 = {"R@10": 0.0438, "R@100": 0.1035}
+    # Electronics-like: A5 beats A0 on R@100 but regresses R@10 -> A0 wins
+    d = decide({"A0": a0, "A5": {"R@10": 0.0421, "R@100": 0.1038}}, 0.0005)
+    assert d["winner"] == "A0" and d["table"][0]["guardrail_pass"] is False
+    # VG-like: tiny R@100 gain, big R@10 gain -> A5 wins
+    d = decide({"A0": a0, "A5": {"R@10": 0.0514, "R@100": 0.1036}}, 0.0005)
+    assert d["winner"] == "A5"
+    # tie on R@100 within tol -> broken by R@10
+    d = decide({"A0": a0, "A2": {"R@10": 0.0450, "R@100": 0.1100},
+                "A3": {"R@10": 0.0440, "R@100": 0.1102}}, 0.0005)
+    assert d["winner"] == "A2" and "tie" in d["tie_note"]
+    # tie on R@100 AND R@10 -> fewer candidate rows wins
+    d = decide({"A0": a0, "A2": {"R@10": 0.0450, "R@100": 0.1100, "n_rows": 100},
+                "A3": {"R@10": 0.0450, "R@100": 0.1101, "n_rows": 90}}, 0.0005)
+    assert d["winner"] == "A3"
+    # no config beats A0 -> A0
+    d = decide({"A0": a0, "A1": {"R@10": 0.0500, "R@100": 0.1000}}, 0.0005)
+    assert d["winner"] == "A0"

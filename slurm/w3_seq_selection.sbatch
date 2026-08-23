@@ -36,6 +36,7 @@ CATS=(Books Electronics Video_Games); VARS=("${W3_VAR_Books:-A2_ap}" "${W3_VAR_E
 CI=$(( SLURM_ARRAY_TASK_ID / N )); SI=$(( SLURM_ARRAY_TASK_ID % N ))
 CAT=${CATS[$CI]}; VAR=${VARS[$CI]}; SPEC=${SPECS[$SI]}
 TAG=$(echo "$SPEC" | tr ':=' '__')
+[ "$SPEC" = "baseline:seed=43" ] && TAG="baseline_seed43"
 RD="results/wave3_seq_v2/${CAT}"
 mkdir -p "$RD"
 # Two sibling arrays (a100-only + any-gpu) race the same index space; the
@@ -49,9 +50,17 @@ trap 'rmdir "$CLAIM" 2>/dev/null' EXIT
 HEADREF=$(cat .git/HEAD); case "$HEADREF" in ref:*) COMMIT=$(cat ".git/${HEADREF#ref: }");; *) COMMIT=$HEADREF;; esac
 echo "=== code commit: $COMMIT ==="
 echo "=== CHECKPOINT: w3 ${CAT} ${VAR} ${SPEC} start $(date) ==="
-python -u -m scripts.ranker.train_temporal_ranker --category "$CAT" \
-    --variant "$VAR" --label-mode all_positive --stage-b \
-    --seq-arm --seq-grid "$SPEC" --results-dir "$RD"
+if [ "$SPEC" = "baseline:seed=43" ]; then
+    # noise-floor arm (PREREGISTRATION_v2): the frozen grid re-run with a
+    # second seed; its |delta| vs the seed-42 deep_cross defines the tie band
+    python -u -m scripts.ranker.train_temporal_ranker --category "$CAT" \
+        --variant "$VAR" --label-mode all_positive --stage-b --seed 43 \
+        --results-dir "$RD"
+else
+    python -u -m scripts.ranker.train_temporal_ranker --category "$CAT" \
+        --variant "$VAR" --label-mode all_positive --stage-b \
+        --seq-arm --seq-grid "$SPEC" --results-dir "$RD"
+fi
 # report lands in ${RD}/${CAT}_stageB_${VAR}_<spec tag>.json (results_dir-aware)
 ls -1 "${RD}"/${CAT}_stageB_${VAR}_*.json | tail -1
 echo "=== CHECKPOINT: w3 ${CAT} ${VAR} ${SPEC} done $(date) ==="

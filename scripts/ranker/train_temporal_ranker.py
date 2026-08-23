@@ -677,6 +677,13 @@ def run(
         if "ranker_train" in kept_users:
             gt_tr = gt_tr[gt_tr["user_id"].astype(str).isin(kept_users["ranker_train"])]
         assert_all_positive_labels(cands["ranker_train"], gt_tr)
+        # Same contract for the model_selection table (review 2026-08-22):
+        # today its label column does not drive Recall@100 selection (gt_sel
+        # sets do), but anything that later reads selection-table labels
+        # (val loss, calibration, sampling) must not be able to regress this.
+        assert_all_positive_labels(cands["model_selection"], gt_sel)
+        if not stage_b_only and gt_test is not None:
+            assert_all_positive_labels(cands["test"], gt_test)
     if "model_selection" in kept_users:
         gt_sel = gt_sel[gt_sel["user_id"].astype(str).isin(
             kept_users["model_selection"])]
