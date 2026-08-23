@@ -1,0 +1,52 @@
+{
+  "category": "All_Beauty",
+  "variant": "A0_ap",
+  "fitted_on": "selection_model_model_selection.parquet (out-of-sample, pre-test)",
+  "pred_subdir": "predictions",
+  "capped_run": false,
+  "dump_fingerprint": {
+    "created_utc": "2026-08-23T03:16:32.572674+00:00",
+    "n_rows": {
+      "ranker_train": 46170202,
+      "model_selection": 43334962,
+      "test": 41522974
+    },
+    "max_users_per_snapshot": 0,
+    "smoke": false,
+    "seed": 42
+  },
+  "pos_weight_selection": 4490.264785992218,
+  "pos_weight_refit": 4466.217209023757,
+  "prior_shift_rule": "logit - log(pos_weight of the scored model)",
+  "platt": {
+    "a": 0.810475724350122,
+    "b": -8.434086055777158,
+    "init_shift": -8.409666951378838,
+    "init_nll": 0.001983067366133706,
+    "final_nll": 0.0019705597991151545,
+    "monotone": true
+  },
+  "chosen_calibrator": "platt",
+  "cohort_thresholds": {
+    "0": 0.0,
+    "1": 0.0,
+    "2": 0.0,
+    "3+": 0.0
+  },
+  "threshold_quantile_grid": [
+    0.5,
+    0.75,
+    0.9,
+    0.95,
+    0.99
+  ],
+  "prob_bins": 15,
+  "item_bucket_edges": [
+    10.0,
+    30.0,
+    100.0,
+    300.0
+  ],
+  "created_utc": "2026-08-23T03:19:51.081465+00:00",
+  "test_dump_untouched": true
+}
