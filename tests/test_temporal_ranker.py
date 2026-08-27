@@ -567,3 +567,18 @@ def test_21_freeze_rule_guardrail_and_tiebreak():
     # no config beats A0 -> A0
     d = decide({"A0": a0, "A1": {"R@10": 0.0500, "R@100": 0.1000}}, 0.0005)
     assert d["winner"] == "A0"
+
+
+def test_22_frozen_ranker_trains_exact_epochs_no_reselection(chain):
+    """--frozen-ranker must train EXACTLY the frozen epoch count with no
+    best-epoch argmax/reload (review 2026-08-26): grid has one entry, its
+    best_epoch equals the frozen epoch, and the run is marked frozen."""
+    root = chain["root"]
+    rep = run_ranker(CAT, smoke=True, seed=7, processed_dir=root,
+                     results_dir=root / "results_frozen", stage_b_only=True,
+                     frozen_ranker={"arch": "mlp", "lr": 1e-3, "epoch": 2})
+    grid = rep["selection"]["grid"]
+    assert len(grid) == 1
+    assert grid[0]["frozen"] is True
+    assert grid[0]["best_epoch"] == 2 and grid[0]["n_epochs_run"] == 2
+    assert rep["selection"]["chosen"]["arch"] == "mlp"

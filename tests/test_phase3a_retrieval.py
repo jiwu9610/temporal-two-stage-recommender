@@ -385,7 +385,8 @@ def _write_builder_fixture(root: Path) -> Path:
 
     cutoffs = {"t0_ms": t0, "t1_ms": t1, "t2_ms": t2, "t3_ms": t3}
     json.dump({"cutoffs": cutoffs,
-               "snapshots": {"model_selection": {"history_end_ms": t1}}},
+               "snapshots": {"model_selection": {"history_end_ms": t1},
+                             "test": {"history_end_ms": t2}}},
               open(tdir / "snapshot_manifest.json", "w"))
     json.dump({"w_store": 1.0, "w_cat": 1.0, "w_pop": 1.0,
                "tuned_on": "ranker_train (T0->T1 development labels)",
@@ -740,3 +741,26 @@ def test_stage_a_denominators_are_users_not_groundtruth_rows(tmp_path):
     # The status histogram covers every target, not every user.
     assert sum(abl["target_status_counts"].values()) == 3
     assert report["base_cohorts"]["3+"]["n_users"] == 1
+
+def test_builder_report_merges_snapshots_instead_of_clobbering(tmp_path):
+    """A --snapshots test build must MERGE into an existing report, not
+    overwrite the Stage-A ranker_train/model_selection provenance (the
+    freeze's row-count tie-breaker reads those; review 2026-08-26)."""
+    from scripts.ranker.temporal_candidate_builder import build_all
+    root = tmp_path / "proc"
+    tdir = _write_builder_fixture(root)
+    # fixture ships only model_selection files; clone them as a "test" snapshot
+    import shutil
+    for stem in ("history", "groundtruth", "user_features", "item_features",
+                 "two_tower_predictions"):
+        shutil.copy(tdir / f"{stem}_model_selection.parquet",
+                    tdir / f"{stem}_test.parquet")
+    build_all(BUILDER_CAT, top_k=2, seed=42, processed_dir=root,
+              results_dir=tmp_path / "res", snapshots=("model_selection",),
+              variant="V")
+    build_all(BUILDER_CAT, top_k=2, seed=42, processed_dir=root,
+              results_dir=tmp_path / "res", snapshots=("test",), variant="V")
+    rep = json.loads((tmp_path / "res" /
+                      f"{BUILDER_CAT}_candidates_report_V.json").read_text())
+    assert set(rep["snapshots"]) == {"model_selection", "test"}
+    assert len(rep["build_history"]) == 2

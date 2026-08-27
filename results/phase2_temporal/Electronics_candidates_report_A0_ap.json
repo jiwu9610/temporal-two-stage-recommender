@@ -14,8 +14,8 @@
       }
     ]
   },
-  "built_utc": "2026-08-21T17:58:35.832475+00:00",
-  "elapsed_seconds": 2065.37,
+  "built_utc": "2026-08-23T01:46:34.125461+00:00",
+  "elapsed_seconds": 504.05,
   "snapshots": {
     "ranker_train": {
       "snapshot": "ranker_train",
@@ -178,6 +178,88 @@
       "n_positive_rows": 16499,
       "top_k": 500,
       "elapsed_seconds": 828.84
+    },
+    "test": {
+      "snapshot": "test",
+      "n_positive_eval_users": 37721,
+      "candidate_catalog_size": 32675,
+      "coverage": {
+        "historical_catalog": 0.6401237886999946,
+        "eligible_pool": 0.435365023031895,
+        "retrieved_union": 0.20416892607227896,
+        "retrieved_union_any_hit": 0.29983298427931393,
+        "retrieved_union_per_positive": 0.17215186825885978
+      },
+      "cold_users": 7354,
+      "n_positives": 83072,
+      "cold_items_not_in_history": 34949,
+      "history_cohorts": {
+        "0": 7354,
+        "1": 5208,
+        "2": 3815,
+        "3+": 21344
+      },
+      "sources": {
+        "popularity": {
+          "Recall@10": 0.0066575728108115954,
+          "Precision@10": 0.0006657572810811595,
+          "Recall@50": 0.039024214796983724,
+          "Precision@50": 0.0007804842959396745,
+          "Recall@100": 0.049390614979380326,
+          "Precision@100": 0.0004939061497938032
+        },
+        "rule": {
+          "Recall@10": 0.006345760114375191,
+          "Precision@10": 0.0006345760114375191,
+          "Recall@50": 0.027840335649738483,
+          "Precision@50": 0.0005568067129947696,
+          "Recall@100": 0.036108790477372664,
+          "Precision@100": 0.00036108790477372665
+        },
+        "two_tower": {
+          "Recall@10": 0.021472714699559452,
+          "Precision@10": 0.0021472714699559453,
+          "Recall@50": 0.04766850008910938,
+          "Precision@50": 0.0009533700017821876,
+          "Recall@100": 0.06397548029070245,
+          "Precision@100": 0.0006397548029070246
+        },
+        "recent_pop": {
+          "Recall@10": 0.03723951479775823,
+          "Precision@10": 0.003723951479775823,
+          "Recall@50": 0.07920752988702895,
+          "Precision@50": 0.001584150597740579,
+          "Recall@100": 0.0980990983453496,
+          "Precision@100": 0.000980990983453496
+        }
+      },
+      "retrieval_config": {
+        "top_k": 500,
+        "min_item_history": null,
+        "tt_k": 500,
+        "extra_sources": [
+          {
+            "name": "recent_pop",
+            "type": "decayed_pop",
+            "half_life_days": 30
+          }
+        ]
+      },
+      "rule_weights": {
+        "w_store": 0.5,
+        "w_cat": 0.5,
+        "w_pop": 1.0
+      },
+      "rule_tuning": null,
+      "n_rows": 49124821,
+      "n_positive_rows": 14301,
+      "top_k": 500,
+      "elapsed_seconds": 503.08
     }
-  }
+  },
+  "build_history": [
+    {
+      "restored": "ranker_train+model_selection re-merged from commit b2cc4dd after the test-only clobber (2026-08-26)"
+    }
+  ]
 }

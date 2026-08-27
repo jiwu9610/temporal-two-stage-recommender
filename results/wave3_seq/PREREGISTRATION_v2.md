@@ -30,3 +30,10 @@ post-hoc as a diagnostic only, not as the frozen choice).
 Locked test: ONE read per adopted config; it follows the all-positive P5.
 Noise floor: two seeds of the deep_cross arm define the ±band; differences
 inside it are reported as ties.
+
+## Post-audit notes (2026-08-25, review #3)
+- Known limitation, fix BEFORE any adopted seq config is ever test-run: the
+  refit vocabulary uses rt+ms histories; items first observed in [T1,T2)
+  (legal at T2) still map to <unk> at test time.
+- Noise-band provenance: results/wave3_seq_v2/NOISE_BAND.md (both seeds'
+  reports are committed; later stage-b reports record `seed`).

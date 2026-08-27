@@ -149,20 +149,23 @@ class TestEvaluateFlat:
         with pytest.raises(ValueError):
             evaluate_flat(users, ones, ones, n_gt_users=1)
 
-    def test_tie_policy_no_auc_credit_any_row_order(self):
-        # tied pos/neg pair -> zero credit regardless of row order
+    def test_tie_policy_auc_half_credit_any_row_order(self):
+        # Standard ROC AUC (review 2026-08-26): a tied +/- pair earns 0.5,
+        # invariant to row order. (Ranking metrics keep the conservative
+        # negatives-first tie policy -- asserted in the zeroed-target test.)
         for labels in ([1.0, 0.0], [0.0, 1.0]):
             users = np.array(["a", "a"])
             scores = np.array([1.0, 1.0])
             got = evaluate_flat(users, scores, np.array(labels), ks=(1,))
-            assert got["auc"] == 0.0, labels
-            assert got["global_auc"] == 0.0, labels
+            assert got["auc"] == pytest.approx(0.5), labels
+            assert got["global_auc"] == pytest.approx(0.5), labels
 
     def test_zeroed_target_is_deterministically_conservative(self):
         # rule-layer shape: 10 surviving negatives (scores 1..10) + 20 rows
-        # zeroed to 0.0 including the single positive. The zeroed positive
-        # must rank below every co-zeroed negative under ANY row permutation:
-        # no recall@10 credit, mrr = 1/30, auc = 0.
+        # zeroed to 0.0 including the single positive. RANKING stays
+        # conservative (positive below every co-zeroed negative under any
+        # permutation: no recall@10, mrr = 1/30); AUC is standard: the
+        # positive strictly loses to 10, ties 19 -> (0 + 19/2)/29.
         rng = np.random.default_rng(3)
         scores = np.array([float(i + 1) for i in range(10)] + [0.0] * 20)
         labels = np.array([0.0] * 10 + [1.0] + [0.0] * 19)
@@ -174,7 +177,7 @@ class TestEvaluateFlat:
             assert got["recall@10_listed"] == 0.0
             assert got["recall@25_listed"] == 0.0
             assert got["mrr"] == pytest.approx(1 / 30)
-            assert got["auc"] == 0.0
+            assert got["auc"] == pytest.approx(9.5 / 29)
 
     def test_tied_data_permutation_invariance(self):
         # heavy ties across many users: results identical under permutation

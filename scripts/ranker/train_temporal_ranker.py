@@ -245,6 +245,12 @@ def assert_all_positive_labels(cands_df: pd.DataFrame, gt_all_df: pd.DataFrame) 
             f"{n_fp_labelled:,} of {n_fp:,} future positives -- it was built on "
             f"the first-positive frame. Rebuild with temporal_candidate_builder "
             f"--label-mode all_positive (or run relabel_candidates_all_positive).")
+    n_label1 = int(cands_df["label"].sum())
+    if n_label1 != n_fp_labelled:
+        raise RuntimeError(
+            f"{n_label1 - n_fp_labelled:,} rows carry label 1 but are NOT in the "
+            f"all-positive ground truth -- stray positives (bidirectional check, "
+            f"review 2026-08-25).")
     return {"future_positives_in_table": n_fp, "labelled": n_fp_labelled,
             "positives_per_user": ppu}
 
@@ -511,6 +517,12 @@ def _eval_test(
     ceiling_positives = (
         sum(len(g & cand_per_user.get(u, set())) for u, g in gt.items())
         / n_pos_total) if n_pos_total else 0.0
+    # EXACT macro Recall@inf ceiling: mean over users of the fraction of THEIR
+    # positives present in the union. `ceiling` above is the ANY-HIT user
+    # coverage (frozen key, kept as a diagnostic); with several positives per
+    # user it overstates the reachable macro recall (review 2026-08-25).
+    ceiling_macro = (float(np.mean([len(g & cand_per_user.get(u, set())) / len(g)
+                                    for u, g in gt.items()])) if gt else 0.0)
     gt_retrieved = {u: g for u, g in gt.items() if u in retrieved_users}
     conditional = {}
     for k in KS:
@@ -562,6 +574,7 @@ def _eval_test(
         "n_groundtruth_positives": n_pos_total,
         "overall": overall.metrics,
         "candidate_ceiling_retrieved_coverage": ceiling,
+        "candidate_ceiling_macro_recall": ceiling_macro,
         "candidate_ceiling_positive_coverage": ceiling_positives,
         "conditional_given_retrieved": {
             "n_users_retrieved": len(retrieved_users), **conditional,
@@ -593,6 +606,7 @@ def run(
     seq_grid: Sequence[str] = ("seq:vanilla:pos=delta", "seq:mh_pool:pos=delta",
                                "seq:causal:pos=delta", "seq:hstu:pos=delta"),
     seq_only: bool = False,
+    frozen_ranker: Optional[Dict] = None,
 ) -> Dict:
     """Full run: selection -> refit -> single locked test eval.
 
@@ -709,7 +723,17 @@ def run(
 
     # Selection grid. Architecture + learning rate; epoch count comes from
     # early stopping against model_selection. Smoke restricts to one config.
-    grid: List[Tuple[str, float]] = (
+    if frozen_ranker:
+        # P5-style run consuming the EXACT Stage-B frozen ranker: no grid, no
+        # early stopping -- arch/lr/epoch come from the freeze file, so what
+        # was frozen is the full model recipe, not a re-selection procedure
+        # (review 2026-08-25, important #1).
+        grid = [(frozen_ranker["arch"], float(frozen_ranker["lr"]))]
+        max_epochs = int(frozen_ranker["epoch"])
+        early_stopping_patience = 10 ** 9
+        print(f"[ranker] FROZEN ranker config: {grid[0][0]} lr={grid[0][1]} "
+              f"epoch={max_epochs} (grid re-selection disabled)", flush=True)
+    grid = grid if frozen_ranker else (
         [("seq:causal:pos=delta", 1e-3)] if (smoke and seq_arm) else
         [("mlp", 1e-3)] if smoke
         else [("mlp", 1e-3), ("mlp", 3e-4), ("deep_cross", 1e-3), ("deep_cross", 3e-4)]
@@ -721,7 +745,7 @@ def run(
         # model_selection and the test read happens once, for that arch.
         seq_entries = [(a, lr) for a in seq_grid for lr in (1e-3, 3e-4)]
         grid = seq_entries if seq_only else grid + seq_entries
-    if smoke:
+    if smoke and not frozen_ranker:
         max_epochs = min(max_epochs, 3)
 
     # Feature spec for SELECTION runs: ranker_train rows only.
@@ -749,6 +773,36 @@ def run(
         # unseeded init makes selection irreproducible across processes.
         torch.manual_seed(seed + 1000 * (gi + 1))
         model = _make_model(arch, spec_sel).to(device)
+        if frozen_ranker:
+            # EXACT freeze (review 2026-08-26): train exactly N epochs with the
+            # refit trainer -- NO per-epoch validation, NO best-state reload.
+            # train_pointwise_bce would still argmax over epochs 1..N and
+            # reload the best one, silently re-selecting the epoch.
+            n_frozen = int(frozen_ranker["epoch"])
+            train_fixed_epochs(
+                model, train_inputs, n_frozen,
+                batch_size=batch_size, lr=lr, weight_decay=weight_decay,
+                device=device, seed=seed, pos_weight=pos_weight,
+            )
+            sel_eval_f = _eval_test(
+                model, cands["model_selection"],
+                build_temporal_tensors(cands["model_selection"], spec_sel,
+                                       features, log1p,
+                                       snapshot="model_selection"),
+                gt_sel, device)
+            run_rec = {
+                "arch": arch, "lr": lr, "frozen": True,
+                "best_epoch_metrics": sel_eval_f["overall"],
+                "best_selection_recall@100": sel_eval_f["overall"]["Recall@100"],
+                "best_epoch": n_frozen, "n_epochs_run": n_frozen,
+            }
+            selection_runs.append(run_rec)
+            best = ((run_rec["best_selection_recall@100"], -gi), run_rec)
+            if stage_b_only or dump_predictions:
+                best_model_state = {k: v.detach().cpu().clone()
+                                    for k, v in model.state_dict().items()}
+            del model
+            continue
         summary = train_pointwise_bce(
             model,
             train_inputs=train_inputs,
@@ -811,6 +865,7 @@ def run(
             "code_commit": _git_head(),
             "seq_arm": bool(seq_arm),
             "seq_grid": list(seq_grid) if seq_arm else None,
+            "seed": seed,
             "stage": "B (model-selection confirmation; test snapshot untouched)",
             "started_utc": datetime.now(tz=timezone.utc).isoformat(),
             "elapsed_seconds": round(time.time() - t0, 2),
@@ -1041,6 +1096,11 @@ def _parse_args(argv=None):
                    help="Wave 3: add the DIN sequence ranker (arch=din, two "
                         "lrs) to the selection grid. Default off = frozen "
                         "protocol byte-for-byte.")
+    p.add_argument("--frozen-ranker", default=None,
+                   help="'arch:lr:epoch' (or a path to frozen_config_ap.json "
+                        "plus --category to look it up). Disables the "
+                        "selection grid; the exact Stage-B recipe is retrained "
+                        "and evaluated (review 2026-08-25 important #1).")
     p.add_argument("--seq-only", action="store_true",
                    help="Grid = only the --seq-grid specs (wave-3 locked test "
                         "of a frozen winner; lr/epoch still selected on "
@@ -1070,6 +1130,9 @@ def main(argv=None):
         variant=args.variant, stage_b_only=args.stage_b,
         label_mode=args.label_mode,
         seq_arm=args.seq_arm, seq_only=args.seq_only,
+        frozen_ranker=(dict(zip(("arch", "lr", "epoch"),
+                                args.frozen_ranker.rsplit(":", 2)))
+                       if args.frozen_ranker else None),
         **({"seq_grid": tuple(args.seq_grid.split(","))} if args.seq_grid else {}),
         dump_predictions=args.dump_predictions, **kwargs)
 

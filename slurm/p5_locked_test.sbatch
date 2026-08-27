@@ -67,9 +67,20 @@ python -u -m scripts.ranker.temporal_candidate_builder --category "$CAT" \
     --variant "$V" --config-json "$CFG" --snapshots test --label-mode all_positive
 
 echo "=== CHECKPOINT: [2] full ranker + dump ${CAT} ${V} $(date) ==="
+# Consume the EXACT frozen Stage-B ranker recipe straight from the freeze
+# file -- no re-selection, and no hand-typed strings that could drift from
+# the JSON (review 2026-08-26 #1). The reference (A0) arm of a category whose
+# winner differs has no frozen recipe of its own and keeps the grid path.
+FR=$(python -c "
+import json,sys
+f=json.load(open('results/p4_freeze/frozen_config_ap.json'))
+c=f['categories']['${CAT}']
+r=c.get('frozen_ranker')
+print(f\"{r['arch']}:{r['lr']}:{r['epoch']}\" if r and c['winner_variant']=='${V}' else '')")
+if [ -n "$FR" ]; then FROZEN_ARGS="--frozen-ranker $FR"; echo "frozen ranker: $FR"; else FROZEN_ARGS=""; echo "reference arm: selection grid (no frozen recipe)"; fi
 python -u -m scripts.ranker.train_temporal_ranker --category "$CAT" \
     --variant "$V" --label-mode all_positive --dump-predictions \
-    --results-dir "$RD"
+    $FROZEN_ARGS --results-dir "$RD"
 
 echo "=== CHECKPOINT: [3] calibration fit ${CAT} ${V} $(date) ==="
 python -u -m scripts.evaluation.temporal_calibration --category "$CAT" \

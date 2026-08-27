@@ -1,8 +1,11 @@
 # 实验结果汇总
 
-**当前冻结配置**：重建波 P4.4 per-category（2026-08-15，commit `ad9d7ba`）——Books thr3+content / Elec thr3 / VG thr5 / AB thr5+content
-**最后一次终测**：2026-08-15（重建波 P5，commit `eaefed8`）→ **见 §9（本文件顶部新节）**；§1–§8 为 first_positive 时代历史，保留可复现
-**上一冻结**：`C2_k500_recent`（Phase 3A，2026-07-26）
+> **当前有效结果 = §9(all-positive 目标,2026-08-25 定稿)**,冻结配置 =
+> `results/p4_freeze/frozen_config_ap.json`(Books A3 / Elec A0 / VG A5 / AB A1)。
+> **§0–§8 为历史存档**(first-positive 时代 + 8/15 已作废的首正例训练冻结),
+> 保留仅为可复现,其中的"候选天花板 = any-hit"、"Precision = Recall/K"等口径
+> 均为旧协议属性,已在当前管线中修正——阅读任何旧节前先看 §9 与
+> [REBUILD_WAVE_REPORT.md](REBUILD_WAVE_REPORT.md)。
 **评估协议**：`global_temporal_snapshots` 三快照 walk-forward，T0<T1<T2<T3
 
 > 本文件是 `results/` 下 96 个 JSON 的人读汇总。每张表都标了溯源路径，数字可逐个核对。

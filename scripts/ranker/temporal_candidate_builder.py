@@ -458,7 +458,8 @@ def build_snapshot_candidates(
     # Float accumulators: each user contributes the FRACTION of their positives
     # a source retrieved, so the per-source figures stay macro recalls rather
     # than becoming hit counts once a user has several targets.
-    src_hits = {s: {k: 0.0 for k in KS} for s in all_source_names}
+    src_hits = {s: {k: 0.0 for k in KS} for s in all_source_names}   # per-user recall sums
+    src_prec = {s: {k: 0.0 for k in KS} for s in all_source_names}   # per-user hits@k/k sums
     retrieved_cov_n = 0        # users with >= 1 positive in the union
     retrieved_cov_macro = 0.0  # sum over users of covered-fraction
     retrieved_cov_pos = 0      # positives covered, pooled
@@ -672,15 +673,21 @@ def build_snapshot_candidates(
             for src, topk_dict in (("popularity", pop_topk), ("rule", rule_topk)):
                 items = topk_dict.get(u, [])
                 for k in KS:
-                    src_hits[src][k] += len(targets & set(items[:k])) / n_t
+                    h = len(targets & set(items[:k]))
+                    src_hits[src][k] += h / n_t
+                    src_prec[src][k] += h / k
             tt_items = (tt_by_user[u]["parent_asin"].tolist()[:top_k]
                         if u in tt_by_user else [])
             for k in KS:
-                src_hits["two_tower"][k] += len(targets & set(tt_items[:k])) / n_t
+                h = len(targets & set(tt_items[:k]))
+                src_hits["two_tower"][k] += h / n_t
+                src_prec["two_tower"][k] += h / k
             for name in extra_names:
                 items = extra_chunk_topk[name].get(u, [])
                 for k in KS:
-                    src_hits[name][k] += len(targets & set(items[:k])) / n_t
+                    h = len(targets & set(items[:k]))
+                    src_hits[name][k] += h / n_t
+                    src_prec[name][k] += h / k
             cand_set = by_user_items.get(u, set())
             hit_n = len(targets & cand_set)
             if hit_n:
@@ -722,7 +729,10 @@ def build_snapshot_candidates(
         out = {}
         for k in (kk for kk in KS if kk <= top_k):
             out[f"Recall@{k}"] = src_hits[src][k] / n_users if n_users else 0.0
-            out[f"Precision@{k}"] = src_hits[src][k] / (k * n_users) if n_users else 0.0
+            # True multi-positive precision (mean over users of hits@k / k).
+            # The old form divided the recall accumulator by k, mechanically
+            # recreating Precision ~= Recall/K (review 2026-08-25, smaller #2).
+            out[f"Precision@{k}"] = src_prec[src][k] / n_users if n_users else 0.0
         return out
 
     report = {
@@ -822,7 +832,25 @@ def build_all(category: str, top_k: int = 100, seed: int = 42,
     results_dir = Path(results_dir)
     results_dir.mkdir(parents=True, exist_ok=True)
     suffix = f"_{variant}" if variant else ""
-    with open(results_dir / f"{category}_candidates_report{suffix}.json", "w") as f:
+    out_path = results_dir / f"{category}_candidates_report{suffix}.json"
+    # MERGE, never clobber (review 2026-08-26 #2): a --snapshots test run used
+    # to overwrite the whole report, destroying the Stage-A ranker_train /
+    # model_selection provenance the freeze's row-count tie-breaker reads.
+    if out_path.exists():
+        try:
+            prev = json.loads(out_path.read_text())
+            merged_snaps = dict(prev.get("snapshots") or {})
+            merged_snaps.update(payload["snapshots"])
+            payload["snapshots"] = merged_snaps
+            hist = list(prev.get("build_history") or [])
+        except Exception:
+            hist = []
+    else:
+        hist = []
+    hist.append({"built_utc": payload["built_utc"],
+                 "snapshots": sorted(reports)})
+    payload["build_history"] = hist
+    with open(out_path, "w") as f:
         json.dump(payload, f, indent=2, default=str)
     return payload
 

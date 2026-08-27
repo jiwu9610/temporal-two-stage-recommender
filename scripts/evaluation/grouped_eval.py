@@ -53,8 +53,11 @@ Tie policy — deterministic and conservative, enforced HERE (metrics.py's own
 argsort is not stable, so its tie behavior is unspecified): rows are
 lexsorted (score descending, negatives before positives among equal scores)
 and the metric primitives are fed each row's within-user RANK instead of the
-raw score. Ordering of distinct scores is unchanged; tied pairs earn zero
-AUC credit and tied negatives fill top-k slots before tied positives. This
+raw score. Ordering of distinct scores is unchanged; tied negatives fill
+top-k slots before tied positives (deterministic conservative RANKING
+policy). AUC/gAUC/global_auc use the STANDARD Mann-Whitney definition with
+average ranks, i.e. tied positive-negative pairs earn 0.5 credit (review
+2026-08-26: the earlier zero-credit AUC was not standard ROC AUC). This
 matters because the calibration rule layer zeroes large fractions of each
 list: a threshold that zeroes the target's score demotes it below every
 co-zeroed negative — always a miss at k below the list length, never an
@@ -79,6 +82,31 @@ from scripts.evaluation.metrics import (
     precision_at_k,
     recall_at_k,
 )
+
+
+def _auc_avg_rank_per_user(codes, scores, labels, n_users):
+    """Per-user ROC AUC with the standard tie treatment (average ranks ->
+    tied +/- pairs earn 0.5). Inputs are one contiguous already-user-sorted
+    slice; `codes` are 0-based user indices within the slice. Returns
+    (auc[n_users], valid[n_users]) with valid = user has both classes."""
+    order = np.lexsort((scores, codes))            # user asc, score asc
+    c = codes[order]; sc = scores[order]; lb = labels[order].astype(np.float64)
+    pos_in_user = np.arange(len(c), dtype=np.float64)
+    starts = np.concatenate([[0], np.cumsum(np.bincount(c, minlength=n_users))])[:-1]
+    pos_in_user -= starts[c]                       # 0-based ascending rank
+    new_grp = np.concatenate([[True], (c[1:] != c[:-1]) | (sc[1:] != sc[:-1])])
+    grp = np.cumsum(new_grp) - 1
+    gsum = np.bincount(grp, weights=pos_in_user)
+    gcnt = np.bincount(grp)
+    avg0 = (gsum / gcnt)[grp]                      # tie-averaged 0-based rank
+    rank_sum_pos = np.bincount(c, weights=lb * (avg0 + 1.0), minlength=n_users)
+    n_pos = np.bincount(c, weights=lb, minlength=n_users)
+    n_tot = np.bincount(c, minlength=n_users).astype(np.float64)
+    n_neg = n_tot - n_pos
+    valid = (n_pos > 0) & (n_neg > 0)
+    denom = np.where(valid, n_pos * n_neg, 1.0)
+    auc = (rank_sum_pos - n_pos * (n_pos + 1) / 2) / denom
+    return np.where(valid, auc, 0.0), valid
 
 
 def evaluate_flat(
@@ -192,19 +220,26 @@ def evaluate_flat(
         lengths = torch.from_numpy(batch_counts.astype(np.int64)).to(device)
         mask = make_mask(lengths, L)
 
-        auc_vals, valid = auc_per_sample(preds, labs, mask)
-        acc["sum_auc"] += float(auc_vals[valid].sum())
-        acc["n_auc_valid"] += int(valid.sum())
-        acc["sum_auc_len"] += float((auc_vals * lengths.float() * valid.float()).sum())
-        acc["sum_len_valid"] += float((lengths.float() * valid.float()).sum())
+        # Standard-tie AUC (0.5 credit) per user via Mann-Whitney with
+        # average ranks, computed on the REAL scores of this batch's rows --
+        # the padded -rank tensors above deliberately break ties for the
+        # ranking metrics and must not feed AUC.
+        auc_np, valid_np = _auc_avg_rank_per_user(
+            codes_s[r0:r1] - b0, scores_s[r0:r1], labels_s[r0:r1], B)
+        lens_np = batch_counts.astype(np.float64)
+        acc["sum_auc"] += float(auc_np[valid_np].sum())
+        acc["n_auc_valid"] += int(valid_np.sum())
+        acc["sum_auc_len"] += float((auc_np * lens_np * valid_np).sum())
+        acc["sum_len_valid"] += float((lens_np * valid_np).sum())
 
         n_pos = (labs * mask.float()).sum(dim=1)
         has_pos = n_pos > 0
         acc["n_pos_users"] += int(has_pos.sum())
         acc["sum_mrr"] += float(mrr(preds, labs, mask).sum())
         # Negatives per AUC-valid user: the scale AUC must be read against.
+        valid_t = torch.from_numpy(valid_np.astype(np.float32)).to(device)
         acc["sum_neg_valid"] += float(
-            ((lengths.float() - n_pos) * valid.float()).sum())
+            ((lengths.float() - n_pos) * valid_t).sum())
 
         true_batch = (torch.from_numpy(true_np[b0:b1]).to(device)
                       if true_np is not None else None)
@@ -245,14 +280,22 @@ def evaluate_flat(
     # integer precision past ~16.7M rows; full-scale dumps are ~60M) and
     # with the strict tie policy: ascending score with positives FIRST among
     # equal scores, so a tied negative is never counted as concordant.
-    flat_order = np.lexsort((-labels_s.astype(np.float64), scores_s))
-    sorted_flat_labels = labels_s[flat_order].astype(np.int64)
-    n_pos_total = int(sorted_flat_labels.sum())
-    n_neg_total = len(sorted_flat_labels) - n_pos_total
+    # Standard ROC AUC pooled over all rows: P(s+ > s-) + 0.5 P(s+ = s-),
+    # via average ranks (int64/float64 -- float32 cumsum loses integer
+    # precision past ~16.7M rows; full-scale dumps are ~60M).
+    n_pos_total = int(labels_s.sum())
+    n_neg_total = len(labels_s) - n_pos_total
     if n_pos_total and n_neg_total:
-        cum_neg = np.cumsum(1 - sorted_flat_labels)
-        concordant = int((sorted_flat_labels * cum_neg).sum())
-        out["global_auc"] = concordant / (n_pos_total * n_neg_total)
+        flat_order = np.argsort(scores_s, kind="mergesort")
+        ss = scores_s[flat_order]; ll = labels_s[flat_order].astype(np.int64)
+        ranks = np.arange(1, len(ss) + 1, dtype=np.float64)
+        grp = np.concatenate([[0], np.cumsum(ss[1:] != ss[:-1])])
+        gsum = np.bincount(grp, weights=ranks)
+        gcnt = np.bincount(grp)
+        avg_rank = (gsum / gcnt)[grp]
+        rank_sum_pos = float(avg_rank[ll == 1].sum())
+        out["global_auc"] = ((rank_sum_pos - n_pos_total * (n_pos_total + 1) / 2)
+                             / (n_pos_total * n_neg_total))
     else:
         out["global_auc"] = 0.0
 

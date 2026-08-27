@@ -54,8 +54,14 @@ def _rows(cat: str, v: str):
     if not p.exists():
         return None
     r = json.loads(p.read_text())
-    return int(sum(r["snapshots"][s]["n_rows"] for s in ("ranker_train", "model_selection")
-                   if s in r["snapshots"]))
+    missing = [s for s in ("ranker_train", "model_selection") if s not in r["snapshots"]]
+    if missing:
+        raise RuntimeError(
+            f"{p}: snapshots {missing} missing -- the Stage-A report was "
+            f"overwritten by a later test-only build (the builder now merges "
+            f"instead of clobbering; restore the Stage-A entries before "
+            f"freezing). Refusing to record n_rows=0.")
+    return int(sum(r["snapshots"][s]["n_rows"] for s in ("ranker_train", "model_selection")))
 
 
 def _load(cat: str) -> dict:
@@ -129,6 +135,10 @@ def main():
 
     payload = {
         "phase": "P4.4 joint freeze -- ALL-POSITIVE rebuild (supersedes results/p4_freeze/frozen_config.json, which froze the first-positive-trained Stage B of 2026-08-15)",
+        "freeze_history": [
+            "controlling PRE-TEST freeze: commit fd894b7 (2026-08-22, before the one-shot P5 read of 08-23); winners Books A3 / Elec A0 / VG A5 / AB A1",
+            "amendments (identical decisions, provenance only): 615f742 row-count tie-breaker implemented; 7e8f38a frozen_ranker recipe field; 2026-08-26 Stage-A row counts restored after the report-clobber bug fix",
+        ],
         "frozen_utc": datetime.now(tz=timezone.utc).isoformat(),
         "decision_rule": RULE,
         "tie_tol": args.tie_tol,
@@ -143,6 +153,14 @@ def main():
         retrieval_cfg = json.loads(cfg_path.read_text())
         payload["categories"][cat] = {
             "winner": w, "winner_variant": f"{w}_ap",
+            # The EXACT Stage-B ranker recipe (arch/lr/epoch). The executed P5
+            # of 2026-08-23 predated this field and re-ran the selection grid
+            # on model_selection (held-out-legitimate; frozen object there =
+            # retrieval config + selection procedure). Any future run must
+            # consume this via train_temporal_ranker --frozen-ranker.
+            "frozen_ranker": {"arch": arms[w]["chosen"].get("arch"),
+                              "lr": arms[w]["chosen"].get("lr"),
+                              "epoch": arms[w]["chosen"].get("best_epoch")},
             "retrieval_config_source": str(cfg_path.relative_to(REPO)),
             "retrieval_config": retrieval_cfg,
             "min_item_history": retrieval_cfg.get("min_item_history") or 5,
