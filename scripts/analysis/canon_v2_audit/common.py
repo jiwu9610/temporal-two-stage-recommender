@@ -1,4 +1,4 @@
-"""Shared helpers for the canon-v2 audit scripts (Track D, REBUILD_WAVE_SPEC P2.1).
+"""Shared helpers for the canon-v2 audit scripts.
 
 Everything here reads RAW inputs only (data/raw/{category}/) and never touches
 data/processed frozen artifacts or results/. The merge predicate is imported
@@ -63,7 +63,7 @@ def load_meta_dedup(category: str) -> pd.DataFrame:
 
 def review_row_counts(category: str) -> Tuple[pd.Series, int]:
     """(review rows per raw parent_asin, total review rows). Reads the single
-    parent_asin column via pyarrow so Books stays within a 64G sbatch node."""
+    parent_asin column via pyarrow so Books stays within a 64G memory budget."""
     path = RAW_DIR / category / "reviews.parquet"
     assert path.exists(), f"{path} not found -- raw reviews is a hard requirement"
     col = pq.read_table(path, columns=["parent_asin"]).column("parent_asin")

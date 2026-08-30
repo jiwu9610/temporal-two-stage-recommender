@@ -2,7 +2,7 @@
   "category": "All_Beauty",
   "leg": "two_tower_anchor_v1",
   "dump": {
-    "path": "/projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/All_Beauty_two_tower_anchor_v1_predictions.parquet",
+    "path": "<repo>/results/anchor/All_Beauty/All_Beauty_two_tower_anchor_v1_predictions.parquet",
     "rows": 25553,
     "n_users": 253,
     "max_list_length": 101,

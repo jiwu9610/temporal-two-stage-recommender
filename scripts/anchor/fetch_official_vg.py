@@ -1,4 +1,4 @@
-"""Fetch the OFFICIAL 5-core Video_Games benchmark split (Track C, P1.1).
+"""Fetch the OFFICIAL 5-core Video_Games benchmark split .
 
 CLI:
     python -m scripts.anchor.fetch_official_vg

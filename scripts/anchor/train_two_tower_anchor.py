@@ -1,4 +1,4 @@
-"""Leg D: our two-tower under the anchor protocol (Track C, spec P1.2).
+"""Leg D: our two-tower under the anchor protocol.
 
 CLI (production conda env `tae`, NOT the recbole venv):
     python -m scripts.anchor.train_two_tower_anchor --category All_Beauty
@@ -8,7 +8,7 @@ What this wrapper does (and deliberately nothing more):
     * monkeypatches scripts.retrieval.train_two_tower module globals:
         - PROCESSED_DIR -> data/anchor              (anchor exports use the
           phase1 file layout: train/val/test.parquet + user/item_features.parquet)
-        - RESULTS_DIR   -> results/anchor/{cat}     (Track C item 2: NEVER
+        - RESULTS_DIR   -> results/anchor/{cat}     (rule: NEVER
           results/phase1 — the phase1 lineage JSONs live there and the variant
           label change alone would not protect the *_predictions.parquet)
         - DEFAULT_K_RETRIEVE -> 101                 (100+1 so score_predictions'
@@ -79,7 +79,7 @@ def main(argv=None):
     from scripts.retrieval.two_tower import TwoTowerConfig
     from scripts.retrieval.two_tower_dataset import PairSamplingConfig
 
-    # ---- monkeypatch: anchor in, anchor out (Track C item 2) -----------------
+    # ---- monkeypatch: anchor in, anchor out -----------------
     t2t.PROCESSED_DIR = ANCHOR_DATA_ROOT
     t2t.RESULTS_DIR = ANCHOR_RESULTS_ROOT / args.category
     t2t.DEFAULT_K_RETRIEVE = 101

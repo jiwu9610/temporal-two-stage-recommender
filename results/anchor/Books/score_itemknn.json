@@ -2,7 +2,7 @@
   "category": "Books",
   "leg": "itemknn",
   "dump": {
-    "path": "/projects/PROJECT_ALLOC/R-project/results/anchor/Books/itemknn_top101.csv.gz",
+    "path": "<repo>/results/anchor/Books/itemknn_top101.csv.gz",
     "rows": 1251390,
     "n_users": 12390,
     "max_list_length": 101,

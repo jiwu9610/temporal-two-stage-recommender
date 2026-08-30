@@ -1,7 +1,6 @@
 """Two-tower retrieval — feature preparation + explicit pair sampler.
 
-Spec-locked design choices, in service of a clean v1 (see the Phase 1 plan in
-project memory and the user's two-tower spec):
+Locked v1 design choices:
 
 * v1 default (loss_mode="bce"): no in-batch sampled softmax. Negatives are
   explicit:
@@ -155,7 +154,7 @@ class FeatureSpec:
     user_dense_norm_stats: Dict[str, Dict[str, float]] = field(default_factory=dict)
     item_dense_norm_stats: Dict[str, Dict[str, float]] = field(default_factory=dict)
 
-    # ---- v2 taste channel (Track A). Tail-appended with None defaults so the
+    # ---- v2 taste channel. Tail-appended with None defaults so the
     # phase1 path (`build_feature_spec`), which never builds history arrays,
     # keeps its field order and construction untouched. Populated only by
     # build_temporal_feature_spec(build_hist_pool=True).
@@ -332,7 +331,7 @@ class PairSamplingConfig:
     hard_negative_weight: float = 1.0
     soft_negative_weight: float = 1.0
     seed: int = 42
-    # ---- v2 (rebuild wave, Track A). Tail-appended; defaults preserve v1.
+    # ---- v2. Tail-appended; defaults preserve v1.
     # These are hashed via asdict() in _config_hash and land in the frozen
     # config, so they cannot drift between the A/B/C snapshot checkpoints.
     loss_mode: str = "bce"                  # "bce" (v1) | "softmax" (in-batch + logQ)

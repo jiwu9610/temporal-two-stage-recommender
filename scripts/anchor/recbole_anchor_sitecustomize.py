@@ -1,7 +1,7 @@
-"""recbole-anchor venv shims (Track C, REBUILD_WAVE_SPEC P1.1).
+"""recbole-anchor venv shims.
 
 Canonical copy — installed as ``sitecustomize.py`` in
-``/projects/PROJECT_ALLOC/envs/recbole-anchor/lib/python3.10/site-packages/``
+the recbole-anchor venv's ``site-packages/``
 by scripts/anchor/setup_recbole_env.sh. Keep the two in sync.
 
 RecBole 1.2.1 predates numpy>=1.24 (which removed the deprecated scalar

@@ -571,7 +571,7 @@ def test_21_freeze_rule_guardrail_and_tiebreak():
 
 def test_22_frozen_ranker_trains_exact_epochs_no_reselection(chain):
     """--frozen-ranker must train EXACTLY the frozen epoch count with no
-    best-epoch argmax/reload (review 2026-08-26): grid has one entry, its
+    best-epoch argmax/reload: grid has one entry, its
     best_epoch equals the frozen epoch, and the run is marked frozen."""
     root = chain["root"]
     rep = run_ranker(CAT, smoke=True, seed=7, processed_dir=root,

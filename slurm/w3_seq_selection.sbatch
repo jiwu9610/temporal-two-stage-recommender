@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --account=PROJECT_ALLOC
+#SBATCH --account=YOUR_ALLOCATION
 #SBATCH --partition=gengpu
 #SBATCH --gres=gpu:1
 #SBATCH --job-name=w3_seq
@@ -11,16 +11,17 @@
 #SBATCH --output=logs/w3_seq_%A_%a.out
 #SBATCH --error=logs/w3_seq_%A_%a.err
 
-# Wave 3 selection sweep (advisor spec docs/advanced_seq.pdf): sequence module
+# Sequence-module selection sweep: sequence module
 # at the ranking position, selection-only (--stage-b, test never read).
 # Each array task = one (category, seq spec); the grid inside = the 4 frozen
 # archs (mlp/deep_cross x 2 lr) + the seq spec x 2 lr, so every report shows
 # whether the seq arm beats the frozen ranker on the SAME candidates.
-# v2 (2026-08-21, PREREGISTRATION_v2.md): residual seq ranker on the
-# ALL-POSITIVE P4.4 winners ({V}_ap; the VARS defaults are placeholders until
-# the all-positive gate/Stage B re-select them -- pass W3_VAR_<cat>=...).
-# 3 preregistered specs/category; AB stays popularity baseline.
-# Index = cat_idx * N_SPECS + spec_idx; specs in configs/wave3_seq_grid.txt.
+# Residual seq ranker on the all-positive frozen winners ({V}_ap; defaults
+# below match results/p4_freeze/frozen_config_ap.json, override via
+# W3_VAR_<cat>=...). 3 preregistered specs per category (see
+# results/wave3_seq_v2/PREREGISTRATION_v2.md); All_Beauty stays a
+# popularity baseline.
+# Index = cat_idx * N_SPECS + spec_idx; specs default to configs/wave3_seq_grid_v2.txt (override via SEQ_GRID).
 # Model = DCN branch (frozen DeepCrossConfig) || seq module -> overarch, so
 # the in-run deep_cross arm is the exact seq-off ablation.
 
@@ -32,7 +33,7 @@ conda activate "${CONDA_ENV:-tae}"
 
 mapfile -t SPECS < "${SEQ_GRID:-configs/wave3_seq_grid_v2.txt}"
 N=${#SPECS[@]}
-CATS=(Books Electronics Video_Games); VARS=("${W3_VAR_Books:-A2_ap}" "${W3_VAR_Electronics:-A5_ap}" "${W3_VAR_Video_Games:-A0_ap}")
+CATS=(Books Electronics Video_Games); VARS=("${W3_VAR_Books:-A3_ap}" "${W3_VAR_Electronics:-A0_ap}" "${W3_VAR_Video_Games:-A5_ap}")
 CI=$(( SLURM_ARRAY_TASK_ID / N )); SI=$(( SLURM_ARRAY_TASK_ID % N ))
 CAT=${CATS[$CI]}; VAR=${VARS[$CI]}; SPEC=${SPECS[$SI]}
 TAG=$(echo "$SPEC" | tr ':=' '__')

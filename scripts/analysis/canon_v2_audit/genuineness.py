@@ -1,4 +1,4 @@
-"""Canon-v2 audit: are the v1 title-only merges genuine? (Track D; MEMO D5.)
+"""Canon-v2 audit: are the v1 title-only merges genuine?
 
 Classifies every multi-asin EXACT-TITLE group (the pre-C1 v1 rule) on raw
 metadata by its store composition:
@@ -24,7 +24,7 @@ to samples_{category}.json for eyeball review; summary numbers go to
 genuineness_{category}.json. Both are committed for reproducibility.
 
 Usage (repo root; All_Beauty only on the login node -- other categories via
-the sbatch loop documented in canon_options.py):
+the batch loop documented in canon_options.py):
     python -m scripts.analysis.canon_v2_audit.genuineness --category All_Beauty
 """
 

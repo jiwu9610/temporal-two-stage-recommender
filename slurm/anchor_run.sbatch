@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --account=PROJECT_ALLOC
+#SBATCH --account=YOUR_ALLOCATION
 #SBATCH --partition=gengpu
 #SBATCH --gres=gpu:a100:1
 #SBATCH --job-name=anchor_run
@@ -12,7 +12,7 @@
 #SBATCH --output=logs/anchor_run_%A_%a.out
 #SBATCH --error=logs/anchor_run_%A_%a.err
 
-# Track C anchor runs (REBUILD_WAVE_SPEC P1.2) — TEMPLATE, DO NOT SUBMIT until
+# Anchor benchmark runs — TEMPLATE, DO NOT SUBMIT until
 # scripts/anchor/run_recbole_anchor.py + train_two_tower_anchor.py have landed
 # and the diff has passed human review (GPU submission is gated on review).
 #
@@ -20,7 +20,7 @@
 #
 # Two phases per category, two different environments:
 #   1. RecBole legs (Pop / ItemKNN / SASRec / SASRec-len20) run inside the
-#      dedicated GPFS venv /projects/PROJECT_ALLOC/envs/recbole-anchor
+#      dedicated shared-filesystem venv (see scripts/anchor/setup_recbole_env.sh)
 #      (recbole==1.2.1; numpy-alias + torch.load weights_only=False shims are
 #      pre-installed in its sitecustomize.py). Video_Games additionally runs
 #      the official-split legs (leg E: official full-5-core SASRec, gate
@@ -47,7 +47,7 @@ mkdir -p logs
 CATS=(All_Beauty Books Electronics Video_Games)
 CAT="${CATS[$SLURM_ARRAY_TASK_ID]}"
 
-RECBOLE_VENV=/projects/PROJECT_ALLOC/envs/recbole-anchor
+RECBOLE_VENV=${ANCHOR_VENV:-$HOME/envs/recbole-anchor}
 RECBOLE_LEGS="${RECBOLE_LEGS:-pop,itemknn,sasrec,sasrec_len20}"
 if [ "$CAT" = "Video_Games" ]; then
     RECBOLE_LEGS="${RECBOLE_LEGS},official_sasrec,official_sasrec_len20"

@@ -2,7 +2,7 @@
   "category": "All_Beauty",
   "leg": "sasrec",
   "dump": {
-    "path": "/projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/sasrec_top101.csv.gz",
+    "path": "<repo>/results/anchor/All_Beauty/sasrec_top101.csv.gz",
     "rows": 25553,
     "n_users": 253,
     "max_list_length": 101,

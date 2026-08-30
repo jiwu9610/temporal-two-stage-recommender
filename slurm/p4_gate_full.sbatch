@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --account=PROJECT_ALLOC
+#SBATCH --account=YOUR_ALLOCATION
 #SBATCH --partition=normal
 #SBATCH --job-name=p4_gate_full
 #SBATCH --nodes=1
@@ -11,7 +11,7 @@
 #SBATCH --error=logs/p4_gate_full_%j.err
 # Full-parquet Stage-A gate pass (per-source R@500, content unique-hit share,
 # hit-by-item-history buckets). Report-only shortlists already ran inline;
-# this adds the advisor-report detail. Login node cannot hold the 40-54M-row
+# this adds the full report detail. A login node cannot hold the 40-54M-row
 # candidate parquets (6G cgroup).
 set -eo pipefail
 cd "${SLURM_SUBMIT_DIR:-$(pwd)}"

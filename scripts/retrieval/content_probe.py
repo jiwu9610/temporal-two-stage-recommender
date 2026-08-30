@@ -4,12 +4,12 @@ CLI:
     python -m scripts.retrieval.content_probe --category Books \
         [--configs A0,A1,A5] [--top-k 500] [--keep-candidates]
 
-Purpose (REBUILD_WAVE_SPEC P1.4): before the Track-D rebuild regenerates
+Purpose: before the identity rebuild regenerates
 embeddings, measure whether the content_i2i source finds ANY unique hits on
 the current identity-poisoned `item_text_embeddings.npz`. The poisoned
 embeddings are a pessimistic lower bound; if even that bound is
-substantively > 0 for Books/Electronics, Track B proceeds -- if it is ~0 the
-recipe goes back to the advisor. NO freeze decision is taken here (the data
+substantively > 0 for Books/Electronics, the content track proceeds -- if it
+is ~0 the embedding recipe needs rework. NO freeze decision is taken here (the data
 layer underneath is about to be replaced).
 
 Configs (recorded verbatim in the report):
@@ -32,8 +32,7 @@ and content-unique targets. Plus the A1-vs-A0 union delta.
 Cost note: recommend_content_knn is a per-user mat-vec over the full
 embedding matrix (5.9 GB for Books) -- profile-holding users only. Expect
 minutes for All_Beauty/Video_Games, ~1-3 h for Electronics and ~4-6 h for
-Books per full probe; run via run_content_probe.sbatch (CPU, 64G), never on
-the login node.
+Books per full probe; run as a batch job (CPU, ~64G), not interactively.
 
 Output: results/phase3a/{category}_content_probe.json
 """

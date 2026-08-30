@@ -6,7 +6,7 @@ PRE-DECLARED rule and writes results/p4_freeze/frozen_config_ap.json with
 full provenance (source paths, sha256 of each report, code_commit and
 label_mode as recorded inside each report, every metric the rule used).
 
-Decision rule (REBUILD_WAVE_SPEC P4.3, unchanged):
+Decision rule (pre-declared):
   reference = A0
   eligible  = candidates V != A0 whose model_selection R@10 >= A0's R@10
               (no-regression guardrail, zero tolerance)
@@ -134,10 +134,10 @@ def main():
     args = ap.parse_args()
 
     payload = {
-        "phase": "P4.4 joint freeze -- ALL-POSITIVE rebuild (supersedes results/p4_freeze/frozen_config.json, which froze the first-positive-trained Stage B of 2026-08-15)",
+        "phase": "P4.4 joint freeze -- ALL-POSITIVE rebuild (supersedes the first-positive freeze now archived at archive/results_invalidated_first_positive/frozen_config_first_positive.json)",
         "freeze_history": [
-            "controlling PRE-TEST freeze: commit fd894b7 (2026-08-22, before the one-shot P5 read of 08-23); winners Books A3 / Elec A0 / VG A5 / AB A1",
-            "amendments (identical decisions, provenance only): 615f742 row-count tie-breaker implemented; 7e8f38a frozen_ranker recipe field; 2026-08-26 Stage-A row counts restored after the report-clobber bug fix",
+            "controlling pre-test freeze recorded 2026-08-22, before the one-shot locked-test read of 2026-08-23; winners Books A3 / Electronics A0 / Video_Games A5 / All_Beauty A1",
+            "later regenerations changed provenance fields only (row-count tie-breaker, frozen_ranker recipe, restored Stage-A row counts) -- decisions identical",
         ],
         "frozen_utc": datetime.now(tz=timezone.utc).isoformat(),
         "decision_rule": RULE,

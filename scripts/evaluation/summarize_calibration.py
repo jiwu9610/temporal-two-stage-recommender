@@ -60,8 +60,8 @@ def summarize(variant: str, results_dir: Path = RESULTS_DIR) -> dict:
 
 def to_markdown(summary: dict) -> str:
     lines = [
-        "| 类目 | 校准器 | ECE raw→final | gAUC | AUC | MRR | nDCG@10 "
-        "| R@100 raw→final | 判据 |",
+        "| Category | Calibrator | ECE raw→final | gAUC | AUC | MRR | nDCG@10 "
+        "| R@100 raw→final | Verdict |",
         "|---|---|---|---|---|---|---|---|---|",
     ]
     for r in summary["categories"]:

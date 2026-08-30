@@ -1,0 +1,40 @@
+{
+ "phase": "wave-3 seq-module freeze (sequence-module design spec)",
+ "frozen_utc": "2026-08-20T17:03:25.470625+00:00",
+ "decision_basis": "72-cell selection sweep (results/wave3_seq/sweep_summary.json), metric = selection R@100 vs in-run DCN with R@10 no-regression guardrail; test snapshot never read by any sweep task (--stage-b)",
+ "winners": {
+  "Books": {
+   "variant": "A2",
+   "seq_spec": "seq:mh_pool:pos=delta:L=2",
+   "selection": {
+    "R@100": 0.0649,
+    "dR@100_vs_dcn": "+2.8%",
+    "dR@10_vs_dcn": "+2.7%"
+   },
+   "note": "hstu:pos=delta R@100 .0651 (+2.7%) rejected on the R@10 guardrail (-1.3%)"
+  },
+  "Video_Games": {
+   "variant": "A0",
+   "seq_spec": "seq:hstu:pos=delta:d=64",
+   "selection": {
+    "R@100": 0.1643,
+    "dR@100_vs_dcn": "+1.9%",
+    "dR@10_vs_dcn": "+12.2%"
+   }
+  },
+  "Electronics": {
+   "variant": "A5",
+   "seq_spec": null,
+   "note": "median dR@100 -0.2%, 7/24 positive -> no sequence module; frozen DCN stands"
+  },
+  "All_Beauty": {
+   "seq_spec": null,
+   "note": "popularity-baseline category, out of wave-3 scope"
+  }
+ },
+ "axis_findings": {
+  "position_encoding": "delta >= both > abs (Books/VG)",
+  "variant": "hstu ~ mh_pool > causal > vanilla",
+  "R@10": "VG hstu family +10..20% -- sequence signal concentrates at the top of the ranking"
+ }
+}

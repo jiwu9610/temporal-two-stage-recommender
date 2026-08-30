@@ -4,7 +4,7 @@ CLI:
     python -m scripts.anchor.export_anchor_splits --category All_Beauty
     python -m scripts.anchor.export_anchor_splits --category all
 
-Track C, P1.1. Deliberately bypasses canonicalize.py: anchor identity is the
+Deliberately bypasses canonicalize.py: anchor identity is the
 *raw* parent_asin, exactly as in the official Amazon-Reviews-2023 benchmark
 (hyp1231/AmazonReviews2023 benchmark_scripts). The protocol is:
 
@@ -30,7 +30,7 @@ Gates (hard asserts, script aborts on failure):
     * .inter-derived LOO (valid, test) pairs == leave_last_two_split parquet,
       per user, exact.
     * VG / Books post-k-core stats == the review-recomputed dedup-first values
-      (REBUILD_WAVE_SPEC §1 Track C item 1). AB / Electronics are recorded, not
+      (protocol note). AB / Electronics are recorded, not
       asserted (spec: filled from the actual pipeline run).
 
 ISOLATION: per-user LOO ignores global time, so anchor train rows fall inside
@@ -69,9 +69,9 @@ CATEGORIES = ["All_Beauty", "Books", "Electronics", "Video_Games"]
 MIN_USER_CORE = 5
 MIN_ITEM_CORE = 5
 
-# Review-recomputed dedup-first 5/5-core expectations (REBUILD_WAVE_SPEC §1,
-# Track C item 1): (n_interactions, n_users, n_items). Only VG and Books were
-# recomputed by the reviewer; AB / Electronics are recorded from this run.
+# Independently recomputed dedup-first 5/5-core expectations:
+# (n_interactions, n_users, n_items). Only VG and Books were
+# independently recomputed; AB / Electronics are recorded from this run.
 EXPECTED_KCORE_STATS = {
     "Video_Games": (263_097, 28_621, 11_909),
     "Books": (145_286, 12_390, 14_059),
@@ -377,7 +377,7 @@ def export_category(category: str, data_dir: Path, out_root: Path) -> dict:
     assert n_inter_rows == final["n_interactions"]
 
     # ---- 5. feature parquets (phase1 layout for the two-tower leg) -----------
-    # NOTE (memo disclosure, Track C item 4): item_features carries lifetime
+    # NOTE: item_features carries lifetime
     # catalog aggregates (average_rating / rating_number) — under per-user LOO
     # that is a future-information channel inherited from phase1.
     meta, meta_stats = load_meta_for_items(

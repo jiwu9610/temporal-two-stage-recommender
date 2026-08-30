@@ -374,14 +374,9 @@ def classify_targets(
 
     Returns a Series indexed by MultiIndex (user_col, item_col). The status is
     a property of the TARGET ITEM -- the same user can hold a retrieved and a
-    cold target at once -- so it cannot be keyed by user. It used to be: the
-    loop wrote `out[u] = status` per gt ROW, so under all_positive_labels a
-    user with n positives kept only the LAST row's status and the returned
-    Series had one entry per user instead of per target. That silently shrank
-    the Stage A `target_status_counts` histogram from #(user, target) pairs to
-    #users and biased it toward whichever status the user's latest positive
-    happened to have. With one gt row per user both indexings carry the same
-    information and value_counts() is unchanged.
+    cold target at once -- so it cannot be keyed by user: a per-user keying
+    would keep only one row's status per user and silently shrink the
+    target-status histogram from #(user, target) pairs to #users.
     """
     pairs = pd.DataFrame({
         user_col: gt_df[user_col].astype(str).to_numpy(),

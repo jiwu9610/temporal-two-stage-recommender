@@ -1,4 +1,4 @@
-"""Track A two-tower v2 unit gates (spec P1.6 / P3.1, worktree branch only).
+"""Two-tower v2 unit gates.
 
 Covers the spec-locked gates:
   * defaults preserve v1 (use_hist_pool=False, loss_mode='bce',
@@ -126,7 +126,7 @@ def test_v2_defaults_preserve_v1():
     assert tc.optimizer == "adam"
 
     # FeatureSpec: the new fields sit at the TAIL with None defaults so the
-    # existing positional field order is untouched (Track A correction 4).
+    # existing positional field order is untouched .
     fs_fields = dataclasses.fields(FeatureSpec)
     assert [f.name for f in fs_fields[-2:]] == ["user_hist_idx", "user_hist_w"]
     assert fs_fields[-2].default is None and fs_fields[-1].default is None
@@ -143,7 +143,7 @@ def test_hard_pool_decoupled_from_flag():
 
     pc_off = PairSamplingConfig(n_soft_neg=1, use_hard_negatives=False, seed=0)
     ds = TwoTowerPairDataset(df, spec, pc_off)
-    # Pool built unconditionally (Track A correction 2)...
+    # Pool built unconditionally (design constraint)...
     assert ds.n_hard_pool == 2
     # ...but the BCE flat tensors still respect the flag (v1 semantics).
     assert ds.composition() == {"n_positive": 2, "n_hard_neg": 0, "n_soft_neg": 2}

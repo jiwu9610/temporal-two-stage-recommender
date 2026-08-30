@@ -94,7 +94,7 @@ SEQ_HIST_LEN = 20
 
 
 class _SeqContext:
-    """Wave-3 sequence feature (advisor spec, advanced_seq.pdf): per user the
+    """Sequence feature: per user the
     last-L engagements (EVERY interaction, spec: "product ids that user
     interacted with") before the snapshot cutoff, each carrying
       item index      frozen vocab from the ranker_train HISTORY only
@@ -107,7 +107,7 @@ class _SeqContext:
       delta bucket    log-spaced gap to the NEXT engagement (the last one
                       measures to the cutoff), 0 = pad     -> emb
     All from history_{snap}.parquet, strictly ts < cutoff by construction --
-    the advisor's "aggregate up to ds-1" leakage rule holds per snapshot."""
+    the aggregate-up-to-cutoff leakage rule holds per snapshot."""
 
     ABS_EPOCH_MS = 946684800000          # 2000-01-01
     ABS_MONTH_MS = 30 * 86400 * 1000
@@ -249,15 +249,13 @@ def assert_all_positive_labels(cands_df: pd.DataFrame, gt_all_df: pd.DataFrame) 
     if n_label1 != n_fp_labelled:
         raise RuntimeError(
             f"{n_label1 - n_fp_labelled:,} rows carry label 1 but are NOT in the "
-            f"all-positive ground truth -- stray positives (bidirectional check, "
-            f"review 2026-08-25).")
+            f"all-positive ground truth -- stray positives.")
     return {"future_positives_in_table": n_fp, "labelled": n_fp_labelled,
             "positives_per_user": ppu}
 
 
 def _git_head() -> Optional[str]:
-    """Resolve HEAD from .git files (compute nodes have no git binary --
-    MEMO lesson 12)."""
+    """Resolve HEAD from .git files (compute nodes have no git binary)."""
     try:
         head = (REPO_ROOT / ".git" / "HEAD").read_text().strip()
         if head.startswith("ref: "):
@@ -433,8 +431,8 @@ def _cohort_of(n: int) -> str:
 
 
 def _cohort_fine_of(n: int) -> str:
-    """External review 2026-08-21: sequence lift must be visible on users
-    with enough history -- add 5-9 / 10+ on top of the frozen 0/1/2/3+."""
+    """Sequence lift must be visible on users with enough history --
+    finer buckets (5-9 / 10+) on top of the frozen 0/1/2/3+ split."""
     if n == 0: return "0"
     if n <= 2: return "1-2"
     if n <= 4: return "3-4"
@@ -461,7 +459,7 @@ def _gt_sets(gt_df: pd.DataFrame) -> Dict[str, Set[str]]:
 
 # Columns carried into prediction dumps so the calibration analysis never has
 # to re-open the multi-GB candidate tables: ids + label + the two bucketing
-# keys from the advisor spec (user history cohort, item review-count bucket).
+# keys (user history cohort, item review-count bucket).
 def _dump_prediction_frame(path: Path, df: pd.DataFrame, logits: np.ndarray) -> None:
     if len(df) != len(logits):
         raise ValueError(f"logits/rows mismatch: {len(logits)} vs {len(df)}")
@@ -520,7 +518,7 @@ def _eval_test(
     # EXACT macro Recall@inf ceiling: mean over users of the fraction of THEIR
     # positives present in the union. `ceiling` above is the ANY-HIT user
     # coverage (frozen key, kept as a diagnostic); with several positives per
-    # user it overstates the reachable macro recall (review 2026-08-25).
+    # user it overstates the reachable macro recall.
     ceiling_macro = (float(np.mean([len(g & cand_per_user.get(u, set())) / len(g)
                                     for u, g in gt.items()])) if gt else 0.0)
     gt_retrieved = {u: g for u, g in gt.items() if u in retrieved_users}
@@ -683,15 +681,15 @@ def run(
     # HARD GUARD (2026-08-21): the label column is written by the candidate
     # builder, not here. Under all_positive the training table MUST carry the
     # all-positive frame -- otherwise every later window positive is trained
-    # as a negative while the evaluator counts it as a miss (the rebuild-wave
-    # bug: Books 807/985 future-positive rows labelled 0). Check it on disk.
+    # as a negative while the evaluator counts it as a miss (a defect of this kind once
+    # labelled 82% of reachable future positives as negatives). Check on disk.
     if label_mode == "all_positive":
         gt_tr = pd.read_parquet(tdir / "groundtruth_all_ranker_train.parquet",
                                 columns=["user_id", "parent_asin"])
         if "ranker_train" in kept_users:
             gt_tr = gt_tr[gt_tr["user_id"].astype(str).isin(kept_users["ranker_train"])]
         assert_all_positive_labels(cands["ranker_train"], gt_tr)
-        # Same contract for the model_selection table (review 2026-08-22):
+        # Same contract for the model_selection table:
         # today its label column does not drive Recall@100 selection (gt_sel
         # sets do), but anything that later reads selection-table labels
         # (val loss, calibration, sampling) must not be able to regress this.
@@ -726,8 +724,7 @@ def run(
     if frozen_ranker:
         # P5-style run consuming the EXACT Stage-B frozen ranker: no grid, no
         # early stopping -- arch/lr/epoch come from the freeze file, so what
-        # was frozen is the full model recipe, not a re-selection procedure
-        # (review 2026-08-25, important #1).
+        # was frozen is the full model recipe, not a re-selection procedure.
         grid = [(frozen_ranker["arch"], float(frozen_ranker["lr"]))]
         max_epochs = int(frozen_ranker["epoch"])
         early_stopping_patience = 10 ** 9
@@ -774,7 +771,7 @@ def run(
         torch.manual_seed(seed + 1000 * (gi + 1))
         model = _make_model(arch, spec_sel).to(device)
         if frozen_ranker:
-            # EXACT freeze (review 2026-08-26): train exactly N epochs with the
+            # EXACT freeze: train exactly N epochs with the
             # refit trainer -- NO per-epoch validation, NO best-state reload.
             # train_pointwise_bce would still argmax over epochs 1..N and
             # reload the best one, silently re-selecting the epoch.
@@ -1100,7 +1097,7 @@ def _parse_args(argv=None):
                    help="'arch:lr:epoch' (or a path to frozen_config_ap.json "
                         "plus --category to look it up). Disables the "
                         "selection grid; the exact Stage-B recipe is retrained "
-                        "and evaluated (review 2026-08-25 important #1).")
+                        "and evaluated.")
     p.add_argument("--seq-only", action="store_true",
                    help="Grid = only the --seq-grid specs (wave-3 locked test "
                         "of a frozen winner; lr/epoch still selected on "
@@ -1109,7 +1106,7 @@ def _parse_args(argv=None):
                    help="Comma-separated seq arch specs to add to the grid "
                         "(each at lr 1e-3 and 3e-4), e.g. "
                         "'seq:causal:pos=delta:d=64:L=2:H=2,seq:hstu:pos=both'. "
-                        "Default: the four advisor variants at pos=delta.")
+                        "Default: the four standard variants at pos=delta.")
     p.add_argument("--results-dir", default=None,
                    help="Override the report output dir. REQUIRED with "
                         "--dump-predictions so the locked one-shot test "

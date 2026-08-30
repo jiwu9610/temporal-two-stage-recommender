@@ -110,7 +110,7 @@ def leave_last_two_split(
     }
     splits["short_users_dropped"] = short_users  # 0 in normal runs
 
-    # Positive-only counts on val / test (advisor-requested)
+    # Positive-only counts on val / test
     val_pos = val[val["label"] == 1]
     test_pos = test[test["label"] == 1]
     splits["train"]["n_positive_users"] = int(train[train["label"] == 1][user_col].nunique())

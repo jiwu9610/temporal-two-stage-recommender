@@ -2,7 +2,7 @@
   "category": "Electronics",
   "leg": "pop",
   "dump": {
-    "path": "/projects/PROJECT_ALLOC/R-project/results/anchor/Electronics/pop_top101.csv.gz",
+    "path": "<repo>/results/anchor/Electronics/pop_top101.csv.gz",
     "rows": 3346938,
     "n_users": 33138,
     "max_list_length": 101,

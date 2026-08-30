@@ -1,4 +1,4 @@
-"""Anchor benchmark exports (Track C).
+"""Anchor benchmark exports.
 
 Everything in this package produces artifacts under data/anchor/ and
 results/anchor/ ONLY. Anchor artifacts follow the official per-user

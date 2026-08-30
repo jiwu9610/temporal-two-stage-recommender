@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --account=PROJECT_ALLOC
+#SBATCH --account=YOUR_ALLOCATION
 #SBATCH --partition=normal
 #SBATCH --job-name=p4_stageA
 #SBATCH --nodes=1
@@ -10,8 +10,7 @@
 #SBATCH --output=logs/p4_stageA_%A_%a.out
 #SBATCH --error=logs/p4_stageA_%A_%a.err
 
-# P4.1 + P4.2 Stage A: retrieval-only 6-config sweep on the post-C1 data
-# layer (spec REBUILD_WAVE_SPEC.md section P4.2).
+# Stage A: retrieval-only 6-config sweep on the rebuilt data layer.
 #   A0  thr5, no content   == frozen C2_k500_recent rebuilt post-C1 (P4.1)
 #   A1  thr5 + content(catalog)
 #   A2  thr3 + content(catalog)

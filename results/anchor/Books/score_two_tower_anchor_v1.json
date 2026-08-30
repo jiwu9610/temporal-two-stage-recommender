@@ -2,7 +2,7 @@
   "category": "Books",
   "leg": "two_tower_anchor_v1",
   "dump": {
-    "path": "/projects/PROJECT_ALLOC/R-project/results/anchor/Books/Books_two_tower_anchor_v1_predictions.parquet",
+    "path": "<repo>/results/anchor/Books/Books_two_tower_anchor_v1_predictions.parquet",
     "rows": 1251390,
     "n_users": 12390,
     "max_list_length": 101,

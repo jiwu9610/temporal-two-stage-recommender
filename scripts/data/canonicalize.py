@@ -4,12 +4,12 @@ Produces three artifacts:
 
 1. canonical_item_map: DataFrame with columns [raw_parent_asin, canonical_parent_asin].
    - For most items raw == canonical.
-   - Canon v2 merge key (approved 2026-08-11, MEMO D5): two parent_asins are the
+   - Canon v2 merge key: two parent_asins are the
      same product iff they share (normalized title, store). Title normalization
      is lowercase / strip / whitespace-collapse; a null or whitespace-only title
      OR a null / whitespace-only store NEVER merges. The v1 title-only rule
      produced Live2Pedal-style cross-store merges (same generic title, different
-     sellers folded into one id -- the C1 poisoned-identity bug).
+     sellers folded into one id -- the poisoned-identity bug).
    - Within a merge group we collapse to the parent_asin with the highest
      rating_number (ties broken by parent_asin ascending, deterministic);
      raw -> canonical records the mapping.
@@ -72,11 +72,11 @@ def normalize_title(title) -> str:
     parent_asin stays its own canonical id.
 
     FROZEN predicate: the S1 rebuild gate numbers are sensitive to this exact
-    definition (spec section 1 Track D correction 2; observed +-0.5-1.5% swing
+    definition (observed +-0.5-1.5% swing
     between predicate variants). It is frozen by
     tests/test_preprocessing_pipeline.py::test_canon_v2_normalization_predicate_frozen;
     do not change without re-running the canon_v2_audit scripts and
-    re-approving the recorded numbers.
+    regenerating the recorded numbers.
     """
     if pd.isna(title):
         return ""

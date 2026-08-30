@@ -253,16 +253,9 @@ def _score_snapshot(
     }
     del rule_topk
 
-    # Label ROWS != users once label_mode == "all_positive". n_eval_users was
-    # len(labels), i.e. a positive count published under a user-count name (the
-    # synthetic val snapshot has 7 users but 8 positives, because UC buys twice
-    # in the window), and cold_user_rate divided a deduplicated user SET by that
-    # row count -- a mismatched quotient, not just a mislabelled one: on Books,
-    # where first-positive keeps only 38.7% of the window's positives, the
-    # published cold rate would have come out 61.3% below the true user-level
-    # rate. Both now use the count of users actually scored (eval_users is what
-    # every recommender above was asked to serve), with the row count kept as an
-    # explicitly named sibling.
+    # Label ROWS != users under all_positive labels: n_eval_users counts the
+    # users actually scored, and the row count is reported under its own name
+    # so no rate ever divides a user set by a row count.
     n_labels = len(labels)
     n_eval_users = len(eval_users)
     payload = {

@@ -10,7 +10,7 @@
     "recbole": "1.2.1",
     "torch": "2.13.0+cu130",
     "device": "cuda",
-    "venv_hint": "/projects/PROJECT_ALLOC/envs/recbole-anchor"
+    "venv_hint": "<recbole-anchor-venv>"
   },
   "protocol": {
     "identity": "raw parent_asin (canonicalize.py bypassed \u2014 anchor identity)",
@@ -46,7 +46,7 @@
     "loss_type": null,
     "k": null,
     "shrink": null,
-    "data_path": "/projects/PROJECT_ALLOC/R-project/data/anchor/Electronics",
+    "data_path": "<repo>/data/anchor/Electronics",
     "benchmark_filename": null
   },
   "data_stats": {
@@ -72,11 +72,11 @@
     "ndcg@100": 0.0244
   },
   "topk_dump": {
-    "path": "/projects/PROJECT_ALLOC/R-project/results/anchor/Electronics/pop_top101.csv.gz",
+    "path": "<repo>/results/anchor/Electronics/pop_top101.csv.gz",
     "k": 101,
     "rows": 3346938,
     "n_users": 33138
   },
   "gate": null,
-  "saved_model_file": "/projects/PROJECT_ALLOC/R-project/results/anchor/Electronics/_ckpt/Pop-Aug-11-2026_12-56-46.pth"
+  "saved_model_file": "<repo>/results/anchor/Electronics/_ckpt/Pop-Aug-11-2026_12-56-46.pth"
 }

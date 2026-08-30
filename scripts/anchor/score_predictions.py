@@ -1,4 +1,4 @@
-"""Score a leg's top-K dump against the anchor test parquet (spec P1.2 item 3).
+"""Score a leg's top-K dump against the anchor test parquet .
 
 CLI (tae env; needs pyarrow for the two-tower parquet dump):
     python -m scripts.anchor.score_predictions --category All_Beauty
@@ -9,12 +9,12 @@ With only --category, discovers every dump in results/anchor/{cat}/
 (``*_top*.csv.gz`` from run_recbole_anchor + ``{cat}_two_tower_anchor_v1_
 predictions.parquet`` from train_two_tower_anchor) and scores each.
 
-The seen-mask asymmetry fix (Track C item 3, the point of this script):
+The seen-mask asymmetry fix (the point of this script):
     our two-tower dump masks train-seen items only, so the user's VALID item is
     still rankable at test time — RecBole's general-model full-sort masks
     train+valid at test. Before scoring, each user's valid item(s) are REMOVED
     from that user's ranked list (list compacts upward). Only after this
-    removal is our metric definition identical to RecBole's ("剔除后恒等").
+    removal our metric definition is identical to RecBole's.
     Both with/without-removal numbers are reported so the delta is visible;
     an inline self-test (constructed example) asserts the removal changes the
     metric and runs before any real scoring.
@@ -271,7 +271,7 @@ def score_leg(category: str, leg: str, dump_path: Path, st: dict) -> dict:
         "self_test_valid_removal_changes_metric": st,
         "protocol": {
             "primary": "with_valid_removed / official_rating_blind "
-                       "(RecBole-comparable after removal — '剔除后恒等')",
+                       "(RecBole-comparable after seen-removal)",
             "tie_break": "explicit rank asc if present, else score desc, "
                          "parent_asin asc; stable mergesort",
             "tie_caveat": (

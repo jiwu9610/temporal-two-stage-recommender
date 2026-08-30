@@ -1,10 +1,10 @@
 #!/bin/bash
-# Reproducible setup for the anchor RecBole venv (Track C, REBUILD_WAVE_SPEC P1.1).
+# Reproducible setup for the anchor RecBole venv .
 #
 #   bash scripts/anchor/setup_recbole_env.sh
 #
-# Creates /projects/PROJECT_ALLOC/envs/recbole-anchor -- a GPFS venv visible from
-# compute nodes (a /tmp venv on the login node is NOT; that was the Track C
+# Creates ${ANCHOR_VENV:-$HOME/envs/recbole-anchor} -- a GPFS venv visible from
+# compute nodes (a /tmp venv on the login node is NOT; that was the
 # lesson that motivated this location). Run on the LOGIN node: compute nodes
 # have no internet, so all pip downloads must happen here.
 #
@@ -38,8 +38,8 @@
 
 set -euo pipefail
 
-VENV=/projects/PROJECT_ALLOC/envs/recbole-anchor
-REPO=/projects/PROJECT_ALLOC/R-project
+VENV=${ANCHOR_VENV:-$HOME/envs/recbole-anchor}
+REPO=${REPO_ROOT:-$(pwd)}
 
 source ~/.bashrc
 conda activate tae   # only to borrow its python 3.10 interpreter for venv creation

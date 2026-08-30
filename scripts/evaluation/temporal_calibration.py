@@ -1,6 +1,6 @@
 """Evaluation & Calibration on the three-snapshot ranker prediction dumps.
 
-Advisor spec (2026-07-26): prediction distribution / bias analysis on the
+Scope: prediction distribution / bias analysis on the
 three snapshots (by set / category / item review-count bucket / user history
 cohort); wire the vectorized metrics (AUC / gAUC / MRR / nDCG@m / P / R)
 with proper per-user grouping; and a rule calibration layer — a
@@ -36,7 +36,7 @@ pre-declared set — no test-time shopping):
     platt   sigmoid(a * logit + b)                  fitted on selection, frozen
     final   chosen calibrator, then p < t_cohort -> 0   (the rule layer)
 
-Success criteria (per MEMO): bucket calibration error goes DOWN and ranking
+Success criteria: bucket calibration error goes DOWN and ranking
 metrics do NOT regress — Recall gains are explicitly not the goal. Monotone
 chains (a > 0, asserted) cannot change ranking metrics; only the rule layer
 can, and its thresholds are chosen under a no-regression constraint on the
@@ -123,7 +123,7 @@ def dist_stats(logits: np.ndarray, probs: np.ndarray,
                   **_quantile_dict(logits)},
         "prob": {"mean": float(probs.mean()), "std": float(probs.std()),
                  **_quantile_dict(probs)},
-        # ranking-separation view (per MEMO: read the distribution through the
+        # ranking-separation view (read the distribution through the
         # ranking decomposition, not as literal probabilities)
         "logit_pos_mean": float(logits[pos].mean()) if pos.any() else None,
         "logit_neg_mean": float(logits[~pos].mean()) if (~pos).any() else None,

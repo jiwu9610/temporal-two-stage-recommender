@@ -24,7 +24,7 @@ patterns. Their concatenation feeds a small head that produces a single
 logit, trained with pointwise BCE — the same training loop the MLP ranker
 uses, so a fair A/B is just a matter of swapping the model.
 
-Deliberately NOT included in v1 (per the user's spec):
+Deliberately out of scope for v1:
   - DIN attention over user histories (requires padded sequence inputs)
   - target-aware item attention
   - multi-head transformer encoders

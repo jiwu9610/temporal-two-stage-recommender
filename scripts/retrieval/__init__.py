@@ -1,4 +1,4 @@
-"""Phase 1 retrieval modules (spec, see memory/project_phase1_plan.md)."""
+"""Retrieval modules."""
 
 from .evaluator import (
     SplitReport,

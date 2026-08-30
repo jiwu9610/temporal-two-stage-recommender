@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --account=PROJECT_ALLOC
+#SBATCH --account=YOUR_ALLOCATION
 #SBATCH --partition=gengpu
 #SBATCH --gres=gpu:1
 #SBATCH --job-name=p4_stageB

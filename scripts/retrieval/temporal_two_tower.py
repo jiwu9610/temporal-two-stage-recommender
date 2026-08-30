@@ -34,7 +34,7 @@ Each checkpoint saves: state dict (.pt), metadata JSON (training boundary,
 seed, dataset composition, config + config_hash -- hash must be identical
 across A/B/C), and a per-user top-K predictions parquet.
 
-v2 (rebuild wave, Track A) -- all default-off; defaults reproduce v1:
+v2 -- all default-off; defaults reproduce v1:
   * selection/reporting labels come from groundtruth_all_{snapshot}.parquet
     (all-positive) with a HARD-WARNING fallback to the single-positive file;
     metrics are dual-reported (all-positive + single-positive gt);
@@ -604,7 +604,7 @@ def train_snapshot_checkpoint(
     rep = build_split_report(snapshot, topk_items, gt_for_metrics, pool_set,
                              "eligible_pool", DEFAULT_KS)
 
-    # Dual-gt reporting (Track A correction 8 / P3.2): alongside the
+    # Dual-gt reporting: alongside the
     # all-positive metrics, score the SAME top-K against the single-positive
     # groundtruth so numbers stay comparable across the migration. Selection
     # above used the all-positive set only.
@@ -952,7 +952,7 @@ def main(argv=None):
 
     # model_selection / test: the ENTIRE configuration comes from the frozen
     # file -- CLI model/training flags are ignored so hyperparameters cannot
-    # drift from checkpoint A (the freezing loophole found in review).
+    # drift from checkpoint A.
     frozen = json.loads(frozen_path.read_text())
     validate_frozen_config(frozen)   # v1-era files (no loss_mode): refuse.
     print("[tt] single-snapshot mode: rebuilding config from "

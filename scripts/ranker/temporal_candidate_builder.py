@@ -21,7 +21,7 @@ Point-in-time / correctness rules:
     selection and must not also tune retrieval, T2->T3 labels tune nothing.
   * candidate pools are sorted alphabetically before any positional
     tie-breaking, so results are invariant to catalog row order (the
-    2023-rating_number ordering leak found in review).
+    2023-rating_number ordering leak).
   * categorical missing values are filled BEFORE string conversion
     (the astype(str).fillna bug turned NaN into the literal "nan").
   * no dump-time aggregate (price / average_rating / rating_number) appears
@@ -731,7 +731,7 @@ def build_snapshot_candidates(
             out[f"Recall@{k}"] = src_hits[src][k] / n_users if n_users else 0.0
             # True multi-positive precision (mean over users of hits@k / k).
             # The old form divided the recall accumulator by k, mechanically
-            # recreating Precision ~= Recall/K (review 2026-08-25, smaller #2).
+            # recreating Precision ~= Recall/K.
             out[f"Precision@{k}"] = src_prec[src][k] / n_users if n_users else 0.0
         return out
 
@@ -833,7 +833,7 @@ def build_all(category: str, top_k: int = 100, seed: int = 42,
     results_dir.mkdir(parents=True, exist_ok=True)
     suffix = f"_{variant}" if variant else ""
     out_path = results_dir / f"{category}_candidates_report{suffix}.json"
-    # MERGE, never clobber (review 2026-08-26 #2): a --snapshots test run used
+    # MERGE, never clobber: a --snapshots test run used
     # to overwrite the whole report, destroying the Stage-A ranker_train /
     # model_selection provenance the freeze's row-count tie-breaker reads.
     if out_path.exists():

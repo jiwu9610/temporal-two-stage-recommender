@@ -602,7 +602,7 @@ def run_category(
     """
     t0 = time.time()
     # The phase1 spec (`build_feature_spec`) never builds history arrays; the
-    # taste channel is a temporal-driver-only feature (Track A correction 1).
+    # taste channel is a temporal-driver-only feature.
     assert not cfg.use_hist_pool, (
         "use_hist_pool=True is not supported on the phase1 path -- "
         "build_feature_spec builds no user history arrays; use "

@@ -150,7 +150,7 @@ class TestEvaluateFlat:
             evaluate_flat(users, ones, ones, n_gt_users=1)
 
     def test_tie_policy_auc_half_credit_any_row_order(self):
-        # Standard ROC AUC (review 2026-08-26): a tied +/- pair earns 0.5,
+        # Standard ROC AUC: a tied +/- pair earns 0.5,
         # invariant to row order. (Ranking metrics keep the conservative
         # negatives-first tie policy -- asserted in the zeroed-target test.)
         for labels in ([1.0, 0.0], [0.0, 1.0]):

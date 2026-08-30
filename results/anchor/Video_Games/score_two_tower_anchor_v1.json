@@ -2,7 +2,7 @@
   "category": "Video_Games",
   "leg": "two_tower_anchor_v1",
   "dump": {
-    "path": "/projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/Video_Games_two_tower_anchor_v1_predictions.parquet",
+    "path": "<repo>/results/anchor/Video_Games/Video_Games_two_tower_anchor_v1_predictions.parquet",
     "rows": 2890721,
     "n_users": 28621,
     "max_list_length": 101,

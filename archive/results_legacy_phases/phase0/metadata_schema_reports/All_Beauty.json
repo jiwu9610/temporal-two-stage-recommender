@@ -1,0 +1,245 @@
+{
+  "category": "All_Beauty",
+  "raw_metadata_path": "<repo>/data/raw/All_Beauty/metadata.parquet",
+  "raw_metadata_n_rows": 112590,
+  "raw_metadata_n_columns": 16,
+  "raw_metadata_columns": [
+    "main_category",
+    "title",
+    "average_rating",
+    "rating_number",
+    "features",
+    "description",
+    "price",
+    "images",
+    "videos",
+    "store",
+    "categories",
+    "details",
+    "parent_asin",
+    "bought_together",
+    "subtitle",
+    "author"
+  ],
+  "columns_summary": {
+    "main_category": {
+      "dtype": "object",
+      "n": 112590,
+      "null_count": 0,
+      "null_rate": 0.0,
+      "kind": "scalar_object"
+    },
+    "title": {
+      "dtype": "object",
+      "n": 112590,
+      "null_count": 0,
+      "null_rate": 0.0,
+      "kind": "scalar_object"
+    },
+    "average_rating": {
+      "dtype": "float64",
+      "n": 112590,
+      "null_count": 0,
+      "null_rate": 0.0,
+      "kind": "scalar"
+    },
+    "rating_number": {
+      "dtype": "int64",
+      "n": 112590,
+      "null_count": 0,
+      "null_rate": 0.0,
+      "kind": "scalar"
+    },
+    "features": {
+      "dtype": "object",
+      "n": 112590,
+      "null_count": 0,
+      "null_rate": 0.0,
+      "kind": "list",
+      "non_list_count": 0,
+      "empty_list_count": 95213,
+      "nonempty_list_count": 17377,
+      "nonempty_list_rate": 0.1543387512212452,
+      "mean_len_when_present": 0.644408917310596,
+      "max_len": 13
+    },
+    "description": {
+      "dtype": "object",
+      "n": 112590,
+      "null_count": 0,
+      "null_rate": 0.0,
+      "kind": "list",
+      "non_list_count": 0,
+      "empty_list_count": 93428,
+      "nonempty_list_count": 19162,
+      "nonempty_list_rate": 0.17019273470112797,
+      "mean_len_when_present": 0.4312727595701217,
+      "max_len": 152
+    },
+    "price": {
+      "dtype": "object",
+      "n": 112590,
+      "null_count": 0,
+      "null_rate": 0.0,
+      "kind": "scalar_object"
+    },
+    "images": {
+      "dtype": "object",
+      "n": 112590,
+      "null_count": 0,
+      "null_rate": 0.0,
+      "kind": "scalar_object"
+    },
+    "videos": {
+      "dtype": "object",
+      "n": 112590,
+      "null_count": 0,
+      "null_rate": 0.0,
+      "kind": "scalar_object"
+    },
+    "store": {
+      "dtype": "object",
+      "n": 112590,
+      "null_count": 11331,
+      "null_rate": 0.10063948840927259,
+      "kind": "scalar_object"
+    },
+    "categories": {
+      "dtype": "object",
+      "n": 112590,
+      "null_count": 0,
+      "null_rate": 0.0,
+      "kind": "list",
+      "non_list_count": 0,
+      "empty_list_count": 112590,
+      "nonempty_list_count": 0,
+      "nonempty_list_rate": 0.0,
+      "mean_len_when_present": 0.0,
+      "max_len": 0
+    },
+    "details": {
+      "dtype": "object",
+      "n": 112590,
+      "null_count": 0,
+      "null_rate": 0.0,
+      "kind": "scalar_object"
+    },
+    "parent_asin": {
+      "dtype": "object",
+      "n": 112590,
+      "null_count": 0,
+      "null_rate": 0.0,
+      "kind": "scalar_object"
+    },
+    "bought_together": {
+      "dtype": "object",
+      "n": 112590,
+      "null_count": 112590,
+      "null_rate": 1.0,
+      "kind": "scalar_object"
+    },
+    "subtitle": {
+      "dtype": "object",
+      "n": 112590,
+      "null_count": 112590,
+      "null_rate": 1.0,
+      "kind": "scalar_object"
+    },
+    "author": {
+      "dtype": "object",
+      "n": 112590,
+      "null_count": 112590,
+      "null_rate": 1.0,
+      "kind": "scalar_object"
+    }
+  },
+  "canonical_view": {
+    "n_canonical_rows": 110566,
+    "expected_n_canonical_rows": 110566,
+    "match": true,
+    "list_columns_in_canonical_rows": {
+      "features": {
+        "dtype": "object",
+        "n": 110566,
+        "null_count": 0,
+        "null_rate": 0.0,
+        "kind": "list",
+        "non_list_count": 0,
+        "empty_list_count": 93701,
+        "nonempty_list_count": 16865,
+        "nonempty_list_rate": 0.15253332850966844,
+        "mean_len_when_present": 0.6388039722880452,
+        "max_len": 13
+      },
+      "description": {
+        "dtype": "object",
+        "n": 110566,
+        "null_count": 0,
+        "null_rate": 0.0,
+        "kind": "list",
+        "non_list_count": 0,
+        "empty_list_count": 91895,
+        "nonempty_list_count": 18671,
+        "nonempty_list_rate": 0.1688674637772914,
+        "mean_len_when_present": 0.42120543385850984,
+        "max_len": 152
+      },
+      "categories": {
+        "dtype": "object",
+        "n": 110566,
+        "null_count": 0,
+        "null_rate": 0.0,
+        "kind": "list",
+        "non_list_count": 0,
+        "empty_list_count": 110566,
+        "nonempty_list_count": 0,
+        "nonempty_list_rate": 0.0,
+        "mean_len_when_present": 0.0,
+        "max_len": 0
+      },
+      "bought_together": {
+        "dtype": "object",
+        "n": 110566,
+        "null_count": 110566,
+        "null_rate": 1.0,
+        "kind": "scalar_object"
+      }
+    }
+  },
+  "item_features_summary": {
+    "path": "<repo>/data/processed/All_Beauty/item_features.parquet",
+    "n_rows": 110566,
+    "feature_status": {
+      "n_features": {
+        "n_nonzero": 16865,
+        "n_total": 110566,
+        "nonzero_rate": 0.15253332850966844,
+        "is_populated": true
+      },
+      "n_description": {
+        "n_nonzero": 18671,
+        "n_total": 110566,
+        "nonzero_rate": 0.1688674637772914,
+        "is_populated": true
+      },
+      "n_categories": {
+        "n_nonzero": 0,
+        "n_total": 110566,
+        "nonzero_rate": 0.0,
+        "is_populated": false
+      },
+      "has_bought_together": {
+        "n_nonzero": 0,
+        "n_total": 110566,
+        "nonzero_rate": 0.0,
+        "is_populated": false
+      },
+      "missing_flag": {
+        "n_nonzero": 93973,
+        "n_total": 110566,
+        "nonzero_rate": 0.8499267405893313,
+        "is_populated": true
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-"""Wave-3 sequence module at the RANKING position (advisor spec advanced_seq.pdf).
+"""Sequence module at the RANKING position.
 
         logit = DCN(x0) + alpha * g(cand_emb, seq_out)        (RESIDUAL)
 
@@ -259,13 +259,13 @@ class SeqModule(nn.Module):
 
 
 class SeqRanker(nn.Module):
-    """RESIDUAL design (external review 2026-08-21, adopted):
+    """RESIDUAL design:
 
         logit = DCN(x0)  +  alpha * g([cand_emb, seq_out, cand_emb*seq_out])
 
     DCN is the frozen DeepCrossRanker layout (same config, same head); alpha
     is a learnable scalar initialised at 0, so at initialisation the model IS
-    the DCN baseline exactly (structural test 19) and the sequence branch can
+    the DCN baseline exactly (asserted by a structural test) and the sequence branch can
     only learn a residual correction. The previous design fed candidate-id
     embedding + sequence + a NEW head into one MLP, which changed three things
     at once and made the seq-vs-DCN comparison unattributable.

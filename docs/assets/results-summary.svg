@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif">
+  <rect width="1400" height="500" fill="#ffffff"/>
+
+  <!-- LEFT: Books win -->
+  <g>
+    <text x="60" y="64" font-size="24" font-weight="800" fill="#0f172a">Books — clear win</text>
+    <text x="60" y="90" font-size="15" fill="#475569">content-augmented retrieval · one-shot locked test</text>
+
+    <!-- bars: R@100 baseline 4.53 vs 5.61 -->
+    <g>
+      <line x1="80" y1="360" x2="520" y2="360" stroke="#cbd5e1" stroke-width="1.6"/>
+      <rect x="130" y="212" width="120" height="148" rx="6" fill="#cbd5e1"/>
+      <text x="190" y="200" text-anchor="middle" font-size="19" font-weight="700" fill="#475569">4.53%</text>
+      <text x="190" y="386" text-anchor="middle" font-size="14.5" fill="#64748b">baseline</text>
+      <rect x="320" y="177" width="120" height="183" rx="6" fill="#0d9488"/>
+      <text x="380" y="165" text-anchor="middle" font-size="19" font-weight="800" fill="#0d9488">5.61%</text>
+      <text x="380" y="386" text-anchor="middle" font-size="14.5" fill="#64748b">+ content retrieval</text>
+      <text x="80" y="146" font-size="15" font-weight="700" fill="#334155">Recall@100</text>
+    </g>
+    <g>
+      <rect x="452" y="212" width="112" height="42" rx="21" fill="#134e4a"/>
+      <text x="508" y="239" text-anchor="middle" font-size="19" font-weight="800" fill="#ffffff">+23.7%</text>
+    </g>
+    <text x="80" y="432" font-size="15" fill="#334155">Recall@10: <tspan font-weight="700" fill="#0d9488">+22.3%</tspan> alongside the R@100 gain</text>
+  </g>
+
+  <line x1="640" y1="60" x2="640" y2="440" stroke="#e2e8f0" stroke-width="2"/>
+
+  <!-- RIGHT: disciplined rejection -->
+  <g>
+    <text x="700" y="64" font-size="24" font-weight="800" fill="#0f172a">Other domains — evidence-based decisions</text>
+    <text x="700" y="90" font-size="15" fill="#475569">frozen variants evaluated under the same locked-test protocol</text>
+
+    <g font-size="16">
+      <rect x="700" y="122" width="640" height="66" rx="10" fill="#f8fafc" stroke="#e2e8f0"/>
+      <text x="724" y="150" font-weight="700" fill="#0f172a">Electronics</text>
+      <text x="724" y="172" fill="#475569">no reliable gain over the baseline</text>
+      <rect x="1180" y="138" width="140" height="34" rx="17" fill="#f1f5f9" stroke="#94a3b8"/>
+      <text x="1250" y="160" text-anchor="middle" font-size="14" font-weight="700" fill="#334155">KEEP BASELINE</text>
+
+      <rect x="700" y="200" width="640" height="66" rx="10" fill="#f8fafc" stroke="#e2e8f0"/>
+      <text x="724" y="228" font-weight="700" fill="#0f172a">Video Games</text>
+      <text x="724" y="250" fill="#475569">R@100 +1.8%, but R@10 <tspan fill="#b45309" font-weight="700">−8.3%</tspan> — guardrail fails</text>
+      <rect x="1180" y="216" width="140" height="34" rx="17" fill="#fffbeb" stroke="#b45309"/>
+      <text x="1250" y="238" text-anchor="middle" font-size="14" font-weight="700" fill="#b45309">REJECT</text>
+
+      <rect x="700" y="278" width="640" height="66" rx="10" fill="#f8fafc" stroke="#e2e8f0"/>
+      <text x="724" y="306" font-weight="700" fill="#0f172a">All Beauty</text>
+      <text x="724" y="328" fill="#475569">difference within the measurement noise band</text>
+      <rect x="1180" y="294" width="140" height="34" rx="17" fill="#f1f5f9" stroke="#94a3b8"/>
+      <text x="1250" y="316" text-anchor="middle" font-size="14" font-weight="700" fill="#334155">KEEP BASELINE</text>
+    </g>
+
+    <text x="700" y="400" font-size="17.5" font-weight="700" fill="#0f172a">Improve when evidence supports it.</text>
+    <text x="700" y="426" font-size="17.5" font-weight="700" fill="#64748b">Keep the simpler baseline when it doesn't.</text>
+  </g>
+</svg>

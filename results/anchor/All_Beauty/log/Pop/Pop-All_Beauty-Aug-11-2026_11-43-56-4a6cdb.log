@@ -1,8 +1,0 @@
-Tue 11 Aug 2026 11:43:58 INFO  [Training]: train_batch_size = [2048] train_neg_sample_args: [{'distribution': 'uniform', 'sample_num': 1, 'alpha': 1.0, 'dynamic': False, 'candidate_num': 0}]
-Tue 11 Aug 2026 11:43:58 INFO  [Evaluation]: eval_batch_size = [4096] eval_args: [{'split': {'LS': 'valid_and_test'}, 'order': 'TO', 'group_by': 'user', 'mode': {'valid': 'full', 'test': 'full'}}]
-Tue 11 Aug 2026 11:44:36 INFO  epoch 0 training [time: 0.13s, train loss: 0.0000]
-Tue 11 Aug 2026 11:44:36 INFO  epoch 0 evaluating [time: 0.20s, valid_score: 0.008000]
-Tue 11 Aug 2026 11:44:36 INFO  valid result: 
-recall@10 : 0.0198    recall@50 : 0.087    recall@100 : 0.2411    ndcg@10 : 0.008    ndcg@50 : 0.0221    ndcg@100 : 0.0471
-Tue 11 Aug 2026 11:44:36 INFO  Saving current: /projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/Pop-Aug-11-2026_11-43-58.pth
-Tue 11 Aug 2026 11:44:36 INFO  Loading model structure and parameters from /projects/PROJECT_ALLOC/R-project/results/anchor/All_Beauty/_ckpt/Pop-Aug-11-2026_11-43-58.pth

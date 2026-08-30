@@ -1,36 +1,16 @@
-# Core ML / Deep Learning
-torch>=2.0
-torchvision
-numpy
-scipy
-pandas
-scikit-learn
+# Pinned to the versions the reported experiments ran under.
+numpy==2.2.6
+pandas==2.3.3
+pyarrow==23.0.1
+torch==2.11.0            # CUDA build used in experiments: 2.11.0+cu128
+PyYAML==6.0.3
+tqdm==4.67.3
+pytest==9.0.2
 
-# Recommendation system libraries
-surprise
-implicit
-lightfm
-recbole
+# Text embeddings for the content retrieval source
+sentence-transformers==5.4.1
+huggingface_hub==1.10.2
 
-# Data handling & feature engineering
-polars
-pyarrow
-
-# Experiment tracking & evaluation
-mlflow
-tensorboard
-
-# Visualization
-matplotlib
-seaborn
-plotly
-
-# Notebooks
-jupyter
-ipywidgets
-
-# Utilities
-tqdm
-pyyaml
-hydra-core
-omegaconf
+# Anchor experiment only (RecBole legs live in their own venv --
+# see scripts/anchor/setup_recbole_env.sh)
+# recbole==1.2.1

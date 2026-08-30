@@ -1,4 +1,4 @@
-"""Canon-v2 audit: merge-key option comparison (Track D; MEMO D5; spec P2.1).
+"""Canon-v2 audit: merge-key option comparison.
 
 Compares four canonicalization rules on one category's RAW metadata + reviews:
 
@@ -24,21 +24,8 @@ variants), which is why the predicate is imported, not redefined.
 Usage (repo root):
     python -m scripts.analysis.canon_v2_audit.canon_options --category All_Beauty
 
-The login node (6GB cgroup) is fine for All_Beauty ONLY. Books / Electronics /
-Video_Games must go through sbatch (documented here, submitted manually):
-
-    for CAT in Video_Games Books Electronics; do
-      sbatch --account=PROJECT_ALLOC --partition=normal --nodes=1 --ntasks=1 \
-        --cpus-per-task=4 --mem=64G --time=02:00:00 \
-        --job-name=canon_audit_$CAT --output=logs/canon_audit_${CAT}_%j.out \
-        --wrap "source ~/.bashrc && conda activate tae && \
-                cd /projects/PROJECT_ALLOC/R-project && \
-                python -m scripts.analysis.canon_v2_audit.canon_options --category $CAT && \
-                python -m scripts.analysis.canon_v2_audit.genuineness --category $CAT"
-    done
-
-Output: scripts/analysis/canon_v2_audit/canon_options_{category}.json
-(committed alongside the scripts for reproducibility).
+Memory: Books needs ~64G; run the three big categories as batch jobs
+(the module is import-light so any scheduler wrapper works).
 """
 
 from __future__ import annotations

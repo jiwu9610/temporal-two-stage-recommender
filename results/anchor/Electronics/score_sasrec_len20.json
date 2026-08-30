@@ -2,7 +2,7 @@
   "category": "Electronics",
   "leg": "sasrec_len20",
   "dump": {
-    "path": "/projects/PROJECT_ALLOC/R-project/results/anchor/Electronics/sasrec_len20_top101.csv.gz",
+    "path": "<repo>/results/anchor/Electronics/sasrec_len20_top101.csv.gz",
     "rows": 3346938,
     "n_users": 33138,
     "max_list_length": 101,

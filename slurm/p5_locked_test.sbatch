@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --account=PROJECT_ALLOC
+#SBATCH --account=YOUR_ALLOCATION
 #SBATCH --partition=gengpu
 #SBATCH --gres=gpu:1
 #SBATCH --job-name=p5_locked
@@ -11,8 +11,8 @@
 #SBATCH --output=logs/p5_locked_%A_%a.out
 #SBATCH --error=logs/p5_locked_%A_%a.err
 
-# P5 -- the ONLY locked test of the rebuild wave (spec P5.1-P5.2). Runs ONLY
-# after the P4.4 freeze commit (results/p4_freeze/frozen_config.json).
+# P5 -- the one-shot locked test. Runs ONLY after the freeze
+# (results/p4_freeze/frozen_config_ap.json) is committed.
 # Per category, two arms: {frozen winner, A0 post-C1 reference} -- the
 # reference decouples "identity fix" from "new source" in the test-time
 # attribution. Per arm:
@@ -26,8 +26,6 @@
 #   [3] calibration fit on the selection dump (test dump not opened)
 #   [4] frozen chain -> test predictions, once
 # Array index -> (category, arm):
-#   0 Books A2 | 1 Books A0 | 2 Electronics A5 | 3 Electronics A0
-#   4 Video_Games A0 (winner == reference; single arm) |
 #   5 All_Beauty A1 | 6 All_Beauty A0
 
 set -eo pipefail
@@ -69,7 +67,7 @@ python -u -m scripts.ranker.temporal_candidate_builder --category "$CAT" \
 echo "=== CHECKPOINT: [2] full ranker + dump ${CAT} ${V} $(date) ==="
 # Consume the EXACT frozen Stage-B ranker recipe straight from the freeze
 # file -- no re-selection, and no hand-typed strings that could drift from
-# the JSON (review 2026-08-26 #1). The reference (A0) arm of a category whose
+# the JSON. The reference (A0) arm of a category whose
 # winner differs has no frozen recipe of its own and keeps the grid path.
 FR=$(python -c "
 import json,sys

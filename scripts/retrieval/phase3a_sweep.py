@@ -247,14 +247,10 @@ def run_category(
                   (item_features, "parent_asin")):
         df[c] = df[c].astype(str)
 
-    # targets[u] = the SET of u's positives in the label window. Both lines
-    # below used to be per-ROW: `sorted(gt["user_id"])` keeps one entry per
-    # groundtruth ROW, so under all_positive_labels `users` became a duplicated
-    # list of length n_positives -- it is the denominator of every Stage A
-    # recall AND the row multiplier of est_candidate_rows / est_ranker_tensor_gb
-    # (the numbers the K=500-vs-6GB decision rests on, inflated up to 2.6x), and
-    # nothing downstream deduped it. `dict(zip(...))` kept exactly one target
-    # per user, whichever row came last.
+    # targets[u] = the SET of u's positives in the label window; `users` must
+    # be DISTINCT users. Per-row construction would duplicate users under
+    # multi-positive labels and corrupt every recall denominator and row
+    # estimate downstream.
     targets = _gt_target_sets(gt)
     users = sorted(targets)
     n_positives = sum(len(t) for t in targets.values())

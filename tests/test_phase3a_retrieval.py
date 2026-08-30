@@ -745,7 +745,7 @@ def test_stage_a_denominators_are_users_not_groundtruth_rows(tmp_path):
 def test_builder_report_merges_snapshots_instead_of_clobbering(tmp_path):
     """A --snapshots test build must MERGE into an existing report, not
     overwrite the Stage-A ranker_train/model_selection provenance (the
-    freeze's row-count tie-breaker reads those; review 2026-08-26)."""
+    freeze's row-count tie-breaker reads those)."""
     from scripts.ranker.temporal_candidate_builder import build_all
     root = tmp_path / "proc"
     tdir = _write_builder_fixture(root)

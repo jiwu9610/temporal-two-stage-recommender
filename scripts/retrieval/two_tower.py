@@ -1,4 +1,4 @@
-"""Two-tower retrieval model — v1 core + v2 (rebuild wave, Track A) extensions.
+"""Two-tower retrieval model — v1 core + v2 extensions.
 
 User tower:
     optional user_id embedding  +  user dense features (USER_DENSE_COLS)
@@ -17,7 +17,7 @@ Score:
 
 Toggleable id embeddings (`use_user_id_emb`, `use_item_id_emb`) let us A/B
 metadata-only vs metadata+ids to demonstrate whether the model is generalizing
-on metadata or memorizing frequent ids — the design concern flagged in review.
+on metadata or memorizing frequent ids.
 
 v2 additions (all default-off / identity so v1 checkpoints and v1 training
 runs reproduce bit-for-bit):
@@ -56,7 +56,7 @@ class TwoTowerConfig:
     use_user_id_emb: bool = True
     use_item_id_emb: bool = True
     use_deeper_cat_emb: bool = True
-    # ---- v2 (rebuild wave, Track A). Tail-appended with defaults that keep
+    # ---- v2. Tail-appended with defaults that keep
     # v1 behavior byte-identical; asdict() -> _config_hash covers them.
     use_hist_pool: bool = False             # taste channel; temporal driver only
     hist_pool_len: int = 20                 # L most recent positive history items

@@ -2,7 +2,7 @@
   "category": "Video_Games",
   "leg": "official_sasrec",
   "dump": {
-    "path": "/projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/official_sasrec_top101.csv.gz",
+    "path": "<repo>/results/anchor/Video_Games/official_sasrec_top101.csv.gz",
     "rows": 9570962,
     "n_users": 94762,
     "max_list_length": 101,

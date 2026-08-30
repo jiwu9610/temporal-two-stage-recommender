@@ -2,7 +2,7 @@
   "category": "Video_Games",
   "leg": "itemknn",
   "dump": {
-    "path": "/projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/itemknn_top101.csv.gz",
+    "path": "<repo>/results/anchor/Video_Games/itemknn_top101.csv.gz",
     "rows": 2890721,
     "n_users": 28621,
     "max_list_length": 101,

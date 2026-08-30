@@ -193,11 +193,11 @@ def test_canon_v2_missing_title_column_merges_nothing():
 
 
 def test_canon_v2_normalization_predicate_frozen():
-    # FROZEN (REBUILD_WAVE_SPEC section 1, Track D correction 2): the S1
+    # FROZEN: the S1
     # rebuild gate numbers are predicate-sensitive (+-0.5-1.5% observed between
     # variants, e.g. Books rows 12.55% vs 12.82%). Any change to this predicate
     # invalidates the recorded canon_v2_audit numbers and requires re-running
-    # scripts/analysis/canon_v2_audit/ plus advisor re-approval.
+    # scripts/analysis/canon_v2_audit/ and regenerating the recorded numbers.
     #
     # Title leg: lowercase, strip, collapse ANY unicode-whitespace run to one space.
     assert normalize_title("  Foo   BAR ") == "foo bar"
@@ -237,7 +237,7 @@ def test_canon_v2_winner_highest_rating_number_ties_by_asin():
 
 
 # ---------------------------------------------------------------------------
-# pinned three_snapshot cutoffs (rebuild wave P2.1, MEMO D4)
+# pinned three_snapshot cutoffs
 # ---------------------------------------------------------------------------
 
 # Epoch-ms values from each category's pre-rebuild

@@ -10,7 +10,7 @@
     "recbole": "1.2.1",
     "torch": "2.13.0+cu130",
     "device": "cuda",
-    "venv_hint": "/projects/PROJECT_ALLOC/envs/recbole-anchor"
+    "venv_hint": "<recbole-anchor-venv>"
   },
   "protocol": {
     "identity": "raw parent_asin (canonicalize.py bypassed \u2014 anchor identity)",
@@ -46,7 +46,7 @@
     "loss_type": "CE",
     "k": null,
     "shrink": null,
-    "data_path": "/projects/PROJECT_ALLOC/R-project/data/anchor/_official/recbole_seq/len20/Video_Games",
+    "data_path": "<repo>/data/anchor/_official/recbole_seq/len20/Video_Games",
     "benchmark_filename": [
       "train",
       "valid",
@@ -76,7 +76,7 @@
     "ndcg@100": 0.0821
   },
   "topk_dump": {
-    "path": "/projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/official_sasrec_len20_top101.csv.gz",
+    "path": "<repo>/results/anchor/Video_Games/official_sasrec_len20_top101.csv.gz",
     "k": 101,
     "rows": 9570962,
     "n_users": 94762
@@ -92,5 +92,5 @@
     "anchor_comparable": true,
     "note": "band anchors (Pctx / LLaDA-Rec) use max_len 20; the len20 leg carries the verdict, len50 is informative."
   },
-  "saved_model_file": "/projects/PROJECT_ALLOC/R-project/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-11-39.pth"
+  "saved_model_file": "<repo>/results/anchor/Video_Games/_ckpt/SASRec-Aug-11-2026_13-11-39.pth"
 }

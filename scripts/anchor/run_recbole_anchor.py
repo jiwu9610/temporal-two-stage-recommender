@@ -1,6 +1,6 @@
-"""RecBole anchor legs (Track C, REBUILD_WAVE_SPEC P1.2).
+"""RecBole anchor legs.
 
-CLI (run inside the recbole-anchor venv, /projects/PROJECT_ALLOC/envs/recbole-anchor):
+CLI (run inside the recbole-anchor venv):
     python -m scripts.anchor.run_recbole_anchor --category All_Beauty --legs pop,itemknn
     python -m scripts.anchor.run_recbole_anchor --category Video_Games \
         --legs pop,itemknn,sasrec,sasrec_len20,official_sasrec,official_sasrec_len20
@@ -15,7 +15,7 @@ Leg registry (letter = spec P1.2 nomenclature):
                                 Recall@10 in [0.070, 0.097] => pipeline/protocol healthy
                                 (band anchors use max_len 20, so E-20 carries the gate)
     official_pop          F-pop  \  optional leg F (spec §6-D9: +official Pop/ItemKNN);
-    official_itemknn      F-knn  /  registered but not in the default sbatch leg list
+    official_itemknn      F-knn  /  registered but not in the default batch leg list
     (leg D, our two-tower, lives in scripts/anchor/train_two_tower_anchor.py)
 
 Protocol per leg:
@@ -487,7 +487,7 @@ def main(argv=None):
         import recbole  # noqa: F401
     except ImportError:
         print("recbole not importable — activate the anchor venv first:\n"
-              "  source /projects/PROJECT_ALLOC/envs/recbole-anchor/bin/activate",
+              "  source <recbole-anchor-venv>/bin/activate",
               file=sys.stderr)
         return 2
 

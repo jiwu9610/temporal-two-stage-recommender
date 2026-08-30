@@ -13,8 +13,10 @@ Two label frames are emitted per snapshot from the SAME history and window:
 groundtruth_{s}.parquet keeps only each user's FIRST positive (the frozen
 next-item framing every existing artifact keys off), and
 groundtruth_all_{s}.parquet keeps EVERY distinct positive (the coverage
-framing: "did we recommend what the user went on to buy"). No consumer reads
-the _all_ frame yet; switching one over is a deliberate, separate step.
+framing: "did we recommend what the user went on to interact with"). The
+all-positive frame is the one candidate labelling, training and evaluation
+consume; the first-positive frame is retained so legacy artifacts stay
+reproducible.
 
 Histories therefore expand: history(T0) subset history(T1) subset history(T2).
 Every snapshot gets its OWN feature stores (all `_hist` aggregates recomputed

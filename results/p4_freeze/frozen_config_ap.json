@@ -1,8 +1,8 @@
 {
-  "phase": "P4.4 joint freeze -- ALL-POSITIVE rebuild (supersedes results/p4_freeze/frozen_config.json, which froze the first-positive-trained Stage B of 2026-08-15)",
+  "phase": "P4.4 joint freeze -- ALL-POSITIVE rebuild (supersedes the first-positive freeze now archived at archive/results_invalidated_first_positive/frozen_config_first_positive.json)",
   "freeze_history": [
-    "controlling PRE-TEST freeze: commit fd894b7 (2026-08-22, before the one-shot P5 read of 08-23); winners Books A3 / Elec A0 / VG A5 / AB A1",
-    "amendments (identical decisions, provenance only): 615f742 row-count tie-breaker implemented; 7e8f38a frozen_ranker recipe field; 2026-08-26 Stage-A row counts restored after the report-clobber bug fix"
+    "controlling pre-test freeze recorded 2026-08-22, before the one-shot locked-test read of 2026-08-23; winners Books A3 / Electronics A0 / Video_Games A5 / All_Beauty A1",
+    "later regenerations changed provenance fields only (row-count tie-breaker, frozen_ranker recipe, restored Stage-A row counts) -- decisions identical"
   ],
   "frozen_utc": "2026-08-27T00:33:20.765714+00:00",
   "decision_rule": "primary = model_selection Recall@100 macro (all_positive frame); guardrail = Recall@10 >= A0 (zero tolerance); winner must beat A0 on Recall@100 else A0; ties within tie_tol on R@100 -> higher R@10 -> fewer rows",
